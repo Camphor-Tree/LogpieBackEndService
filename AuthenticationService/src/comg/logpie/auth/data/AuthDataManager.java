@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.postgresql.Driver;
 
 import com.logpie.auth.config.AuthConfig;
+import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.AuthResponseKeys;
 import com.logpie.auth.tool.AuthErrorType;
 import com.logpie.auth.tool.AuthServiceLog;
@@ -103,6 +104,7 @@ public class AuthDataManager
     }
 
     public void executeInsert(final String sql, final DataCallback callback)
+            throws EmailAlreadyExistException
     {
         Connection connection = null;
         PreparedStatement statement = null;
@@ -122,7 +124,7 @@ public class AuthDataManager
             if (generatedKeys.next())
             {
                 long id = generatedKeys.getLong(1);
-                callback.onSuccess(new JSONObject().append(KEY_INSERT_RESULT_ID, String.valueOf(id)));
+                callback.onSuccess(new JSONObject().put(KEY_INSERT_RESULT_ID, String.valueOf(id)));
             }
             else
             {
@@ -130,9 +132,17 @@ public class AuthDataManager
             }
         } catch (SQLException e)
         {
-            handleErrorCallbackWithServerError(callback);
+
             AuthServiceLog.e(TAG, e.getMessage());
             AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
+            if (e.getMessage().contains("ERROR: duplicate key value"))
+            {
+                throw new EmailAlreadyExistException();
+            }
+            else
+            {
+                handleErrorCallbackWithServerError(callback);
+            }
         } catch (JSONException e)
         {
             handleErrorCallbackWithServerError(callback);
@@ -164,7 +174,8 @@ public class AuthDataManager
         }
     }
 
-    public void executeQueryForLogin(final String sql, final DataCallback callback)
+    // Step1 Query the user information, to verify the email_password
+    public JSONObject executeQueryForLoginStep1(final String sql)
     {
         Connection connection = null;
         Statement statement = null;
@@ -173,7 +184,124 @@ public class AuthDataManager
         try
         {
             connection = openConnection();
+            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            resultSet = statement.executeQuery(sql);
+            int count = 0;
+            if (resultSet.last())
+            {
+                count = resultSet.getRow();
+                resultSet.beforeFirst(); // not rs.first() because the rs.next()
+                                         // below
+                // will move on, missing the first element
+            }
+            // no user found, return auth error.
+            if (count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                resultSet.next();
+                JSONObject returnJSON = new JSONObject();
+                returnJSON.put(AuthResponseKeys.KEY_USER_ID,
+                        String.valueOf(resultSet.getLong(SQLHelper.SCHEMA_UID)));
+                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN,
+                        resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
+                return returnJSON;
+            }
+        } catch (SQLException e)
+        {
+            AuthServiceLog.e(TAG, e.getMessage());
+            AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
+            return null;
+
+        } catch (JSONException e)
+        {
+            AuthServiceLog.e(TAG, e.getMessage());
+            AuthServiceLog.e(TAG, "JSONException happend when executing callback");
+            return null;
+
+        } finally
+        {
+            if (resultSet != null)
+                try
+                {
+                    resultSet.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+            if (statement != null)
+                try
+                {
+                    statement.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+            if (connection != null)
+                try
+                {
+                    connection.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+        }
+    }
+
+    // Step2, update the token
+    public boolean executeQueryForLoginStep2(final String sql)
+    {
+        Connection connection = null;
+        Statement statement = null;
+        try
+        {
+            connection = openConnection();
             statement = connection.createStatement();
+            int row_affected = statement.executeUpdate(sql);
+            if (row_affected != 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        } catch (SQLException e)
+        {
+            AuthServiceLog.e(TAG, e.getMessage());
+            AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
+            return false;
+        } finally
+        {
+            if (statement != null)
+                try
+                {
+                    statement.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+            if (connection != null)
+                try
+                {
+                    connection.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+        }
+    }
+
+    // Step3 Query the user information again, get lastest token information
+    public void executeQueryForLoginStep3(final String sql, final DataCallback callback)
+    {
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            connection = openConnection();
+            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
             resultSet = statement.executeQuery(sql);
             int count = 0;
             if (resultSet.last())
@@ -193,16 +321,16 @@ public class AuthDataManager
             {
                 resultSet.next();
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.append(AuthResponseKeys.KEY_USER_ID,
-                        resultSet.getLong(SQLHelper.SCHEMA_UID));
-                returnJSON.append(AuthResponseKeys.KEY_ACCESS_TOKEN,
+                returnJSON.put(AuthResponseKeys.KEY_USER_ID,
+                        String.valueOf(resultSet.getLong(SQLHelper.SCHEMA_UID)));
+                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
-                returnJSON.append(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
-                        resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION));
-                returnJSON.append(AuthResponseKeys.KEY_REFRESH_TOKEN,
+                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, resultSet
+                        .getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
+                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
-                returnJSON.append(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
-                        resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION));
+                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, resultSet
+                        .getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
                 callback.onSuccess(returnJSON);
             }
         } catch (SQLException e)

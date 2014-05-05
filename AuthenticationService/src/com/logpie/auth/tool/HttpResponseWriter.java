@@ -36,5 +36,4 @@ public class HttpResponseWriter
                             "Response data must contain key: AuthResponseKeys.KEY_RESULT = com.logpie.auth.result");
         }
     }
-
 }

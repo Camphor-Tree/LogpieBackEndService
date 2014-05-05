@@ -16,3 +16,5 @@ WITH (
 TABLESPACE pg_default;
 ALTER TABLE "user_auth"
   OWNER TO postgres;
+  
+ALTER TABLE user_auth ADD CONSTRAINT emailunique UNIQUE (email);

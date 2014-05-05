@@ -12,7 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.TokenScopeManager.Scope;
+import com.logpie.auth.tool.AuthErrorMessage;
 import com.logpie.auth.tool.AuthErrorType;
 import com.logpie.auth.tool.AuthServiceLog;
 import com.logpie.auth.tool.HttpRequestParser;
@@ -54,6 +56,7 @@ public class AuthenticationManager
         if (sAuthenticationManager == null)
         {
             sAuthenticationManager = new AuthenticationManager();
+            sAuthDataManager = AuthDataManager.getInstance();
         }
         return sAuthenticationManager;
     }
@@ -149,6 +152,9 @@ public class AuthenticationManager
      * Handle Register
      * 
      * @param regData
+     *            sample regData: {"login_email":"yilei@aa.com","request_id":
+     *            "36619c29-d767-445b-9a8c-8f20b5e53ad6"
+     *            ,"login_password":"123456"}
      * @param response
      */
     private void handleRegister(JSONObject regData, final HttpServletResponse response)
@@ -164,17 +170,19 @@ public class AuthenticationManager
         } catch (JSONException e)
         {
             requestID = UUID.randomUUID().toString();
-            AuthServiceLog.e(TAG, "JSONException when getting requestID");
+            AuthServiceLog.e(TAG,
+                    "JSONException when getting requestID, setting a new random requestID");
             AuthServiceLog.e(TAG, e.getMessage());
         }
 
         final String request_id = requestID;
 
-        String email;
         try
         {
-            email = regData.getString(AuthRequestKeys.KEY_REGISTER_EMAIL);
+            String email = regData.getString(AuthRequestKeys.KEY_REGISTER_EMAIL);
             String password = regData.getString(AuthRequestKeys.KEY_REGISTER_PASSWORD);
+            // check whether the email already exist.
+
             // Generate the new tokens for all new users
             String sql = SQLHelper.buildCreateUserSQL(email, password, buildNewUserScope());
             sAuthDataManager.executeInsert(sql, new DataCallback()
@@ -185,15 +193,15 @@ public class AuthenticationManager
                 {
                     try
                     {
-                        String uid = result.getString(AuthDataManager.KEY_INSERT_RESULT_ID);
+                        String uid = String.valueOf(result
+                                .getInt(AuthDataManager.KEY_INSERT_RESULT_ID));
                         JSONObject returnData = new JSONObject();
                         returnData.put(AuthResponseKeys.KEY_REQUEST_ID, request_id);
-                        returnData.put(AuthResponseKeys.KEY_AUTH_RESULT,
-                                AuthResponseKeys.AUTH_RESULT_SUCCESS);
                         returnData.put(AuthResponseKeys.KEY_USER_ID, uid);
-                        handleRegistrationSuccess(returnData, response);
+                        handleAuthResult(true, returnData, response);
                     } catch (JSONException e)
                     {
+                        AuthServiceLog.logRequest(TAG, request_id, e.getMessage());
                         AuthServiceLog.e(TAG, "JSONException when getting insert result");
                         AuthServiceLog.e(TAG, e.getMessage());
                     }
@@ -214,13 +222,38 @@ public class AuthenticationManager
             });
         } catch (JSONException e)
         {
+            AuthServiceLog.logRequest(TAG, request_id, e.getMessage());
+            handleAuthenticationResponseWithError(response, AuthErrorType.BAD_REQUEST);
             AuthServiceLog.e(TAG, "JSONException when getting email/password");
             AuthServiceLog.e(TAG, e.getMessage());
+        } catch (EmailAlreadyExistException e)
+        {
+            AuthServiceLog.e(TAG, "email already exist");
+            JSONObject errorMessage = new JSONObject();
+            try
+            {
+                errorMessage.put(AuthResponseKeys.KEY_ERROR_MESSAGE,
+                        AuthErrorMessage.ERROR_EMAIL_ALREADY_EXIST);
+                handleAuthResult(false, errorMessage, response);
+            } catch (JSONException e1)
+            {
+                handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
+            }
+
         }
     }
 
-    private void handleRegistrationSuccess(JSONObject data, HttpServletResponse response)
+    private void handleAuthResult(boolean success, JSONObject data, HttpServletResponse response)
+            throws JSONException
     {
+        if (success)
+        {
+            data.put(AuthResponseKeys.KEY_AUTH_RESULT, AuthResponseKeys.AUTH_RESULT_SUCCESS);
+        }
+        else
+        {
+            data.put(AuthResponseKeys.KEY_AUTH_RESULT, AuthResponseKeys.AUTH_RESULT_ERROR);
+        }
         HttpResponseWriter.reponseWithSuccess(data, response);
     }
 
@@ -272,19 +305,51 @@ public class AuthenticationManager
             String password = loginData.getString(AuthRequestKeys.KEY_LOGIN_PASSWORD);
             // Generate the new tokens for all new users
             String sql = SQLHelper.buildLoginSQL(email, password);
-            sAuthDataManager.executeQueryForLogin(sql, new DataCallback()
+
+            JSONObject step1_result = sAuthDataManager.executeQueryForLoginStep1(sql);
+            if (step1_result == null)
+            {
+                handleAuthenticationResponseWithError(response, AuthErrorType.AUTH_ERROR);
+                return;
+            }
+            else
+            {
+                String sql_step2 = SQLHelper.buildUpdateTokenSQL(
+                        step1_result.getString(AuthResponseKeys.KEY_USER_ID), email, password,
+                        step1_result.getString(AuthResponseKeys.KEY_ACCESS_TOKEN));
+                boolean step2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step2);
+                if (!step2_result)
+                {
+                    AuthServiceLog.e(sql,
+                            "Error happend in authentication Step2, refresh all the token");
+                    AuthServiceLog.logRequest(TAG, requestID,
+                            "Error happend in authentication Step2, refresh all the token");
+                    handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
+                    return;
+                }
+            }
+
+            // TODO:Verify and improve this flow. Currently if step2 fails, we
+            // will stop the authentication, because the token didn't get
+            // refresh, it's meaningless to return the old-token.
+            // But in some edge cases, such as user change a device to login, it
+            // can return the token, because the token is still valid.
+            // There are two flows,
+            // 1. user's refresh_token invalid, force to login again. (should
+            // fails in step 2)
+            // 2. user change a device, login normally (shouldn't fails in
+            // step2, the token maybe still valid)
+            sAuthDataManager.executeQueryForLoginStep3(sql, new DataCallback()
             {
 
                 @Override
                 public void onSuccess(JSONObject result)
                 {
+
                     try
                     {
-
                         result.put(AuthResponseKeys.KEY_REQUEST_ID, request_id);
-                        result.put(AuthResponseKeys.KEY_AUTH_RESULT,
-                                AuthResponseKeys.AUTH_RESULT_SUCCESS);
-                        handleRegistrationSuccess(result, response);
+                        handleAuthResult(true, result, response);
                     } catch (JSONException e)
                     {
                         handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
@@ -301,8 +366,10 @@ public class AuthenticationManager
             });
         } catch (JSONException e)
         {
+            AuthServiceLog.logRequest(TAG, request_id, e.getMessage());
             AuthServiceLog.e(TAG, "JSONException when getting email/password");
             AuthServiceLog.e(TAG, e.getMessage());
         }
     }
+
 }

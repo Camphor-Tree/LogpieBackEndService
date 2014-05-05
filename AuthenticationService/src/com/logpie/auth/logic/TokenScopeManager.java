@@ -26,7 +26,7 @@ public class TokenScopeManager
     {
         if (keySource != null)
         {
-            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new StringBuilder(keySource);
             for (Scope scope : scopes)
             {
                 stringBuilder.append("$");
@@ -45,8 +45,10 @@ public class TokenScopeManager
     public static List<Scope> getScope(String token)
     {
         List<Scope> scopesList = new LinkedList<Scope>();
-        String scopeString = token.substring(token.indexOf("$") + 1, token.length());
-        String[] scopes = scopeString.split("$");
+        String decodeToken = TokenGenerator.decodeToken(token);
+        String scopeString = decodeToken.substring(decodeToken.indexOf("$") + 1,
+                decodeToken.length());
+        String[] scopes = scopeString.split("\\$");
         for (String scope : scopes)
         {
             scopesList.add(Scope.valueOf(scope));
