@@ -1,0 +1,5 @@
+#ignore the .classpath
+.classpath
+bin
+.settings
+.class
