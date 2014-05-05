@@ -53,6 +53,11 @@ public class AuthServiceLog
         }
     }
 
+    public static void logRequest(String TAG, String requestID, String info)
+    {
+        writeFile(requestID + TAG, info);
+    }
+
     public synchronized static void writeFile(String TAG, String info)
     {
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
