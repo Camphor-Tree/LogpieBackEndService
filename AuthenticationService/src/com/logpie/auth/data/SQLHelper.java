@@ -1,4 +1,4 @@
-package comg.logpie.auth.data;
+package com.logpie.auth.data;
 
 import java.util.List;
 

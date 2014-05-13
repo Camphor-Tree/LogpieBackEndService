@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.logpie.auth.data.AuthDataManager;
+import com.logpie.auth.data.AuthDataManager.DataCallback;
+import com.logpie.auth.data.SQLHelper;
 import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.TokenScopeManager.Scope;
 import com.logpie.auth.tool.AuthErrorMessage;
@@ -19,9 +22,6 @@ import com.logpie.auth.tool.AuthErrorType;
 import com.logpie.auth.tool.AuthServiceLog;
 import com.logpie.auth.tool.HttpRequestParser;
 import com.logpie.auth.tool.HttpResponseWriter;
-import comg.logpie.auth.data.AuthDataManager;
-import comg.logpie.auth.data.AuthDataManager.DataCallback;
-import comg.logpie.auth.data.SQLHelper;
 
 public class AuthenticationManager
 {
@@ -55,6 +55,7 @@ public class AuthenticationManager
     {
         if (sAuthenticationManager == null)
         {
+            AuthServiceLog.d(TAG, "Should initialize only once!");
             sAuthenticationManager = new AuthenticationManager();
             sAuthDataManager = AuthDataManager.getInstance();
         }
@@ -78,6 +79,7 @@ public class AuthenticationManager
         JSONObject postBody = HttpRequestParser.httpRequestParser(request);
         if (postBody != null)
         {
+            AuthServiceLog.d(TAG, "[Receiving request data:]" + postBody.toString());
             AuthenticationType type = getAuthenticationType(postBody);
             switch (type)
             {
@@ -97,7 +99,7 @@ public class AuthenticationManager
                 break;
             default:
             {
-                AuthServiceLog.e(TAG, "Un Supported Type!");
+                AuthServiceLog.e(TAG, "Unsupported Type!");
                 handleAuthenticationResponseWithError(response, AuthErrorType.BAD_REQUEST);
                 break;
             }
@@ -166,7 +168,6 @@ public class AuthenticationManager
             requestID = regData.getString(AuthRequestKeys.KEY_REQUEST_ID) != null ? regData
                     .getString(AuthRequestKeys.KEY_REQUEST_ID) : UUID.randomUUID().toString();
             AuthServiceLog.d(TAG, "Start handling register: requestID=" + requestID);
-            AuthServiceLog.d(TAG, "Received registration data:" + regData);
         } catch (JSONException e)
         {
             requestID = UUID.randomUUID().toString();
@@ -193,12 +194,8 @@ public class AuthenticationManager
                 {
                     try
                     {
-                        String uid = String.valueOf(result
-                                .getInt(AuthDataManager.KEY_INSERT_RESULT_ID));
-                        JSONObject returnData = new JSONObject();
-                        returnData.put(AuthResponseKeys.KEY_REQUEST_ID, request_id);
-                        returnData.put(AuthResponseKeys.KEY_USER_ID, uid);
-                        handleAuthResult(true, returnData, response);
+                        result.put(AuthResponseKeys.KEY_REQUEST_ID, request_id);
+                        handleAuthResult(true, result, response);
                     } catch (JSONException e)
                     {
                         AuthServiceLog.logRequest(TAG, request_id, e.getMessage());

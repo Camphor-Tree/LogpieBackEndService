@@ -1,4 +1,4 @@
-package comg.logpie.auth.data;
+package com.logpie.auth.data;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -9,7 +9,6 @@ import java.sql.Statement;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.postgresql.Driver;
 
 import com.logpie.auth.config.AuthConfig;
 import com.logpie.auth.exception.EmailAlreadyExistException;
@@ -28,9 +27,9 @@ public class AuthDataManager
 
     private static final String TAG = AuthDataManager.class.getName();
     private static AuthDataManager sAuthDataManager;
-    private static Driver sPostgreDriver;
 
     public static final String KEY_INSERT_RESULT_ID = "com.logpie.auth.insert.id";
+
     public static final String KEY_CALLBACK_ERROR = "com.logpie.auth.error";
 
     public synchronized static AuthDataManager getInstance()
@@ -50,7 +49,7 @@ public class AuthDataManager
     {
         try
         {
-            sPostgreDriver = (Driver) Class.forName("org.postgresql.Driver").newInstance();
+            Class.forName("org.postgresql.Driver").newInstance();
         } catch (InstantiationException e)
         {
             AuthServiceLog.e(TAG, e.getMessage());
@@ -108,7 +107,7 @@ public class AuthDataManager
     {
         Connection connection = null;
         PreparedStatement statement = null;
-        ResultSet generatedKeys = null;
+        ResultSet resultSet = null;
 
         try
         {
@@ -120,11 +119,27 @@ public class AuthDataManager
                 throw new SQLException("Creating user failed, no rows affected.");
             }
 
-            generatedKeys = statement.getGeneratedKeys();
-            if (generatedKeys.next())
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next())
             {
-                long id = generatedKeys.getLong(1);
-                callback.onSuccess(new JSONObject().put(KEY_INSERT_RESULT_ID, String.valueOf(id)));
+                long uid = resultSet.getLong(SQLHelper.SCHEMA_UID);
+                String email = resultSet.getString(SQLHelper.SCHEMA_EMAIL);
+                String access_token = resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN);
+                String access_token_expiration = resultSet
+                        .getString(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION);
+                String refresh_token = resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN);
+                String refresh_token_expiration = resultSet
+                        .getString(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION);
+                JSONObject returnJSON = new JSONObject();
+                returnJSON.put(AuthResponseKeys.KEY_USER_ID, String.valueOf(uid));
+                returnJSON.put(AuthResponseKeys.KEY_EMAIL, email);
+                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN, access_token);
+                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
+                        access_token_expiration);
+                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
+                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
+                        refresh_token_expiration);
+                callback.onSuccess(returnJSON);
             }
             else
             {
@@ -132,7 +147,6 @@ public class AuthDataManager
             }
         } catch (SQLException e)
         {
-
             AuthServiceLog.e(TAG, e.getMessage());
             AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
             if (e.getMessage().contains("ERROR: duplicate key value"))
@@ -150,10 +164,10 @@ public class AuthDataManager
             AuthServiceLog.e(TAG, "JSONException happend when executing callback");
         } finally
         {
-            if (generatedKeys != null)
+            if (resultSet != null)
                 try
                 {
-                    generatedKeys.close();
+                    resultSet.close();
                 } catch (SQLException logOrIgnore)
                 {
                 }
