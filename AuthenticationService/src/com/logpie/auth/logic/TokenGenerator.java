@@ -2,7 +2,7 @@ package com.logpie.auth.logic;
 
 import java.util.UUID;
 
-import com.logpie.auth.tool.AuthServiceLog;
+import com.logpie.service.common.helper.CommonServiceLog;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
@@ -36,8 +36,8 @@ public class TokenGenerator
             return new String(Base64.decode(token));
         } catch (Base64DecodingException e)
         {
-            AuthServiceLog.e(TAG, "error happend when decode the token");
-            AuthServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "error happend when decode the token");
+            CommonServiceLog.e(TAG, e.getMessage());
             return null;
         }
     }

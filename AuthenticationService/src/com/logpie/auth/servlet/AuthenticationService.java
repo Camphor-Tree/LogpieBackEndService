@@ -10,8 +10,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.logpie.auth.config.AuthConfig;
 import com.logpie.auth.logic.AuthenticationManager;
-import com.logpie.auth.tool.AuthServiceLog;
+import com.logpie.service.common.helper.CommonServiceLog;
 
 public class AuthenticationService extends HttpServlet
 {
@@ -21,7 +22,8 @@ public class AuthenticationService extends HttpServlet
     @Override
     public void init()
     {
-        AuthServiceLog.d(TAG, "Start initializing...");
+    	CommonServiceLog.setLogFilePath(AuthConfig.LogPath);
+    	CommonServiceLog.d(TAG, "Start initializing...");
         ServletContext serviceContext = getServletContext();
         AuthenticationManager.initialize(serviceContext);
         // load properties from disk, do be used by subsequent doGet() calls

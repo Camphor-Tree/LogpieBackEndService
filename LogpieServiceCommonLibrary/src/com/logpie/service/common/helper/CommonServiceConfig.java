@@ -1,15 +1,23 @@
-package com.logpie.customer.config;
+/*
+ * Copyright (c) 2014 logpie.com
+ * All rights reserved.
+ */
+package com.logpie.service.common.helper;
 
-public class CustomerConfig
+/**
+ * This should be the central configuration file. Deploy common Service
+ * should first configure this file.
+ * 
+ * @author yilei
+ * 
+ */
+public class CommonServiceConfig
 {
     /**
-     * Is debugging? When deploy, should turn this to false;
+     * Is debuging? When deploy, should turn this to false;
      */
     public static final boolean isDebugging = true;
-    /**
-     * The logfile's path
-     */
-    public static final String LogPath = "E:/CustomerLog/";
+
 
     /**
      * Different system may have different changeLine Character.

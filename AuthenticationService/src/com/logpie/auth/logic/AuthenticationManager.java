@@ -19,9 +19,10 @@ import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.TokenScopeManager.Scope;
 import com.logpie.auth.tool.AuthErrorMessage;
 import com.logpie.auth.tool.AuthErrorType;
-import com.logpie.auth.tool.AuthServiceLog;
-import com.logpie.auth.tool.HttpRequestParser;
-import com.logpie.auth.tool.HttpResponseWriter;
+import com.logpie.service.common.exception.HttpRequestIsNullException;
+import com.logpie.service.common.helper.CommonServiceLog;
+import com.logpie.service.common.helper.HttpRequestParser;
+import com.logpie.service.common.helper.HttpResponseWriter;
 
 public class AuthenticationManager
 {
@@ -55,7 +56,7 @@ public class AuthenticationManager
     {
         if (sAuthenticationManager == null)
         {
-            AuthServiceLog.d(TAG, "Should initialize only once!");
+            CommonServiceLog.d(TAG, "Should initialize only once!");
             sAuthenticationManager = new AuthenticationManager();
             sAuthDataManager = AuthDataManager.getInstance();
         }
@@ -76,10 +77,17 @@ public class AuthenticationManager
      */
     public void handleAuthenticationRequest(HttpServletRequest request, HttpServletResponse response)
     {
-        JSONObject postBody = HttpRequestParser.httpRequestParser(request);
+        JSONObject postBody = null;
+		try {
+			postBody = HttpRequestParser.httpRequestParser(request);
+		} catch (HttpRequestIsNullException e) {
+			CommonServiceLog.e(TAG, "The coming request is null!It should be a bug of tomcat!");
+			e.printStackTrace();
+			return;
+		}
         if (postBody != null)
         {
-            AuthServiceLog.d(TAG, "[Receiving request data:]" + postBody.toString());
+            CommonServiceLog.d(TAG, "[Receiving request data:]" + postBody.toString());
             AuthenticationType type = getAuthenticationType(postBody);
             switch (type)
             {
@@ -99,7 +107,7 @@ public class AuthenticationManager
                 break;
             default:
             {
-                AuthServiceLog.e(TAG, "Unsupported Type!");
+                CommonServiceLog.e(TAG, "Unsupported Type!");
                 handleAuthenticationResponseWithError(response, AuthErrorType.BAD_REQUEST);
                 break;
             }
@@ -119,14 +127,14 @@ public class AuthenticationManager
         try
         {
             response.sendError(errorType.getErrorCode());
-            AuthServiceLog.e(
+            CommonServiceLog.e(
                     TAG,
                     "Returning error code when handling authentication ->" + "ErrorCode:"
                             + errorType.getErrorCode() + " ErrorMessage:"
                             + errorType.getErrorMessage());
         } catch (IOException e)
         {
-            AuthServiceLog.e(TAG, "IOException happend when sendErrorCode");
+            CommonServiceLog.e(TAG, "IOException happend when sendErrorCode");
         }
     }
 
@@ -140,7 +148,7 @@ public class AuthenticationManager
                         .getString(AuthRequestKeys.KEY_AUTHENTICATION_TYPE));
             } catch (JSONException e)
             {
-                AuthServiceLog.e(TAG, "JSONException happend when parsing Authentication Type");
+                CommonServiceLog.e(TAG, "JSONException happend when parsing Authentication Type");
                 return null;
             }
         }
@@ -167,13 +175,13 @@ public class AuthenticationManager
             // If exception happened, just generate a random requestID
             requestID = regData.getString(AuthRequestKeys.KEY_REQUEST_ID) != null ? regData
                     .getString(AuthRequestKeys.KEY_REQUEST_ID) : UUID.randomUUID().toString();
-            AuthServiceLog.d(TAG, "Start handling register: requestID=" + requestID);
+            CommonServiceLog.d(TAG, "Start handling register: requestID=" + requestID);
         } catch (JSONException e)
         {
             requestID = UUID.randomUUID().toString();
-            AuthServiceLog.e(TAG,
+            CommonServiceLog.e(TAG,
                     "JSONException when getting requestID, setting a new random requestID");
-            AuthServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, e.getMessage());
         }
 
         final String request_id = requestID;
@@ -198,9 +206,9 @@ public class AuthenticationManager
                         handleAuthResult(true, result, response);
                     } catch (JSONException e)
                     {
-                        AuthServiceLog.logRequest(TAG, request_id, e.getMessage());
-                        AuthServiceLog.e(TAG, "JSONException when getting insert result");
-                        AuthServiceLog.e(TAG, e.getMessage());
+                        CommonServiceLog.logRequest(TAG, request_id, e.getMessage());
+                        CommonServiceLog.e(TAG, "JSONException when getting insert result");
+                        CommonServiceLog.e(TAG, e.getMessage());
                     }
                 }
 
@@ -219,13 +227,13 @@ public class AuthenticationManager
             });
         } catch (JSONException e)
         {
-            AuthServiceLog.logRequest(TAG, request_id, e.getMessage());
+            CommonServiceLog.logRequest(TAG, request_id, e.getMessage());
             handleAuthenticationResponseWithError(response, AuthErrorType.BAD_REQUEST);
-            AuthServiceLog.e(TAG, "JSONException when getting email/password");
-            AuthServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "JSONException when getting email/password");
+            CommonServiceLog.e(TAG, e.getMessage());
         } catch (EmailAlreadyExistException e)
         {
-            AuthServiceLog.e(TAG, "email already exist");
+            CommonServiceLog.e(TAG, "email already exist");
             JSONObject errorMessage = new JSONObject();
             try
             {
@@ -251,7 +259,7 @@ public class AuthenticationManager
         {
             data.put(AuthResponseKeys.KEY_AUTH_RESULT, AuthResponseKeys.AUTH_RESULT_ERROR);
         }
-        HttpResponseWriter.reponseWithSuccess(data, response);
+        HttpResponseWriter.reponseWithSuccess(AuthResponseKeys.KEY_AUTH_RESULT,data, response);
     }
 
     /**
@@ -284,13 +292,13 @@ public class AuthenticationManager
             // If exception happened, just generate a random requestID
             requestID = loginData.getString(AuthRequestKeys.KEY_REQUEST_ID) != null ? loginData
                     .getString(AuthRequestKeys.KEY_REQUEST_ID) : UUID.randomUUID().toString();
-            AuthServiceLog.d(TAG, "Start handling register: requestID=" + requestID);
-            AuthServiceLog.d(TAG, "Received registration data:" + loginData);
+            CommonServiceLog.d(TAG, "Start handling register: requestID=" + requestID);
+            CommonServiceLog.d(TAG, "Received registration data:" + loginData);
         } catch (JSONException e)
         {
             requestID = UUID.randomUUID().toString();
-            AuthServiceLog.e(TAG, "JSONException when getting requestID");
-            AuthServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "JSONException when getting requestID");
+            CommonServiceLog.e(TAG, e.getMessage());
         }
 
         final String request_id = requestID;
@@ -317,9 +325,9 @@ public class AuthenticationManager
                 boolean step2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step2);
                 if (!step2_result)
                 {
-                    AuthServiceLog.e(sql,
+                    CommonServiceLog.e(sql,
                             "Error happend in authentication Step2, refresh all the token");
-                    AuthServiceLog.logRequest(TAG, requestID,
+                    CommonServiceLog.logRequest(TAG, requestID,
                             "Error happend in authentication Step2, refresh all the token");
                     handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
                     return;
@@ -350,8 +358,8 @@ public class AuthenticationManager
                     } catch (JSONException e)
                     {
                         handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
-                        AuthServiceLog.e(TAG, "JSONException when getting insert result");
-                        AuthServiceLog.e(TAG, e.getMessage());
+                        CommonServiceLog.e(TAG, "JSONException when getting insert result");
+                        CommonServiceLog.e(TAG, e.getMessage());
                     }
                 }
 
@@ -363,9 +371,9 @@ public class AuthenticationManager
             });
         } catch (JSONException e)
         {
-            AuthServiceLog.logRequest(TAG, request_id, e.getMessage());
-            AuthServiceLog.e(TAG, "JSONException when getting email/password");
-            AuthServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.logRequest(TAG, request_id, e.getMessage());
+            CommonServiceLog.e(TAG, "JSONException when getting email/password");
+            CommonServiceLog.e(TAG, e.getMessage());
         }
     }
 

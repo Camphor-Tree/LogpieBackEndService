@@ -5,7 +5,7 @@ import java.util.List;
 import com.logpie.auth.logic.TokenGenerator;
 import com.logpie.auth.logic.TokenScopeManager;
 import com.logpie.auth.logic.TokenScopeManager.Scope;
-import com.logpie.auth.tool.AuthServiceLog;
+import com.logpie.service.common.helper.CommonServiceLog;
 
 public class SQLHelper
 {
@@ -30,7 +30,7 @@ public class SQLHelper
         sqlBuilder.append("\',\'");
         String access_keysource = TokenScopeManager.addScope(
                 TokenGenerator.generateBaseKeySource(email, password), scopes);
-        AuthServiceLog.d(TAG, "access_keysource:" + access_keysource);
+        CommonServiceLog.d(TAG, "access_keysource:" + access_keysource);
         String access_token = TokenGenerator.generateToken(access_keysource);
         sqlBuilder.append(access_token);
         sqlBuilder.append("\',now() + interval \'1 hour\',\'");

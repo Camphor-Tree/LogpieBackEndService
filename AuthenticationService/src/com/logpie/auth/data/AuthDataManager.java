@@ -14,7 +14,7 @@ import com.logpie.auth.config.AuthConfig;
 import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.AuthResponseKeys;
 import com.logpie.auth.tool.AuthErrorType;
-import com.logpie.auth.tool.AuthServiceLog;
+import com.logpie.service.common.helper.CommonServiceLog;
 
 public class AuthDataManager
 {
@@ -52,18 +52,18 @@ public class AuthDataManager
             Class.forName("org.postgresql.Driver").newInstance();
         } catch (InstantiationException e)
         {
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG,
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG,
                     "InstantiationException happended when trying to initiliaze postgreSQL driver");
         } catch (IllegalAccessException e)
         {
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG,
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG,
                     "IllegalAccessException happended when trying to initiliaze postgreSQL driver");
         } catch (ClassNotFoundException e)
         {
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG,
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG,
                     "ClassNotFoundException happended when trying to initiliaze postgreSQL driver");
         }
     }
@@ -81,8 +81,8 @@ public class AuthDataManager
             return result;
         } catch (SQLException e)
         {
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "SQLException happend when execute the sql");
             return false;
         } finally
         {
@@ -93,8 +93,8 @@ public class AuthDataManager
                     connection.close();
                 } catch (SQLException e)
                 {
-                    AuthServiceLog.e(TAG, e.getMessage());
-                    AuthServiceLog.e(TAG, "SQLException when trying to close the connection");
+                    CommonServiceLog.e(TAG, e.getMessage());
+                    CommonServiceLog.e(TAG, "SQLException when trying to close the connection");
                 }
             }
 
@@ -147,8 +147,8 @@ public class AuthDataManager
             }
         } catch (SQLException e)
         {
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "SQLException happend when execute the sql");
             if (e.getMessage().contains("ERROR: duplicate key value"))
             {
                 throw new EmailAlreadyExistException();
@@ -160,8 +160,8 @@ public class AuthDataManager
         } catch (JSONException e)
         {
             handleErrorCallbackWithServerError(callback);
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG, "JSONException happend when executing callback");
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "JSONException happend when executing callback");
         } finally
         {
             if (resultSet != null)
@@ -226,14 +226,14 @@ public class AuthDataManager
             }
         } catch (SQLException e)
         {
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "SQLException happend when execute the sql");
             return null;
 
         } catch (JSONException e)
         {
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG, "JSONException happend when executing callback");
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "JSONException happend when executing callback");
             return null;
 
         } finally
@@ -282,8 +282,8 @@ public class AuthDataManager
             }
         } catch (SQLException e)
         {
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "SQLException happend when execute the sql");
             return false;
         } finally
         {
@@ -350,13 +350,13 @@ public class AuthDataManager
         } catch (SQLException e)
         {
             handleErrorCallbackWithServerError(callback);
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG, "SQLException happend when execute the sql");
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "SQLException happend when execute the sql");
         } catch (JSONException e)
         {
             handleErrorCallbackWithServerError(callback);
-            AuthServiceLog.e(TAG, e.getMessage());
-            AuthServiceLog.e(TAG, "JSONException happend when executing callback");
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "JSONException happend when executing callback");
         } finally
         {
             if (resultSet != null)

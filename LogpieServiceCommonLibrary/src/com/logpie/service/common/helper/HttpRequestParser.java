@@ -1,4 +1,4 @@
-package com.logpie.customer.tool;
+package com.logpie.service.common.helper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.customer.exception.HttpRequestIsNullException;
+import com.logpie.service.common.exception.HttpRequestIsNullException;
 
 public class HttpRequestParser
 {
@@ -23,13 +23,11 @@ public class HttpRequestParser
      * @return Postbody to JSONObject
      * @throws HttpRequestIsNullException
      */
-    public static JSONObject httpRequestParser(HttpServletRequest request)
+    public static JSONObject httpRequestParser(HttpServletRequest request) throws HttpRequestIsNullException
     {
         if (request == null)
         {
-            CustomerServiceLog.e(TAG, "The coming request is null!");
-            // Return null
-            return null;
+            throw new HttpRequestIsNullException();
         }
 
         JSONObject jsonObj = new JSONObject();
@@ -47,16 +45,14 @@ public class HttpRequestParser
 
         } catch (JSONException e)
         {
-            CustomerServiceLog
-                    .e(TAG, "JSON convert exception. Cannot convert String to JSONObject");
-            CustomerServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "JSON convert exception. Cannot convert String to JSONObject");
+            CommonServiceLog.e(TAG, e.getMessage());
             // Return null if find IO exception
             return null;
         } catch (IOException e)
         {
-            CustomerServiceLog.e(TAG,
-                    "HttpRequest IO exception. Cannot get httprequest inputstream.");
-            CustomerServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "HttpRequest IO exception. Cannot get httprequest inputstream.");
+            CommonServiceLog.e(TAG, e.getMessage());
             // Return null if find IO exception
             return null;
         }

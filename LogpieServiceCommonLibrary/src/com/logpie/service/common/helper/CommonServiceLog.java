@@ -1,4 +1,8 @@
-package com.logpie.customer.tool;
+/*
+ * Copyright (c) 2014 logpie.com
+ * All rights reserved.
+ */
+package com.logpie.service.common.helper;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -7,14 +11,18 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.logpie.customer.config.CustomerConfig;
 
-public class CustomerServiceLog
+public class CommonServiceLog
 {
-    private static boolean sDebug = CustomerConfig.isDebugging;
-    private static String sPath = CustomerConfig.LogPath;
-    private static final String LOG_TAG = CustomerServiceLog.class.getName();
+    private static boolean sDebug = CommonServiceConfig.isDebugging;
+    private static String sPath;
+    private static final String LOG_TAG = CommonServiceLog.class.getName();
 
+    public static void setLogFilePath(String path)
+    {
+    	sPath = path;
+    }
+    
     public static void openLog()
     {
         sDebug = true;
@@ -54,7 +62,7 @@ public class CustomerServiceLog
         writeFile(requestID + TAG, info);
     }
 
-    private synchronized static void writeFile(String TAG, String info)
+    public synchronized static void writeFile(String TAG, String info)
     {
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
         DateFormat timeFormat = new SimpleDateFormat("hh:mm:ss:SSS");
@@ -70,13 +78,13 @@ public class CustomerServiceLog
             writer.write(timeFormat.format(date) + "-->");
             writer.write(TAG + ": ");
             writer.write(info);
-            writer.write(CustomerConfig.changeLineCharacter);
+            writer.write(CommonServiceConfig.changeLineCharacter);
             writer.flush();
             writer.close();
         } catch (IOException e)
         {
-            CustomerServiceLog.e(LOG_TAG, "<Logpie> IOException: When writing log file.");
-            CustomerServiceLog.e(LOG_TAG, e.getMessage());
+            CommonServiceLog.e(LOG_TAG, "<Logpie> IOException: When writing log file.");
+            CommonServiceLog.e(LOG_TAG, e.getMessage());
         }
     }
 }
