@@ -1,6 +1,4 @@
-#ignore the .classpath
-*.classpath
-/bin/
-/build/
-*.settings
-*.class
+#ignore the files below:
+**/build/
+**.classpath
+**.settings
