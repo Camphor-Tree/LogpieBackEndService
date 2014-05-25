@@ -103,4 +103,20 @@ public class TokenScopeManager
 
         return true;
     }
+    
+    /**
+     * Build the scopes for new user. The token would contain the information
+     * about whether the user can access specific logpie service
+     * 
+     * @return list of the scopes, new user can access to
+     */
+    public static List<Scope> buildNewUserScope()
+    {
+        List<Scope> scopes = new LinkedList<Scope>();
+        scopes.add(Scope.RocketService);
+        scopes.add(Scope.ActivityService);
+        scopes.add(Scope.UserService);
+        scopes.add(Scope.AuthenticationService);
+        return scopes;
+    }
 }

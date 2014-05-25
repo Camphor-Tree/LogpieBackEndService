@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import com.logpie.auth.config.AuthConfig;
 import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.AuthResponseKeys;
+import com.logpie.auth.logic.TokenGenerator;
 import com.logpie.auth.tool.AuthErrorType;
 import com.logpie.service.common.helper.CommonServiceLog;
 
@@ -70,6 +71,7 @@ public class AuthDataManager
 
     public boolean executeNoResult(String sql)
     {
+    	initializeDB();
         Connection connection = null;
         boolean result = false;
         try
@@ -102,7 +104,79 @@ public class AuthDataManager
 
     }
 
-    public void executeInsert(final String sql, final DataCallback callback)
+    public void executeInsertAndGetUID(final String sql, final DataCallback callback) throws EmailAlreadyExistException
+    {
+    	Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            connection = openConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows == 0)
+            {
+                throw new SQLException("Creating user failed, no rows affected.");
+            }
+
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next())
+            {
+                long uid = resultSet.getLong(SQLHelper.SCHEMA_UID);
+                JSONObject returnJSON = new JSONObject();
+                returnJSON.put(AuthResponseKeys.KEY_USER_ID, String.valueOf(uid));
+                callback.onSuccess(returnJSON);
+            }
+            else
+            {
+                throw new SQLException("Creating user failed, no generated key obtained.");
+            }
+        } catch (SQLException e)
+        {
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "SQLException happend when execute the sql");
+            e.printStackTrace();
+            if (e.getMessage().contains("ERROR: duplicate key value"))
+            {
+                throw new EmailAlreadyExistException();
+            }
+            else
+            {
+                handleErrorCallbackWithServerError(callback);
+            }
+        } catch (JSONException e)
+        {
+            handleErrorCallbackWithServerError(callback);
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "JSONException happend when executing callback");
+        } finally
+        {
+            if (resultSet != null)
+                try
+                {
+                    resultSet.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+            if (statement != null)
+                try
+                {
+                    statement.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+            if (connection != null)
+                try
+                {
+                    connection.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+        }
+    }
+    
+    public void executeInsertAndGetWholeRecord(final String sql, final DataCallback callback)
             throws EmailAlreadyExistException
     {
         Connection connection = null;
@@ -222,6 +296,12 @@ public class AuthDataManager
                         String.valueOf(resultSet.getLong(SQLHelper.SCHEMA_UID)));
                 returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
+                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN,
+                        resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
+                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
+                        resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
+                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
+                        resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
                 return returnJSON;
             }
         } catch (SQLException e)
@@ -304,8 +384,8 @@ public class AuthDataManager
         }
     }
 
-    // Step3 Query the user information again, get lastest token information
-    public void executeQueryForLoginStep3(final String sql, final DataCallback callback)
+    // Step4 Query the user information again, get lastest token information
+    public void executeQueryForLoginStep4(final String sql, final DataCallback callback)
     {
         Connection connection = null;
         Statement statement = null;
@@ -339,12 +419,13 @@ public class AuthDataManager
                         String.valueOf(resultSet.getLong(SQLHelper.SCHEMA_UID)));
                 returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
-                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, resultSet
-                        .getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
+                //We doesn't plan to include expiration information to clients.
+                //Since User may login to different device. We will refresh the token anyway.
+                //Then the expiration time the client's hold may not be accurate. So just let the server to handle token check.
+                //returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
                 returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
-                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, resultSet
-                        .getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
+                //returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
                 callback.onSuccess(returnJSON);
             }
         } catch (SQLException e)

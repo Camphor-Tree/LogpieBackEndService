@@ -11,34 +11,45 @@ public class TokenGenerator
     private static final String TAG = TokenGenerator.class.getName();
 
     /**
-     * Build the base key source without any information about token's scope.
+     * Build the base key source for AccessToken without any information about token's scope.
      * 
-     * @param email
-     * @param password
+     * @param uid  the user id
      * @return
      */
-    public static String generateBaseKeySource(String email, String password)
+    public static String generateAccessTokenBaseKeySource(String uid)
     {
-        String source = String.format("%s+%s+%s", email, password, UUID.randomUUID().toString());
-        // String token = Base64.encode(source.getBytes());
+        String source = String.format("%s+%s", uid, UUID.randomUUID().toString());
+        return source;
+    }
+    /**
+     * Build the base key source for RefreshToken.
+     * Containing the currentTimeMillis.
+     * @return
+     */
+    public static String generateRefreshTokenBaseKeySource()
+    {
+    	String source = String.format("%s+%s", String.valueOf(System.currentTimeMillis()), UUID.randomUUID().toString());
         return source;
     }
 
     public static String generateToken(String keySource)
     {
-        return Base64.encode(keySource.getBytes());
+        String raw_token = Base64.encode(keySource.getBytes());
+        //Base64 will automatically add a new line when the length more than 64.
+        //Remove the unnecessary \n
+        return raw_token.replace("\n", "");
     }
 
     public static String decodeToken(String token)
     {
-        try
-        {
-            return new String(Base64.decode(token));
-        } catch (Base64DecodingException e)
-        {
-            CommonServiceLog.e(TAG, "error happend when decode the token");
-            CommonServiceLog.e(TAG, e.getMessage());
-            return null;
-        }
+            try
+            {
+                return new String(Base64.decode(token));
+            } catch (Base64DecodingException e)
+            {
+                CommonServiceLog.e(TAG, "Base64DecodingException when decoing the token");
+                e.printStackTrace();
+                return null;
+            }
     }
 }

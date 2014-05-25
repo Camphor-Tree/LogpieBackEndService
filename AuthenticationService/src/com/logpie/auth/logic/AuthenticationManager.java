@@ -1,6 +1,8 @@
 package com.logpie.auth.logic;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +25,7 @@ import com.logpie.service.common.exception.HttpRequestIsNullException;
 import com.logpie.service.common.helper.CommonServiceLog;
 import com.logpie.service.common.helper.HttpRequestParser;
 import com.logpie.service.common.helper.HttpResponseWriter;
+import com.logpie.service.common.helper.TimeHelper;
 
 public class AuthenticationManager
 {
@@ -43,12 +46,12 @@ public class AuthenticationManager
     private static String TAG = AuthenticationManager.class.getName();
     private static AuthenticationManager sAuthenticationManager;
 
-    private static ServletContext sGlobalUniqueContext;
+    //private static ServletContext sGlobalUniqueContext;
     private static AuthDataManager sAuthDataManager;
 
     public static void initialize(ServletContext globalUniqueContext)
     {
-        sGlobalUniqueContext = globalUniqueContext;
+        //sGlobalUniqueContext = globalUniqueContext;
         sAuthDataManager = AuthDataManager.getInstance();
     }
 
@@ -77,6 +80,7 @@ public class AuthenticationManager
      */
     public void handleAuthenticationRequest(HttpServletRequest request, HttpServletResponse response)
     {
+        final long startTime = System.currentTimeMillis();
         JSONObject postBody = null;
 		try {
 			postBody = HttpRequestParser.httpRequestParser(request);
@@ -95,8 +99,12 @@ public class AuthenticationManager
                 handleRegister(postBody, response);
                 break;
             case AUTHENTICATE:
+            {
                 handleAuthenticate(postBody, response);
+                long latency = System.currentTimeMillis()- startTime;
+                CommonServiceLog.d(TAG, "Authenticate, totally time consuming:" + latency);
                 break;
+            }
             case RESET_PASSWORD:
                 break;
             case TOKEN_EXCHANGE:
@@ -188,27 +196,47 @@ public class AuthenticationManager
 
         try
         {
-            String email = regData.getString(AuthRequestKeys.KEY_REGISTER_EMAIL);
+        	// get email & password
+            final String email = regData.getString(AuthRequestKeys.KEY_REGISTER_EMAIL);
             String password = regData.getString(AuthRequestKeys.KEY_REGISTER_PASSWORD);
             // check whether the email already exist.
 
             // Generate the new tokens for all new users
-            String sql = SQLHelper.buildCreateUserSQL(email, password, buildNewUserScope());
-            sAuthDataManager.executeInsert(sql, new DataCallback()
+            String sql = SQLHelper.buildCreateUserStep1SQL(email, password);
+            sAuthDataManager =  AuthDataManager.getInstance();
+            sAuthDataManager.executeInsertAndGetUID(sql, new DataCallback()
             {
 
                 @Override
                 public void onSuccess(JSONObject result)
                 {
+                	if(result==null||!result.has(AuthResponseKeys.KEY_USER_ID))
+                	{
+                		handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
+                		return;
+                	}
+                	
+                	
                     try
                     {
-                        result.put(AuthResponseKeys.KEY_REQUEST_ID, request_id);
-                        handleAuthResult(true, result, response);
+                    	String uid = result.getString (AuthResponseKeys.KEY_USER_ID);
+                    	//the result contains sql and two tokens
+                    	ArrayList<String> resultArray = SQLHelper.buildCreateUserStep2SQL(uid,TokenScopeManager.buildNewUserScope());
+                    	String sql = resultArray.get(0);
+                    	boolean success = sAuthDataManager.executeNoResult(sql);
+                    	if(success)
+                    	{
+                    		result.put(AuthResponseKeys.KEY_EMAIL,email);
+                    		result.put(AuthResponseKeys.KEY_ACCESS_TOKEN, resultArray.get(1));
+                    		result.put(AuthResponseKeys.KEY_REFRESH_TOKEN, resultArray.get(2));
+                    		handleAuthResult(true, result, response);
+                    	}
                     } catch (JSONException e)
                     {
                         CommonServiceLog.logRequest(TAG, request_id, e.getMessage());
-                        CommonServiceLog.e(TAG, "JSONException when getting insert result");
-                        CommonServiceLog.e(TAG, e.getMessage());
+                        CommonServiceLog.e(TAG, request_id+":JSONException when getting insert result");
+                        CommonServiceLog.e(TAG, request_id+":"+e.getMessage());
+                        e.printStackTrace();
                     }
                 }
 
@@ -246,11 +274,14 @@ public class AuthenticationManager
             }
 
         }
+        
+       
     }
 
     private void handleAuthResult(boolean success, JSONObject data, HttpServletResponse response)
             throws JSONException
     {
+        CommonServiceLog.d(TAG, data.toString());
         if (success)
         {
             data.put(AuthResponseKeys.KEY_AUTH_RESULT, AuthResponseKeys.AUTH_RESULT_SUCCESS);
@@ -262,21 +293,7 @@ public class AuthenticationManager
         HttpResponseWriter.reponseWithSuccess(AuthResponseKeys.KEY_AUTH_RESULT,data, response);
     }
 
-    /**
-     * Build the scopes for new user. The token would contain the information
-     * about whether the user can access specific logpie service
-     * 
-     * @return list of the scopes, new user can access to
-     */
-    private List<Scope> buildNewUserScope()
-    {
-        List<Scope> scopes = new LinkedList<Scope>();
-        scopes.add(Scope.RocketService);
-        scopes.add(Scope.ActivityService);
-        scopes.add(Scope.UserService);
-        scopes.add(Scope.AuthenticationService);
-        return scopes;
-    }
+
 
     /**
      * Handle Register
@@ -305,46 +322,80 @@ public class AuthenticationManager
 
         String email;
         try
-        {
+        {   //Step1: Verify Email&Password
             email = loginData.getString(AuthRequestKeys.KEY_LOGIN_EMAIL);
             String password = loginData.getString(AuthRequestKeys.KEY_LOGIN_PASSWORD);
+            if(email==null||password==null)
+            {
+            	handleAuthenticationResponseWithError(response, AuthErrorType.AUTH_ERROR);
+            	return;
+            }
+            
+            
             // Generate the new tokens for all new users
             String sql = SQLHelper.buildLoginSQL(email, password);
-
+            //Step1: Verify the email and password
             JSONObject step1_result = sAuthDataManager.executeQueryForLoginStep1(sql);
             if (step1_result == null)
             {
                 handleAuthenticationResponseWithError(response, AuthErrorType.AUTH_ERROR);
                 return;
             }
+            
+            //Step2: Check the expiration time of accessToken & refreshToken
+            //We do not refresh anyway, because the user may login to multiple devices, if refresh anyway, 
+            //it will invalid the tokens in previous devices, which is a bad user experience
+            final String uid = step1_result.getString(AuthResponseKeys.KEY_USER_ID);
+            String access_token =  step1_result.getString(AuthResponseKeys.KEY_ACCESS_TOKEN);
+            String refresh_token =  step1_result.getString(AuthResponseKeys.KEY_REFRESH_TOKEN);
+            Timestamp access_token_expiration = Timestamp.valueOf(step1_result.getString(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION));
+            Timestamp refresh_token_expiration = Timestamp.valueOf(step1_result.getString(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION));
+            String currentTime = TimeHelper.getCurrentTimestamp().toString();
+            CommonServiceLog.d(TAG,"currentTime:"+currentTime);
+        	CommonServiceLog.d(TAG,"access_token_expiration:"+access_token_expiration.toString());
+        	CommonServiceLog.d(TAG,"refresh_token_expiration:"+refresh_token_expiration.toString());
+            if(access_token_expiration.before(TimeHelper.getCurrentTimestamp()))
+            { 
+            	CommonServiceLog.d(TAG, "access_token already expire, refresh the access_token");
+	        	//(Step3.1): If the access_token already expire, update the token for the user.
+	            String sql_step2 = SQLHelper.buildUpdateAccessTokenSQL(uid, access_token);
+	            boolean step2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step2);
+	            if (!step2_result)
+	            {
+	                CommonServiceLog.e(sql,
+	                        "Error happend in authentication Step2, refresh the access_token");
+	                CommonServiceLog.logRequest(TAG, requestID,
+	                        "Error happend in authentication Step2, refresh the access_token");
+	                handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
+	                return;
+	            }
+            }
             else
             {
-                String sql_step2 = SQLHelper.buildUpdateTokenSQL(
-                        step1_result.getString(AuthResponseKeys.KEY_USER_ID), email, password,
-                        step1_result.getString(AuthResponseKeys.KEY_ACCESS_TOKEN));
-                boolean step2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step2);
-                if (!step2_result)
-                {
-                    CommonServiceLog.e(sql,
-                            "Error happend in authentication Step2, refresh all the token");
-                    CommonServiceLog.logRequest(TAG, requestID,
-                            "Error happend in authentication Step2, refresh all the token");
-                    handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
-                    return;
-                }
+            	CommonServiceLog.d(TAG, "access_token still valid, won't refresh to disturb the account in other device");
             }
-
-            // TODO:Verify and improve this flow. Currently if step2 fails, we
-            // will stop the authentication, because the token didn't get
-            // refresh, it's meaningless to return the old-token.
-            // But in some edge cases, such as user change a device to login, it
-            // can return the token, because the token is still valid.
-            // There are two flows,
-            // 1. user's refresh_token invalid, force to login again. (should
-            // fails in step 2)
-            // 2. user change a device, login normally (shouldn't fails in
-            // step2, the token maybe still valid)
-            sAuthDataManager.executeQueryForLoginStep3(sql, new DataCallback()
+            if(refresh_token_expiration.before(TimeHelper.getCurrentTimestamp()))
+            { 
+            	CommonServiceLog.d(TAG, "refresh_token already expire, refresh the refresh_token");
+	        	//(Step3.2): If the refresh_token already expire, update the token for the user.
+	            String sql_step2 = SQLHelper.buildUpdateRefreshTokenSQL(uid, refresh_token);
+	            boolean step2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step2);
+	            if (!step2_result)
+	            {
+	                CommonServiceLog.e(sql,"Error happend in authentication Step3, refresh the refresh_token");
+	                CommonServiceLog.logRequest(TAG, requestID,
+	                        "Error happend in authentication Step3, refresh the refresh_token");
+	                handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
+	                return;
+	            }
+            }
+            else
+            {
+            	CommonServiceLog.d(TAG, "refresh_token still valid, won't refresh to disturb the account in other device");
+            }
+            	
+            //Step4. Do a query to again to ensure the token is valid from database
+            sAuthDataManager.executeQueryForLoginStep4(sql, new DataCallback()
             {
 
                 @Override
