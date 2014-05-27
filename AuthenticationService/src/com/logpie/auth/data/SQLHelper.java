@@ -80,8 +80,15 @@ public class SQLHelper
         return sql;
     }
     
-    public static String buildUpdateAccessTokenSQL(String uid, String token)
+    /**
+     * Build update access_token SQL
+     * @param uid
+     * @param token
+     * @return ArrayList<String> the first element is the sql, and the second element is access_token
+     */
+    public static List<String> buildUpdateAccessTokenSQL(String uid, String token)
     {
+        ArrayList<String> result = new ArrayList<String>();
         List<Scope> scopeList = TokenScopeManager.getScope(token);
         String access_keysource = TokenScopeManager.addScope(
                 TokenGenerator.generateAccessTokenBaseKeySource(uid), scopeList);
@@ -91,11 +98,20 @@ public class SQLHelper
         String sql = String
                 .format("update user_auth set access_token = \'%s\', access_token_expire_time = now() + interval \'1 hour\' where uid = \'%s\';",
                         new_access_token, uid);
-        return sql;
+        result.add(sql);
+        result.add(new_access_token);
+        return result;
     }
     
-    public static String buildUpdateRefreshTokenSQL(String uid, String token)
+    /**
+     * Build update refresh_token SQL 
+     * @param uid
+     * @param token
+     * @return ArrayList<String> the first element is the sql, and the second element is refresh_token
+     */
+    public static List<String> buildUpdateRefreshTokenSQL(String uid, String token)
     {
+        ArrayList<String> result = new ArrayList<String>();
         List<Scope> scopeList = TokenScopeManager.getScope(token);
         String refresh_keysource = TokenScopeManager.addScope(
                 TokenGenerator.generateRefreshTokenBaseKeySource(), scopeList);
@@ -103,7 +119,8 @@ public class SQLHelper
         String sql = String
                 .format("update user_auth set refresh_token = \'%s\', refresh_token_expire_time = now() + interval \'365 days\' where uid = \'%s\';",
                         new_refresh_token, uid);
-
-        return sql;
+        result.add(sql);
+        result.add(new_refresh_token);
+        return result;
     }
 }

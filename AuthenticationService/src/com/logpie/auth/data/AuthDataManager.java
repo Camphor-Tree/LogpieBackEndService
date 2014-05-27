@@ -73,14 +73,13 @@ public class AuthDataManager
     {
     	initializeDB();
         Connection connection = null;
-        boolean result = false;
         try
         {
             connection = openConnection();
             Statement statement = connection.createStatement();
-            result = statement.execute(sql);
+            int result = statement.executeUpdate(sql);
             connection.close();
-            return result;
+            return result==1?true:false;
         } catch (SQLException e)
         {
             CommonServiceLog.e(TAG, e.getMessage());
@@ -385,6 +384,12 @@ public class AuthDataManager
     }
 
     // Step4 Query the user information again, get lastest token information
+    /**
+     * Step4 have been optimized to based on Step1 ~ Step3's results
+     * @param sql
+     * @param callback
+     */
+    @Deprecated
     public void executeQueryForLoginStep4(final String sql, final DataCallback callback)
     {
         Connection connection = null;

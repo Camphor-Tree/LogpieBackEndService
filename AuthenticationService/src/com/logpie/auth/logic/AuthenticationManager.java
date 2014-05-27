@@ -199,9 +199,7 @@ public class AuthenticationManager
         	// get email & password
             final String email = regData.getString(AuthRequestKeys.KEY_REGISTER_EMAIL);
             String password = regData.getString(AuthRequestKeys.KEY_REGISTER_PASSWORD);
-            // check whether the email already exist.
-
-            // Generate the new tokens for all new users
+            // Step1 just insert into the database and get the uid back
             String sql = SQLHelper.buildCreateUserStep1SQL(email, password);
             sAuthDataManager =  AuthDataManager.getInstance();
             sAuthDataManager.executeInsertAndGetUID(sql, new DataCallback()
@@ -220,16 +218,22 @@ public class AuthenticationManager
                     try
                     {
                     	String uid = result.getString (AuthResponseKeys.KEY_USER_ID);
+                    	CommonServiceLog.d(TAG,"Generating the new uid:"+uid );
                     	//the result contains sql and two tokens
                     	ArrayList<String> resultArray = SQLHelper.buildCreateUserStep2SQL(uid,TokenScopeManager.buildNewUserScope());
                     	String sql = resultArray.get(0);
                     	boolean success = sAuthDataManager.executeNoResult(sql);
                     	if(success)
-                    	{
-                    		result.put(AuthResponseKeys.KEY_EMAIL,email);
+                    	{   CommonServiceLog.d(TAG,"Update token successfully" );
                     		result.put(AuthResponseKeys.KEY_ACCESS_TOKEN, resultArray.get(1));
                     		result.put(AuthResponseKeys.KEY_REFRESH_TOKEN, resultArray.get(2));
                     		handleAuthResult(true, result, response);
+                    	}
+                    	else
+                    	{
+                    	    CommonServiceLog.d(TAG,"Update token fail");
+                    	    handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
+                            return;
                     	}
                     } catch (JSONException e)
                     {
@@ -237,6 +241,8 @@ public class AuthenticationManager
                         CommonServiceLog.e(TAG, request_id+":JSONException when getting insert result");
                         CommonServiceLog.e(TAG, request_id+":"+e.getMessage());
                         e.printStackTrace();
+                        handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
+                        return;
                     }
                 }
 
@@ -296,7 +302,7 @@ public class AuthenticationManager
 
 
     /**
-     * Handle Register
+     * Handle authenticate/login flow.
      * 
      * @param regData
      * @param response
@@ -354,13 +360,15 @@ public class AuthenticationManager
             CommonServiceLog.d(TAG,"currentTime:"+currentTime);
         	CommonServiceLog.d(TAG,"access_token_expiration:"+access_token_expiration.toString());
         	CommonServiceLog.d(TAG,"refresh_token_expiration:"+refresh_token_expiration.toString());
-            if(access_token_expiration.before(TimeHelper.getCurrentTimestamp()))
+            if(!access_token_expiration.before(TimeHelper.getCurrentTimestamp()))
             { 
             	CommonServiceLog.d(TAG, "access_token already expire, refresh the access_token");
 	        	//(Step3.1): If the access_token already expire, update the token for the user.
-	            String sql_step2 = SQLHelper.buildUpdateAccessTokenSQL(uid, access_token);
-	            boolean step2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step2);
-	            if (!step2_result)
+            	ArrayList<String> sqlResultWithAccessToken = (ArrayList<String>) SQLHelper.buildUpdateAccessTokenSQL(uid, access_token);
+	            String sql_step3_1 =sqlResultWithAccessToken.get(0);
+	            access_token = sqlResultWithAccessToken.get(1);
+	            boolean step3_1_result = sAuthDataManager.executeQueryForLoginStep2(sql_step3_1);
+	            if (!step3_1_result)
 	            {
 	                CommonServiceLog.e(sql,
 	                        "Error happend in authentication Step2, refresh the access_token");
@@ -374,13 +382,15 @@ public class AuthenticationManager
             {
             	CommonServiceLog.d(TAG, "access_token still valid, won't refresh to disturb the account in other device");
             }
-            if(refresh_token_expiration.before(TimeHelper.getCurrentTimestamp()))
+            if(!refresh_token_expiration.before(TimeHelper.getCurrentTimestamp()))
             { 
             	CommonServiceLog.d(TAG, "refresh_token already expire, refresh the refresh_token");
 	        	//(Step3.2): If the refresh_token already expire, update the token for the user.
-	            String sql_step2 = SQLHelper.buildUpdateRefreshTokenSQL(uid, refresh_token);
-	            boolean step2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step2);
-	            if (!step2_result)
+                ArrayList<String> sqlResultWithRefreshToken = (ArrayList<String>) SQLHelper.buildUpdateRefreshTokenSQL(uid, access_token);
+                String sql_step3_2 =sqlResultWithRefreshToken.get(0);
+                refresh_token = sqlResultWithRefreshToken.get(1);
+	            boolean step3_2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step3_2);
+	            if (!step3_2_result)
 	            {
 	                CommonServiceLog.e(sql,"Error happend in authentication Step3, refresh the refresh_token");
 	                CommonServiceLog.logRequest(TAG, requestID,
@@ -393,35 +403,28 @@ public class AuthenticationManager
             {
             	CommonServiceLog.d(TAG, "refresh_token still valid, won't refresh to disturb the account in other device");
             }
-            	
-            //Step4. Do a query to again to ensure the token is valid from database
-            sAuthDataManager.executeQueryForLoginStep4(sql, new DataCallback()
+            
+            //Step4. If Step1 to Step3 success, then just add access_token,refresh_token,uid into the response.
+            //TODO: If we support checkbox "remember this device", then we should only return access_token when uncheck.
+            try
             {
+                JSONObject authResult = new JSONObject();
+                authResult.put(AuthResponseKeys.KEY_USER_ID,uid);
+                authResult.put(AuthResponseKeys.KEY_ACCESS_TOKEN,access_token);
+                authResult.put(AuthResponseKeys.KEY_REFRESH_TOKEN,refresh_token);
+                authResult.put(AuthResponseKeys.KEY_REQUEST_ID, request_id);
+                handleAuthResult(true, authResult, response);
+            } catch (JSONException e)
+            {
+                handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
+                CommonServiceLog.e(TAG, "Authenticate Step4, JSONException when getting insert result");
+                CommonServiceLog.e(TAG, e.getMessage());
+            }
+           
 
-                @Override
-                public void onSuccess(JSONObject result)
-                {
-
-                    try
-                    {
-                        result.put(AuthResponseKeys.KEY_REQUEST_ID, request_id);
-                        handleAuthResult(true, result, response);
-                    } catch (JSONException e)
-                    {
-                        handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
-                        CommonServiceLog.e(TAG, "JSONException when getting insert result");
-                        CommonServiceLog.e(TAG, e.getMessage());
-                    }
-                }
-
-                @Override
-                public void onError(JSONObject error)
-                {
-                    handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
-                }
-            });
         } catch (JSONException e)
         {
+            handleAuthenticationResponseWithError(response, AuthErrorType.SEVER_ERROR);
             CommonServiceLog.logRequest(TAG, request_id, e.getMessage());
             CommonServiceLog.e(TAG, "JSONException when getting email/password");
             CommonServiceLog.e(TAG, e.getMessage());
