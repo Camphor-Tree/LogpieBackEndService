@@ -2,7 +2,7 @@ package com.logpie.customer.tool;
 
 import org.json.JSONObject;
 
-import com.logpie.cutomer.logic.CustomerManager.CustomerRequestType;
+import com.logpie.customer.logic.CustomerManager.CustomerRequestType;
 
 public abstract class CustomerCallback
 {

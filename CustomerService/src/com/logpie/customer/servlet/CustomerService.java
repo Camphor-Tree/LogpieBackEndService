@@ -5,8 +5,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.logpie.customer.tool.CustomerServiceLog;
-import com.logpie.cutomer.logic.CustomerManager;
+import com.logpie.customer.logic.CustomerManager;
+import com.logpie.service.common.helper.CommonServiceLog;
 
 public class CustomerService extends HttpServlet
 {
@@ -16,7 +16,7 @@ public class CustomerService extends HttpServlet
 
     public void init()
     {
-        CustomerServiceLog.d(TAG, "Start initializing...");
+        CommonServiceLog.d(TAG, "Start initializing...");
         ServletContext serviceContext = getServletContext();
         CustomerManager.initialize(serviceContext);
         // load properties from disk, do be used by subsequent doGet() calls
@@ -26,6 +26,7 @@ public class CustomerService extends HttpServlet
     {
         // TODO: we should remove in the future
         // Currently we can just keep it.
+    	System.out.println("Get your request!");
         doPost(request, response);
     }
 
