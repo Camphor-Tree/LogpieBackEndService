@@ -25,6 +25,7 @@ import com.logpie.service.common.exception.HttpRequestIsNullException;
 import com.logpie.service.common.helper.CommonServiceLog;
 import com.logpie.service.common.helper.HttpRequestParser;
 import com.logpie.service.common.helper.HttpResponseWriter;
+import com.logpie.service.common.helper.LatencyHelper;
 import com.logpie.service.common.helper.TimeHelper;
 
 public class AuthenticationManager
@@ -93,16 +94,22 @@ public class AuthenticationManager
         {
             CommonServiceLog.d(TAG, "[Receiving request data:]" + postBody.toString());
             AuthenticationType type = getAuthenticationType(postBody);
+            if(type ==null)
+            {
+                CommonServiceLog.d(TAG, "authentication type is null!" );
+                return;
+            }
+            final LatencyHelper latencyHelper = new LatencyHelper(type.name());
             switch (type)
             {
             case REGISTER:
+            {
                 handleRegister(postBody, response);
                 break;
+            }
             case AUTHENTICATE:
             {
                 handleAuthenticate(postBody, response);
-                long latency = System.currentTimeMillis()- startTime;
-                CommonServiceLog.d(TAG, "Authenticate, totally time consuming:" + latency);
                 break;
             }
             case RESET_PASSWORD:
@@ -121,11 +128,14 @@ public class AuthenticationManager
             }
 
             }
+            latencyHelper.stopAndGetLantency();
+            latencyHelper.logLatencyInformation(TAG);
         }
         else
         {
             handleAuthenticationResponseWithError(response, AuthErrorType.BAD_REQUEST);
         }
+       
 
     };
 
@@ -199,10 +209,17 @@ public class AuthenticationManager
         	// get email & password
             final String email = regData.getString(AuthRequestKeys.KEY_REGISTER_EMAIL);
             String password = regData.getString(AuthRequestKeys.KEY_REGISTER_PASSWORD);
+            String nickName = regData.getString(AuthRequestKeys.KEY_REGISTER_NICKNAME);
+            final String city = regData.getString(AuthRequestKeys.KEY_REGISTER_CITY);
+            if(nickName==null||nickName.equals(""))
+            {
+                nickName = "New User";
+            }
+            final String userNickName =nickName;
             // Step1 just insert into the database and get the uid back
             String sql = SQLHelper.buildCreateUserStep1SQL(email, password);
             sAuthDataManager =  AuthDataManager.getInstance();
-            sAuthDataManager.executeInsertAndGetUID(sql, new DataCallback()
+            sAuthDataManager.executeInsertAndGetUIDandEmail(sql, new DataCallback()
             {
 
                 @Override
@@ -218,13 +235,17 @@ public class AuthenticationManager
                     try
                     {
                     	String uid = result.getString (AuthResponseKeys.KEY_USER_ID);
+                    	String email = result.getString(AuthResponseKeys.KEY_EMAIL);
                     	CommonServiceLog.d(TAG,"Generating the new uid:"+uid );
                     	//the result contains sql and two tokens
                     	ArrayList<String> resultArray = SQLHelper.buildCreateUserStep2SQL(uid,TokenScopeManager.buildNewUserScope());
                     	String sql = resultArray.get(0);
                     	boolean success = sAuthDataManager.executeNoResult(sql);
                     	if(success)
-                    	{   CommonServiceLog.d(TAG,"Update token successfully" );
+                    	{
+                    	    //TODO: add check to whether it succeed. if not need to roolback the database.
+                    	    RegisterHelper.callCustomerServiceToRegister(uid, email, userNickName, city); 
+                    	    CommonServiceLog.d(TAG,"Update token successfully" );
                     		result.put(AuthResponseKeys.KEY_ACCESS_TOKEN, resultArray.get(1));
                     		result.put(AuthResponseKeys.KEY_REFRESH_TOKEN, resultArray.get(2));
                     		handleAuthResult(true, result, response);

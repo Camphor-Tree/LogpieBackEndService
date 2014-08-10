@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.logpie.auth.config.AuthConfig;
 import com.logpie.auth.logic.AuthenticationManager;
+import com.logpie.auth.logic.RegisterHelper;
 import com.logpie.service.common.helper.CommonServiceLog;
 
 public class AuthenticationService extends HttpServlet

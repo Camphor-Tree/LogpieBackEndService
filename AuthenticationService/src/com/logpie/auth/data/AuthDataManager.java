@@ -103,7 +103,7 @@ public class AuthDataManager
 
     }
 
-    public void executeInsertAndGetUID(final String sql, final DataCallback callback) throws EmailAlreadyExistException
+    public void executeInsertAndGetUIDandEmail(final String sql, final DataCallback callback) throws EmailAlreadyExistException
     {
     	Connection connection = null;
         PreparedStatement statement = null;
@@ -123,8 +123,10 @@ public class AuthDataManager
             if (resultSet.next())
             {
                 long uid = resultSet.getLong(SQLHelper.SCHEMA_UID);
+                String email = resultSet.getString(SQLHelper.SCHEMA_EMAIL);
                 JSONObject returnJSON = new JSONObject();
                 returnJSON.put(AuthResponseKeys.KEY_USER_ID, String.valueOf(uid));
+                returnJSON.put(AuthResponseKeys.KEY_EMAIL, email);
                 callback.onSuccess(returnJSON);
             }
             else
