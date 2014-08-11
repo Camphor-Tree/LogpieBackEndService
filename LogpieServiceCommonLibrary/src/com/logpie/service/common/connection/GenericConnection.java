@@ -46,14 +46,23 @@ public class GenericConnection
 
     public void initialize(ServiceURL serviceURL)
     {
-        // TODO: Should turn off when release;
-        disableSSLClientCertificate();
+
         try
         {
             mServiceURL = serviceURL;
             // initialize the HttpURLConnection based on the url
             URL url = serviceURL.getURL();
-            mHttpURLConnection =  (HttpURLConnection) url.openConnection();   
+            boolean isUsingSSL = serviceURL.isUsingHttps();
+            if(isUsingSSL)
+            {
+                // TODO: Should turn off when release;
+                disableSSLClientCertificate();
+                mHttpURLConnection = (HttpsURLConnection) url.openConnection();
+            }
+            else
+            {
+                mHttpURLConnection = (HttpURLConnection) url.openConnection();
+            }
             // check whether need to do input
             if (mServiceURL.needDoOutput())
             {
