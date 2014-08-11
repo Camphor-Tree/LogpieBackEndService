@@ -6,6 +6,7 @@ public class CustomerConfig
      * Is debugging? When deploy, should turn this to false;
      */
     public static final boolean isDebugging = true;
+    
     /**
      * The logfile's path
      */
@@ -20,6 +21,9 @@ public class CustomerConfig
      */
     public static final String changeLineCharacter = "\r\n";
 
+    /**
+     * The postgresSQL database information
+     */
     public static final String PostgreSQL_URL = "jdbc:postgresql://localhost:5432/logpie";
     public static final String PostgreSQL_Username = "postgres";
     public static final String PostgreSQL_Password = "123456";

@@ -16,7 +16,7 @@ public class CustomerService extends HttpServlet
 
     public void init()
     {
-        CommonServiceLog.d(TAG, "Start initializing...");
+        CommonServiceLog.d(TAG, "Customer service servlet starts initializing...");
         ServletContext serviceContext = getServletContext();
         CustomerManager.initialize(serviceContext);
         // load properties from disk, do be used by subsequent doGet() calls
@@ -26,13 +26,17 @@ public class CustomerService extends HttpServlet
     {
         // TODO: we should remove in the future
         // Currently we can just keep it.
-    	System.out.println("Get your request!");
+    	CommonServiceLog.d(TAG, "Customer service received the request by GET...");
         doPost(request, response);
     }
 
     public void doPost(HttpServletRequest request, HttpServletResponse response)
     {
-
+    	CommonServiceLog.d(TAG, "Customer service received the request by POST...");
+    	CustomerManager manager = CustomerManager.getInstance();
+    	CommonServiceLog.d(TAG, "Customer service is handling the request...");
+    	manager.handleCustomerRequest(request, response);
+    	CommonServiceLog.d(TAG, "Customer service finished the request.");
     }
 
 }

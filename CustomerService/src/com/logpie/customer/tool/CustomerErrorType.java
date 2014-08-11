@@ -5,10 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 public enum CustomerErrorType
 {
     BAD_REQUEST(HttpServletResponse.SC_BAD_REQUEST, "bad request"),
-
-    SEVER_ERROR(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "server internal error"),
-
-    AUTH_ERROR(HttpServletResponse.SC_FORBIDDEN, "cannot authenticate the user");
+    SEVER_ERROR(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "server internal error");
 
     private int errorCode;
     private String errorMessage;

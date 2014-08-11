@@ -45,14 +45,12 @@ public class HttpRequestParser
 
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSON convert exception. Cannot convert String to JSONObject");
-            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "JSON convert exception. Cannot convert String to JSONObject", e);
             // Return null if find IO exception
             return null;
         } catch (IOException e)
         {
-            CommonServiceLog.e(TAG, "HttpRequest IO exception. Cannot get httprequest inputstream.");
-            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "HttpRequest IO exception. Cannot get httprequest inputstream.", e);
             // Return null if find IO exception
             return null;
         }

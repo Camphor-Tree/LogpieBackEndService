@@ -36,17 +36,14 @@ public class HttpResponseWriter
                 response.getWriter().print(returnData.toString());
                 CommonServiceLog.d(TAG, returnData.toString());
             } catch (IOException e)
-            {
-                CommonServiceLog.e(TAG, e.getMessage());
-                CommonServiceLog.e(TAG, "IOException when returning result");
+            {         
+                CommonServiceLog.e(TAG, "IOException when returning result", e);
 
             }
         }
         else
         {
-            CommonServiceLog
-                    .e(TAG,
-                            "Response data must contain a result_key. Each Service may behave different.");
+            CommonServiceLog.e(TAG, "Response data must contain a result_key. Each Service may behave different.");
         }
     }
 }
