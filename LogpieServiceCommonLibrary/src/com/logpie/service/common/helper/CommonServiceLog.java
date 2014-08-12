@@ -17,6 +17,7 @@ public class CommonServiceLog
     private static boolean sDebug = CommonServiceConfig.isDebugging;
     private static String sPath;
     private static final String LOG_TAG = CommonServiceLog.class.getName();
+    private static final String BREAK_LINE = "\n--------------------------------------";
 
     public static void setLogFilePath(String path)
     {
@@ -40,8 +41,7 @@ public class CommonServiceLog
     {
         if (sDebug)
         {
-            System.out.println("Info:" + TAG + " : " + info);
-            breakline();
+            System.out.println(getTimeStamp () + " Info: " + TAG + " : " + info + BREAK_LINE);
         }
     }
 
@@ -49,8 +49,7 @@ public class CommonServiceLog
     {
         if (sDebug)
         {
-            System.out.println("Debug:" + TAG + " : " + info);
-            breakline();
+            System.out.println(getTimeStamp () + " Debug: " + TAG + " : " + info + BREAK_LINE);
         }
     }
 
@@ -58,8 +57,7 @@ public class CommonServiceLog
     {
     	if (sDebug)
         {
-            System.out.println("Error:" + TAG + " : " + info);       
-            breakline();
+            System.out.println(getTimeStamp () + " Error: " + TAG + " : " + info + BREAK_LINE);
         }
     }
     
@@ -67,10 +65,9 @@ public class CommonServiceLog
     {
         if (sDebug)
         {
-        	e.printStackTrace();
-        	e.getMessage();
-            System.out.println("Error:" + TAG + " : " + info);       
-            breakline();
+            String time = getTimeStamp ();
+            e.printStackTrace();
+            System.out.println(time + " | Error: " + TAG + " : " + info + BREAK_LINE);
         }
     }
     
@@ -81,9 +78,7 @@ public class CommonServiceLog
     {
         if (sDebug)
         {
-        	System.out.println("Request ID:" + requestID);
-            System.out.println("Info:" + TAG + " : " + info);
-            breakline();
+            System.out.println(getTimeStamp() + " <-> Request ID:" + requestID + " | Info: " + TAG + " : " + info + BREAK_LINE);
         }
     }
 
@@ -91,9 +86,7 @@ public class CommonServiceLog
     {
         if (sDebug)
         {
-        	System.out.println("Request ID:" + requestID);
-            System.out.println("Debug:" + TAG + " : " + info);
-            breakline();
+            System.out.println(getTimeStamp() + " <-> Request ID:" + requestID + " | Debug: " + TAG + " : " + info + BREAK_LINE);
         }
     }
     
@@ -101,35 +94,48 @@ public class CommonServiceLog
     {
     	if (sDebug)
         {
-    		System.out.println("Request ID:" + requestID);
-            System.out.println("Error:" + TAG + " : " + info);
-            breakline();
+            System.out.println(getTimeStamp() + " <-> Request ID:" + requestID + " | Error: " + TAG + " : " + info + BREAK_LINE);
         }
     }
-    
+    /**
+     * Sample log:
+     * 2014/08/11-09:36:47:591 Request ID:11111 | Error: a : nihao
+     * 2014/08/11-09:36:47:591 Exception stacktrace:
+     * Request ID:11111com.logpie.service.common.helper.sss.main(sss.java:12)
+     * @param TAG
+     * @param info
+     * @param requestID
+     * @param e
+     */
     public static void e(String TAG, String info, String requestID, Exception e)
     {
     	if (sDebug)
         {
-    		System.out.println("Request ID:" + requestID);
-        	e.printStackTrace();
-        	e.getMessage();
-            System.out.println("Error:" + TAG + " : " + info);
-            breakline();
+    	    String time = getTimeStamp ();
+    		StringBuilder stringBuilder = new StringBuilder();
+        	StackTraceElement[] stackTraceElements = e.getStackTrace();
+        	for(StackTraceElement element : stackTraceElements)
+        	{
+        	    stringBuilder.append("Request ID: " + requestID + " | " + element.toString() + "\n");
+        	}
+        	System.out.println(time + " Request ID:" + requestID + " | Error: " + TAG + " : " + info);
+        	System.out.println(time + " Exception stacktrace:\n" + stringBuilder.toString());
         }
-    }
-
-    private static void breakline()
-    {
-    	if(sDebug)
-    	{
-    		System.out.println("------------------------");
-    	}
     }
     
     public static void logRequest(String TAG, String requestID, String info)
     {
         writeFile(requestID + TAG, info);
+    }
+    
+    private static String getTimeStamp()
+    {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd-hh:mm:ss:SSS");
+        // get current date time with Date()
+        Date date = new Date();
+        String currentTimeStamp = new String();
+        currentTimeStamp =  dateFormat.format(date);
+        return currentTimeStamp;
     }
 
     public synchronized static void writeFile(String TAG, String info)
