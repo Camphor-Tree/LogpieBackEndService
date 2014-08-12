@@ -127,7 +127,8 @@ public class CustomerDataManager
     		{
     			case "user":
     				CommonServiceLog.d(TAG, "Creating '" + tableName + "' table...");
-    				statement.execute(SQLHelper.SQL_CREATE_USER_TABLE);   				
+    				statement.execute(SQLHelper.SQL_CREATE_USER_TABLE);   
+    				break;
     			default:
     				CommonServiceLog.e(TAG, "Unsupported table name in the database.");
     				return;

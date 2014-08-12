@@ -15,7 +15,7 @@ public class EndPoint
 
         AuthenticationService("RocketService",
                 "http://10.0.0.2:8080/AuthenticationService/server", "1.0.0", "test", true, true, false),
-        
+
         CustomerService("CustomerService","http://10.0.0.2:8080/CustomerService/server","1.0.0","test",true,true,false);
 
         String mServiceName;

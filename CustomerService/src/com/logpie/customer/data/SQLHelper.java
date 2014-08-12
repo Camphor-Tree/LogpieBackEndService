@@ -21,7 +21,7 @@ public class SQLHelper
     /**
      * SQL syntax to create tables
      */
-    public static final String SQL_CREATE_USER_TABLE = "CREATE TABLE \"user\" (uid integer NOT NULL, email character varying NOT NULL, nickname character(18) NOT NULL, birthday date, city integer, country character varying, gender boolean NOT NULL DEFAULT true,last_updated_time timestamp with time zone NOT NULL DEFAULT now(), is_organization boolean NOT NULL DEFAULT false, CONSTRAINT \"PK_user\" PRIMARY KEY (uid) USING INDEX TABLESPACE pg_default) WITH (OIDS = FALSE) TABLESPACE pg_default; ALTER TABLE \"user\" OWNER TO postgres;";
+    public static final String SQL_CREATE_USER_TABLE = "CREATE TABLE \"user\" (uid integer NOT NULL, email character varying NOT NULL, nickname character(18) NOT NULL, birthday date, city character varying, country character varying, gender boolean NOT NULL DEFAULT true,last_updated_time timestamp with time zone NOT NULL DEFAULT now(), is_organization boolean NOT NULL DEFAULT false, CONSTRAINT \"PK_user\" PRIMARY KEY (uid) USING INDEX TABLESPACE pg_default) WITH (OIDS = FALSE) TABLESPACE pg_default; ALTER TABLE \"user\" OWNER TO postgres;";
     
     
     public static String buildRegisterSQL(String uid, String email, String nickname, String city)

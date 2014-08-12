@@ -21,6 +21,15 @@ public class SQLHelper
 
     private static final String TAG = SQLHelper.class.getName();
 
+    public static String buildCheckUserDuplicateSQL(String email)
+    {
+    	StringBuilder sqlBuilder = new StringBuilder();
+    	sqlBuilder.append("select * from user_auth where email=\'");
+    	sqlBuilder.append(email);
+    	sqlBuilder.append("\';");
+    	return sqlBuilder.toString();
+    }
+    
     public static String buildCreateUserStep1SQL(String email, String password)
     {
         StringBuilder sqlBuilder = new StringBuilder();
