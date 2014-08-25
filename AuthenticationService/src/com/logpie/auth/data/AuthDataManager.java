@@ -485,6 +485,47 @@ public class AuthDataManager
         }
     }
 
+    public boolean executeUpdate(final String sql)
+    {
+        Connection connection = null;
+        Statement statement = null;
+        try
+        {
+            connection = openConnection();
+            statement = connection.createStatement();
+            int row_affected = statement.executeUpdate(sql);
+            if (row_affected != 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        } catch (SQLException e)
+        {
+            CommonServiceLog.e(TAG, e.getMessage());
+            CommonServiceLog.e(TAG, "SQLException happend when execute the sql");
+            return false;
+        } finally
+        {
+            if (statement != null)
+                try
+                {
+                    statement.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+            if (connection != null)
+                try
+                {
+                    connection.close();
+                } catch (SQLException logOrIgnore)
+                {
+                }
+        }
+    }
+    
     private Connection openConnection() throws SQLException
     {
         return DriverManager.getConnection(AuthConfig.PostgreSQL_URL,

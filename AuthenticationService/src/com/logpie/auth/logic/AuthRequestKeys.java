@@ -12,5 +12,9 @@ public class AuthRequestKeys
     // For login/authenticate
     public static final String KEY_LOGIN_EMAIL = "login_email";
     public static final String KEY_LOGIN_PASSWORD = "login_password";
+    // For reset password
+    public static final String KEY_CHANGE_PASSWORD_EMAIL = "change_password_email";
+    public static final String KEY_CHANGE_PASSWORD_NEW_PASSWORD = "change_password_new_password";
+    public static final String KEY_CHANGE_PASSWORD_OLD_PASSWORD = "change_password_old_password";
     
 }

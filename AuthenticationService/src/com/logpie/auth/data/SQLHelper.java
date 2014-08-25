@@ -132,4 +132,13 @@ public class SQLHelper
         result.add(new_refresh_token);
         return result;
     }
+    
+    /**
+     * Build reset password SQL
+     */
+    public static String buildResetPasswordSQL(String uid, String newPassword)
+    {
+        String sql = String.format("UPDATE user_auth SET password = \'%s\';",newPassword);
+        return sql;
+    }
 }
