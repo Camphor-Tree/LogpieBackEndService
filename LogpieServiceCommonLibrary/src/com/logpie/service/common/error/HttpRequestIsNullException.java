@@ -1,4 +1,4 @@
-package com.logpie.service.common.exception;
+package com.logpie.service.common.error;
 
 public class HttpRequestIsNullException extends Exception
 {

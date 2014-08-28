@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.common.exception.HttpRequestIsNullException;
+import com.logpie.service.common.error.HttpRequestIsNullException;
 
 public class HttpRequestParser
 {

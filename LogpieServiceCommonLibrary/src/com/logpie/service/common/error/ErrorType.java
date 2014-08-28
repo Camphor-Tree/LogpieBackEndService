@@ -1,8 +1,8 @@
-package com.logpie.auth.tool;
+package com.logpie.service.common.error;
 
 import javax.servlet.http.HttpServletResponse;
 
-public enum AuthErrorType
+public enum ErrorType
 {
     BAD_REQUEST(HttpServletResponse.SC_BAD_REQUEST, "bad request"),
 
@@ -13,7 +13,7 @@ public enum AuthErrorType
     private int errorCode;
     private String errorMessage;
 
-    AuthErrorType(int code, String message)
+    ErrorType(int code, String message)
     {
         this.errorCode = code;
         this.errorMessage = message;
