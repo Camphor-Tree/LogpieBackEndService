@@ -1,4 +1,4 @@
-package com.logpie.customer.data;
+package com.logpie.service.data;
 
 import java.util.ArrayList;
 
@@ -12,7 +12,7 @@ public class SQLHelper
     public static final String SCHEMA_GENDER = "gender";
     public static final String SCHEMA_BIRTHDAY = "birthday";
     public static final String SCHEMA_CITY = "city";
-    public static final String SCHEMA_country = "country";
+    public static final String SCHEMA_COUNTRY = "country";
     public static final String SCHEMA_LASTUPDATEDTIME = "lastupdatedtime";
     public static final String SCHEMA_ISORGANIZATION = "isorganization";
     

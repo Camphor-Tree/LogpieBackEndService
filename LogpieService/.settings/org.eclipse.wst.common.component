@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
-    <wb-module deploy-name="CustomerService">
+    <wb-module deploy-name="LogpieService">
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
-        <property name="context-root" value="CustomerService"/>
-        <property name="java-output-path" value="/CustomerService/build/classes"/>
+        <property name="java-output-path" value="/LogpieService/build/classes"/>
+        <property name="context-root" value="LogpieService"/>
     </wb-module>
 </project-modules>

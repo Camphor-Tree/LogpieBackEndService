@@ -1,32 +1,22 @@
-/*
- * Copyright (c) 2014 logpie.com
- * All rights reserved.
- */
-package com.logpie.auth.config;
+package com.logpie.service.config;
 
-/**
- * This should be the central configuration file. Deploy Authentication Service
- * should first configure this file.
- * 
- * @author yilei
- * 
- */
-public class AuthConfig
+public class ServiceConfig
 {
     /**
-     * Is debuging? When deploy, should turn this to false;
+     * Is debugging? When deploy, should turn this to false;
      */
     public static final boolean isDebugging = true;
+    
     /**
      * The logfile's path on Jiahang's computer
      */
-    public static final String LogPath = "/Users/xujiahang/Documents/workspace/AuthLog/";
+    public static final String LogPath = "/Users/xujiahang/Documents/workspace/ServiceLog/";
     
     /**
      * The logfile's path on Yilei's computer
-     * public static final String LogPath = "E:/AuthLog/";
+     * public static final String LogPath = "E:/ServiceLog/";
      */
-    
+
     /**
      * Different system may have different changeLine Character.
      * 
@@ -36,6 +26,9 @@ public class AuthConfig
      */
     public static final String changeLineCharacter = "\r\n";
 
+    /**
+     * The postgresSQL database information
+     */
     public static final String PostgreSQL_URL = "jdbc:postgresql://localhost:5432/logpie";
     public static final String PostgreSQL_Username = "postgres";
     public static final String PostgreSQL_Password = "123456";

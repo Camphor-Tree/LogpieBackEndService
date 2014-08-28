@@ -12,10 +12,10 @@ import org.json.JSONObject;
 
 import com.logpie.auth.config.AuthConfig;
 import com.logpie.auth.exception.EmailAlreadyExistException;
-import com.logpie.auth.logic.AuthResponseKeys;
 import com.logpie.auth.logic.TokenGenerator;
-import com.logpie.auth.tool.AuthErrorType;
+import com.logpie.service.common.error.ErrorType;
 import com.logpie.service.common.helper.CommonServiceLog;
+import com.logpie.service.common.helper.ResponseKeys;
 
 public class AuthDataManager
 {
@@ -120,8 +120,8 @@ public class AuthDataManager
                 long uid = resultSet.getLong(SQLHelper.SCHEMA_UID);
                 String email = resultSet.getString(SQLHelper.SCHEMA_EMAIL);
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(AuthResponseKeys.KEY_USER_ID, String.valueOf(uid));
-                returnJSON.put(AuthResponseKeys.KEY_EMAIL, email);
+                returnJSON.put(ResponseKeys.KEY_UID, String.valueOf(uid));
+                returnJSON.put(ResponseKeys.KEY_EMAIL, email);
                 callback.onSuccess(returnJSON);
             }
             else
@@ -199,13 +199,13 @@ public class AuthDataManager
                 String refresh_token_expiration = resultSet
                         .getString(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION);
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(AuthResponseKeys.KEY_USER_ID, String.valueOf(uid));
-                returnJSON.put(AuthResponseKeys.KEY_EMAIL, email);
-                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN, access_token);
-                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
+                returnJSON.put(ResponseKeys.KEY_UID, String.valueOf(uid));
+                returnJSON.put(ResponseKeys.KEY_EMAIL, email);
+                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN, access_token);
+                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
                         access_token_expiration);
-                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
-                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
+                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
+                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
                         refresh_token_expiration);
                 callback.onSuccess(returnJSON);
             }
@@ -312,15 +312,15 @@ public class AuthDataManager
             {
                 resultSet.next();
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(AuthResponseKeys.KEY_USER_ID,
+                returnJSON.put(ResponseKeys.KEY_UID,
                         String.valueOf(resultSet.getLong(SQLHelper.SCHEMA_UID)));
-                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN,
+                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
-                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN,
+                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
-                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
+                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
                         resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
-                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
+                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
                         resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
                 return returnJSON;
             }
@@ -432,23 +432,23 @@ public class AuthDataManager
             if (count == 0)
             {
                 callback.onError(new JSONObject().append(KEY_CALLBACK_ERROR,
-                        AuthErrorType.AUTH_ERROR));
+                        ErrorType.AUTH_ERROR));
             }
             else
             {
                 resultSet.next();
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(AuthResponseKeys.KEY_USER_ID,
+                returnJSON.put(ResponseKeys.KEY_UID,
                         String.valueOf(resultSet.getLong(SQLHelper.SCHEMA_UID)));
-                returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN,
+                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
                 //We doesn't plan to include expiration information to clients.
                 //Since User may login to different device. We will refresh the token anyway.
                 //Then the expiration time the client's hold may not be accurate. So just let the server to handle token check.
-                //returnJSON.put(AuthResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
-                returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN,
+                //returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
+                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
-                //returnJSON.put(AuthResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
+                //returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
                 callback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
@@ -537,7 +537,7 @@ public class AuthDataManager
         try
         {
             callback.onError(new JSONObject().append(KEY_CALLBACK_ERROR,
-                    AuthErrorType.SEVER_ERROR.toString()));
+                    ErrorType.SEVER_ERROR.toString()));
         } catch (JSONException e1)
         {
         }
