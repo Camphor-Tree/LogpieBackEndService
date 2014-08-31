@@ -12,7 +12,6 @@ import org.json.JSONObject;
 
 import com.logpie.auth.config.AuthConfig;
 import com.logpie.auth.exception.EmailAlreadyExistException;
-import com.logpie.auth.logic.TokenGenerator;
 import com.logpie.service.common.error.ErrorType;
 import com.logpie.service.common.helper.CommonServiceLog;
 import com.logpie.service.common.helper.ResponseKeys;
@@ -54,21 +53,24 @@ public class AuthDataManager
         } catch (InstantiationException e)
         {
             CommonServiceLog.e(TAG,
-                    "InstantiationException happended when trying to initiliaze postgreSQL driver", e);
+                    "InstantiationException happended when trying to initiliaze postgreSQL driver",
+                    e);
         } catch (IllegalAccessException e)
         {
             CommonServiceLog.e(TAG,
-                    "IllegalAccessException happended when trying to initiliaze postgreSQL driver", e);
+                    "IllegalAccessException happended when trying to initiliaze postgreSQL driver",
+                    e);
         } catch (ClassNotFoundException e)
         {
             CommonServiceLog.e(TAG,
-                    "ClassNotFoundException happended when trying to initiliaze postgreSQL driver", e);
+                    "ClassNotFoundException happended when trying to initiliaze postgreSQL driver",
+                    e);
         }
     }
 
     public boolean executeNoResult(String sql)
     {
-    	initializeDB();
+        initializeDB();
         Connection connection = null;
         try
         {
@@ -76,7 +78,7 @@ public class AuthDataManager
             Statement statement = connection.createStatement();
             int result = statement.executeUpdate(sql);
             connection.close();
-            return result==1?true:false;
+            return result == 1 ? true : false;
         } catch (SQLException e)
         {
             CommonServiceLog.e(TAG, "SQLException happend when execute the sql", e);
@@ -98,9 +100,10 @@ public class AuthDataManager
 
     }
 
-    public void executeInsertAndGetUIDandEmail(final String sql, final DataCallback callback) throws EmailAlreadyExistException
+    public void executeInsertAndGetUIDandEmail(final String sql, final DataCallback callback)
+            throws EmailAlreadyExistException
     {
-    	Connection connection = null;
+        Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
 
@@ -169,7 +172,7 @@ public class AuthDataManager
                 }
         }
     }
-    
+
     public void executeInsertAndGetWholeRecord(final String sql, final DataCallback callback)
             throws EmailAlreadyExistException
     {
@@ -186,7 +189,7 @@ public class AuthDataManager
             {
                 throw new SQLException("Creating user failed, no rows affected.");
             }
-            
+
             resultSet = statement.getGeneratedKeys();
             if (resultSet.next())
             {
@@ -202,11 +205,9 @@ public class AuthDataManager
                 returnJSON.put(ResponseKeys.KEY_UID, String.valueOf(uid));
                 returnJSON.put(ResponseKeys.KEY_EMAIL, email);
                 returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN, access_token);
-                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
-                        access_token_expiration);
+                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, access_token_expiration);
                 returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
-                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
-                        refresh_token_expiration);
+                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, refresh_token_expiration);
                 callback.onSuccess(returnJSON);
             }
             else
@@ -256,32 +257,34 @@ public class AuthDataManager
 
     public boolean executeQueryForCheckDuplicate(final String sql)
     {
-    	Connection connection = null;
+        Connection connection = null;
         Statement statement = null;
         ResultSet resultSet = null;
-        
+
         try
         {
             connection = openConnection();
             statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
             resultSet = statement.executeQuery(sql);
-            
-            if(resultSet.last())
+
+            if (resultSet.last())
             {
-            	CommonServiceLog.e(TAG, "The user is already existed!");
-            	return true;
-            }else
-            {
-            	return false;
+                CommonServiceLog.e(TAG, "The user is already existed!");
+                return true;
             }
-        }catch(SQLException e)
+            else
+            {
+                return false;
+            }
+        } catch (SQLException e)
         {
-        	CommonServiceLog.e(TAG, "SQLException happend when execute the sql to check user duplicate", e);
-        	return true;
-        }        
+            CommonServiceLog.e(TAG,
+                    "SQLException happend when execute the sql to check user duplicate", e);
+            return true;
+        }
     }
-    
+
     // Step1 Query the user information, to verify the email_password
     public JSONObject executeQueryForLoginStep1(final String sql)
     {
@@ -318,10 +321,14 @@ public class AuthDataManager
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
                 returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
-                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
-                        resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
+                returnJSON
+                        .put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
+                                resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION)
+                                        .toString());
                 returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
-                        resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
+                        resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION)
+                                .toString());
+
                 return returnJSON;
             }
         } catch (SQLException e)
@@ -404,6 +411,7 @@ public class AuthDataManager
     // Step4 Query the user information again, get lastest token information
     /**
      * Step4 have been optimized to based on Step1 ~ Step3's results
+     * 
      * @param sql
      * @param callback
      */
@@ -431,8 +439,7 @@ public class AuthDataManager
             // no user found, return auth error.
             if (count == 0)
             {
-                callback.onError(new JSONObject().append(KEY_CALLBACK_ERROR,
-                        ErrorType.AUTH_ERROR));
+                callback.onError(new JSONObject().append(KEY_CALLBACK_ERROR, ErrorType.AUTH_ERROR));
             }
             else
             {
@@ -442,13 +449,19 @@ public class AuthDataManager
                         String.valueOf(resultSet.getLong(SQLHelper.SCHEMA_UID)));
                 returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
-                //We doesn't plan to include expiration information to clients.
-                //Since User may login to different device. We will refresh the token anyway.
-                //Then the expiration time the client's hold may not be accurate. So just let the server to handle token check.
-                //returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
+
+                // We doesn't plan to include expiration information to clients.
+                // Since User may login to different device. We will refresh the
+                // token anyway.
+                // Then the expiration time the client's hold may not be
+                // accurate. So just let the server to handle token check.
+                // returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
+                // resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION).toString());
                 returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
-                //returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
+                // returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
+                // resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION).toString());
+
                 callback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
@@ -525,7 +538,7 @@ public class AuthDataManager
                 }
         }
     }
-    
+
     private Connection openConnection() throws SQLException
     {
         return DriverManager.getConnection(AuthConfig.PostgreSQL_URL,
