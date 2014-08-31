@@ -27,18 +27,18 @@ public class CustomerService extends HttpServlet
     public void doGet(HttpServletRequest request, HttpServletResponse response)
     {
         // TODO: we should remove in the future. Currently we can just keep it.
-    	CommonServiceLog.d(TAG, "Customer service received the request by GET...");
+        CommonServiceLog.d(TAG, "Customer service received the request by GET...");
         doPost(request, response);
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response)
     {
-    	CommonServiceLog.d(TAG, "Customer service received the request by POST...");
-    	CustomerManager manager = CustomerManager.getInstance();
-    	CommonServiceLog.d(TAG, "Customer service is handling the request...");
-    	manager.handleRequest(request, response);
-    	CommonServiceLog.d(TAG, "Customer service finished the request.");
+        CommonServiceLog.d(TAG, "Customer service received the request by POST...");
+        CustomerManager manager = CustomerManager.getInstance();
+        CommonServiceLog.d(TAG, "Customer service is handling the request...");
+        manager.handleRequest(request, response);
+        CommonServiceLog.d(TAG, "Customer service finished the request.");
     }
 
 }

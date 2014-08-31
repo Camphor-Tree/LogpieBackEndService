@@ -28,18 +28,18 @@ public class ActivityService extends HttpServlet
     {
         // TODO: we should remove in the future
         // Currently we can just keep it.
-    	CommonServiceLog.d(TAG, "Activity service received the request by GET...");
+        CommonServiceLog.d(TAG, "Activity service received the request by GET...");
         doPost(request, response);
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response)
     {
-    	CommonServiceLog.d(TAG, "Activity service received the request by POST...");
-    	
-    	CommonServiceLog.d(TAG, "Activity service is handling the request...");
-    	
-    	CommonServiceLog.d(TAG, "Activity service finished the request.");
+        CommonServiceLog.d(TAG, "Activity service received the request by POST...");
+
+        CommonServiceLog.d(TAG, "Activity service is handling the request...");
+
+        CommonServiceLog.d(TAG, "Activity service finished the request.");
     }
 
 }

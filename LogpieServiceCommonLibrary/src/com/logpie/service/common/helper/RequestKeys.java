@@ -19,9 +19,8 @@ public class RequestKeys {
     
     
     /**
-     * Keys for all Logpie keywords in database
+     * Keys for all Logpie keywords
      */
-    public static final String KEY_TABLE_USER = "user";
     public static final String KEY_UID = "uid";
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_EMAIL = "email";
@@ -33,14 +32,12 @@ public class RequestKeys {
     public static final String KEY_LAST_UPDATE_TIME = "last_update_time";
     public static final String KEY_IS_ORGANIZATION = "is_organization";
     
-    public static final String KEY_TABLE_ACTIVITY = "activity";
     public static final String KEY_AID = "aid";
     public static final String KEY_CREATE_USER = "create_user";
     public static final String KEY_DESCRIPTION = "description";
     public static final String KEY_LOCATION = "location";
     public static final String KEY_LATITUDE = "latitude";
     public static final String KEY_LONGITUDE = "longitude";
-    public static final String KEY_ADDRESS = "address";
     public static final String KEY_CREATE_TIME = "create_time";
     public static final String KEY_START_TIME = "start_time";
     public static final String KEY_END_TIME = "end_time";
@@ -50,7 +47,6 @@ public class RequestKeys {
     public static final String KEY_ACTIVATED = "activated";
     public static final String KEY_CATEGORY = "category";
     
-    public static final String KEY_TABLE_COMMENTS = "comments";
     public static final String KEY_SENDER_USER_ID = "sender_user_id";
     public static final String KEY_SEND_TO_USER_ID = "sendto_user_id";
     public static final String KEY_SENDER_USER_NAME = "sender_username";
@@ -60,11 +56,6 @@ public class RequestKeys {
     public static final String KEY_READ_BY_REPLY = "read_by_reply";
     public static final String KEY_READ_BY_HOST = "read_by_host";
     
-    public static final String KEY_TABLE_USER_LIKE_ACTIVITY = "user_like_activity";
-    
-    public static final String KEY_TABLE_USER_DISLIKE_ACTIVITY = "user_dislike_activity";
-    
-    public static final String KEY_TABLE_CITY = "city";
     public static final String KEY_CID = "cid";
     public static final String KEY_LEVEL = "level";
     public static final String KEY_PROVINCE = "province";

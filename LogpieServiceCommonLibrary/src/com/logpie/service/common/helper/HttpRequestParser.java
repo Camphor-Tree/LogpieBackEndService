@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import com.logpie.service.common.error.HttpRequestIsNullException;
 
+
 public class HttpRequestParser
 {
     private static final String TAG = HttpRequestParser.class.getName();

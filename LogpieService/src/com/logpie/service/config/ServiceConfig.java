@@ -6,15 +6,15 @@ public class ServiceConfig
      * Is debugging? When deploy, should turn this to false;
      */
     public static final boolean isDebugging = true;
-    
+
     /**
      * The logfile's path on Jiahang's computer
      */
     public static final String LogPath = "/Users/xujiahang/Documents/workspace/ServiceLog/";
-    
+
     /**
-     * The logfile's path on Yilei's computer
-     * public static final String LogPath = "E:/ServiceLog/";
+     * The logfile's path on Yilei's computer public static final String LogPath
+     * = "E:/ServiceLog/";
      */
 
     /**
