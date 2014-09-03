@@ -1,23 +1,22 @@
 package com.logpie.service.common.helper;
 
-public class RequestKeys {
-	
-	/**
-	 * Keys for different service types
-	 */
-	public static final String KEY_AUTHENTICATION_TYPE = "authentication_type";
-	public static final String KEY_CUSTOMER_TYPE = "customer_type";
-	public static final String KEY_ACTIVITY_TYPE = "activity_type";
-	
-	
-	/**
-	 * Key for request ID
-	 * 
-	 * Each httpRequest should have a unique request ID.
-	 */
+public class RequestKeys
+{
+
+    /**
+     * Keys for different service types
+     */
+    public static final String KEY_AUTHENTICATION_TYPE = "authentication_type";
+    public static final String KEY_CUSTOMER_TYPE = "customer_type";
+    public static final String KEY_ACTIVITY_TYPE = "activity_type";
+
+    /**
+     * Key for request ID
+     * 
+     * Each httpRequest should have a unique request ID.
+     */
     public static final String KEY_REQUEST_ID = "request_id";
-    
-    
+
     /**
      * Keys for all Logpie keywords
      */
@@ -31,9 +30,8 @@ public class RequestKeys {
     public static final String KEY_COUNTRY = "country";
     public static final String KEY_LAST_UPDATE_TIME = "last_update_time";
     public static final String KEY_IS_ORGANIZATION = "is_organization";
-    
+
     public static final String KEY_AID = "aid";
-    public static final String KEY_CREATE_USER = "create_user";
     public static final String KEY_DESCRIPTION = "description";
     public static final String KEY_LOCATION = "location";
     public static final String KEY_LATITUDE = "latitude";
@@ -46,7 +44,7 @@ public class RequestKeys {
     public static final String KEY_COUNT_DISLIKE = "count_dislike";
     public static final String KEY_ACTIVATED = "activated";
     public static final String KEY_CATEGORY = "category";
-    
+
     public static final String KEY_SENDER_USER_ID = "sender_user_id";
     public static final String KEY_SEND_TO_USER_ID = "sendto_user_id";
     public static final String KEY_SENDER_USER_NAME = "sender_username";
@@ -55,18 +53,15 @@ public class RequestKeys {
     public static final String KEY_COMMENT_TIME = "comment_time";
     public static final String KEY_READ_BY_REPLY = "read_by_reply";
     public static final String KEY_READ_BY_HOST = "read_by_host";
-    
+
     public static final String KEY_CID = "cid";
     public static final String KEY_LEVEL = "level";
     public static final String KEY_PROVINCE = "province";
-    
-    
+
     /**
      * Keys for OOD
      */
-    
-    
-    
+
     /**
      * Keys for SQL syntax
      */

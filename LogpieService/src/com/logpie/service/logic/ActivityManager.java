@@ -1,5 +1,6 @@
 package com.logpie.service.logic;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import javax.servlet.ServletContext;
@@ -16,6 +17,7 @@ import com.logpie.service.common.helper.CommonServiceLog;
 import com.logpie.service.common.helper.HttpRequestParser;
 import com.logpie.service.common.helper.RequestKeys;
 import com.logpie.service.common.helper.ResponseKeys;
+import com.logpie.service.common.helper.TimeHelper;
 import com.logpie.service.data.ActivityDataManager;
 import com.logpie.service.data.DataCallback;
 import com.logpie.service.data.DataManager;
@@ -61,10 +63,8 @@ public class ActivityManager
             postBody = HttpRequestParser.httpRequestParser(request);
         } catch (HttpRequestIsNullException e)
         {
-            CommonServiceLog
-                    .e(TAG,
-                            "HttpRequestParser is null when parsing an activity service request.",
-                            e);
+            CommonServiceLog.e(TAG,
+                    "HttpRequestParser is null when parsing an activity service request.", e);
             return;
         }
         if (postBody != null)
@@ -72,8 +72,9 @@ public class ActivityManager
             String requestType = RequestKeys.KEY_ACTIVITY_TYPE;
             String requestID = ManagerHelper.getRequestID(postBody);
 
-            RequestType type = ManagerHelper.getRequestType(postBody, requestType,
-                    requestID);
+            // TODO: verify token by auth service
+
+            RequestType type = ManagerHelper.getRequestType(postBody, requestType, requestID);
             switch (type)
             {
             case INSERT:
@@ -89,8 +90,7 @@ public class ActivityManager
                 break;
             default:
             {
-                CommonServiceLog.e(TAG, "Unsupported type of Activity Service.",
-                        requestID);
+                CommonServiceLog.e(TAG, "Unsupported type of Activity Service.", requestID);
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 break;
             }
@@ -108,25 +108,40 @@ public class ActivityManager
         try
         {
             ArrayList<String> key_set = new ArrayList<String>();
-            key_set.add(RequestKeys.KEY_CREATE_USER);
+            key_set.add(RequestKeys.KEY_UID);
             key_set.add(RequestKeys.KEY_DESCRIPTION);
             key_set.add(RequestKeys.KEY_LOCATION);
+            key_set.add(RequestKeys.KEY_START_TIME);
+            key_set.add(RequestKeys.KEY_END_TIME);
             key_set.add(RequestKeys.KEY_CATEGORY);
+            key_set.add(RequestKeys.KEY_CITY);
+            key_set.add(RequestKeys.KEY_LATITUDE);
+            key_set.add(RequestKeys.KEY_LONGITUDE);
 
             ArrayList<String> value_set = new ArrayList<String>();
-            value_set.add(postData.getString(RequestKeys.KEY_CREATE_USER));
+            value_set.add(postData.getString(RequestKeys.KEY_UID));
             value_set.add(postData.getString(RequestKeys.KEY_DESCRIPTION));
             value_set.add(postData.getString(RequestKeys.KEY_LOCATION));
             value_set.add(postData.getString(RequestKeys.KEY_CATEGORY));
-
+            Timestamp startTime = TimeHelper.getTimestamp(postData
+                    .getString(RequestKeys.KEY_START_TIME));
+            Timestamp endTime = TimeHelper.getTimestamp(postData
+                    .getString(RequestKeys.KEY_END_TIME));
+            if (startTime == null || endTime == null)
+            {
+                CommonServiceLog.e(TAG,
+                        "start time/end time is null when parsed the activity INSERT request",
+                        requestID);
+            }
+            String cid = postData.getString(RequestKeys.KEY_CITY);
             String lat = postData.getString(RequestKeys.KEY_LATITUDE);
             String lon = postData.getString(RequestKeys.KEY_LONGITUDE);
 
             CommonServiceLog.d(TAG, "Parsed the INSERT request.");
 
             // Generate the sql for register a user
-            String sql = SQLHelper.buildInsertSQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY,
-                    key_set, value_set);
+            String sql = SQLHelper.buildInsertSQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, key_set,
+                    value_set);
             CommonServiceLog.d(TAG, "Built the SQL to create an antivity: " + sql);
 
             sActivityDataManager.executeInsert(sql, RequestKeys.KEY_ACTIVITY_TYPE,
@@ -139,12 +154,10 @@ public class ActivityManager
                             {
                                 result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
                                 ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_ACTIVITY_RESULT, result,
-                                        response);
+                                        ResponseKeys.KEY_ACTIVITY_RESULT, result, response);
                             } catch (JSONException e)
                             {
-                                CommonServiceLog.logRequest(TAG, requestID,
-                                        e.getMessage());
+                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
                                 CommonServiceLog
                                         .e(TAG,
                                                 "JSONException happened when getting INSERT result successfully.",
@@ -157,10 +170,8 @@ public class ActivityManager
                         {
                             try
                             {
-                                ManagerHelper.handleResponseWithError(
-                                        response,
-                                        ErrorType.valueOf(error
-                                                .getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                                ManagerHelper.handleResponseWithError(response, ErrorType
+                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                             } catch (JSONException e)
                             {
                                 CommonServiceLog
@@ -202,8 +213,8 @@ public class ActivityManager
             CommonServiceLog.d(TAG, "Parsed the QUERY request.");
 
             // Generate the sql for query a record
-            String sql = SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY,
-                    keySet, constraintKey, constraintValue);
+            String sql = SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, keySet,
+                    constraintKey, constraintValue);
             CommonServiceLog.d(TAG, "Built the SQL to query: " + sql);
 
             sActivityDataManager.executeQuery(keySet, sql, RequestKeys.KEY_CUSTOMER_TYPE,
@@ -216,12 +227,10 @@ public class ActivityManager
                             {
                                 result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
                                 ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result,
-                                        response);
+                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
                             } catch (JSONException e)
                             {
-                                CommonServiceLog.logRequest(TAG, requestID,
-                                        e.getMessage());
+                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
                                 CommonServiceLog
                                         .e(TAG,
                                                 "JSONException happened when getting QUERY result successfully.",
@@ -234,10 +243,8 @@ public class ActivityManager
                         {
                             try
                             {
-                                ManagerHelper.handleResponseWithError(
-                                        response,
-                                        ErrorType.valueOf(error
-                                                .getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                                ManagerHelper.handleResponseWithError(response, ErrorType
+                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                             } catch (JSONException e)
                             {
                                 CommonServiceLog
@@ -252,10 +259,8 @@ public class ActivityManager
         {
             CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog
-                    .e(TAG,
-                            "JSONException happened when getting key/value before QUERY operation.",
-                            e);
+            CommonServiceLog.e(TAG,
+                    "JSONException happened when getting key/value before QUERY operation.", e);
         }
     }
 
@@ -280,8 +285,8 @@ public class ActivityManager
             CommonServiceLog.d(TAG, "Parsed the UPDATE request.");
 
             // Generate the sql for query a record
-            String sql = SQLHelper.buildUpdateSQL(keySet, valueSet, constraintKey,
-                    constraintValue);
+            String sql = SQLHelper.buildUpdateSQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, keySet,
+                    valueSet, constraintKey, constraintValue);
             CommonServiceLog.d(TAG, "Built the SQL to query: " + sql);
 
             sActivityDataManager.executeUpdate(sql, RequestKeys.KEY_CUSTOMER_TYPE,
@@ -294,12 +299,10 @@ public class ActivityManager
                             {
                                 result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
                                 ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result,
-                                        response);
+                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
                             } catch (JSONException e)
                             {
-                                CommonServiceLog.logRequest(TAG, requestID,
-                                        e.getMessage());
+                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
                                 CommonServiceLog
                                         .e(TAG,
                                                 "JSONException happened when getting UPDATE result successfully.",
@@ -312,10 +315,8 @@ public class ActivityManager
                         {
                             try
                             {
-                                ManagerHelper.handleResponseWithError(
-                                        response,
-                                        ErrorType.valueOf(error
-                                                .getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                                ManagerHelper.handleResponseWithError(response, ErrorType
+                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                             } catch (JSONException e)
                             {
                                 CommonServiceLog
@@ -330,10 +331,8 @@ public class ActivityManager
         {
             CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog
-                    .e(TAG,
-                            "JSONException happened when getting key/value before UPDATE operation.",
-                            e);
+            CommonServiceLog.e(TAG,
+                    "JSONException happened when getting key/value before UPDATE operation.", e);
         }
     }
 

@@ -97,8 +97,7 @@ public abstract class DataManager
      */
     protected abstract void createTable();
 
-    public void executeInsert(String sql, String resultType,
-            final DataCallback dataCallback)
+    public void executeInsert(String sql, String resultType, final DataCallback dataCallback)
     {
         Statement statement = null;
         ResultSet resultSet = null;
@@ -118,16 +117,14 @@ public abstract class DataManager
             }
             else
             {
-                CommonServiceLog.d(TAG, "INSERT is finished. " + affectedRows
-                        + " row affected.");
+                CommonServiceLog.d(TAG, "INSERT is finished. " + affectedRows + " row affected.");
                 JSONObject returnJSON = new JSONObject();
                 returnJSON.put(resultType, ResponseKeys.KEY_RESULT_SUCCESS);
                 dataCallback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG, "SQLException happend when executing the INSERT sql",
-                    e);
+            CommonServiceLog.e(TAG, "SQLException happend when executing the INSERT sql", e);
             handleErrorCallbackWithServerError(dataCallback);
         } catch (JSONException e)
         {
@@ -161,8 +158,7 @@ public abstract class DataManager
         try
         {
             CommonServiceLog.d(TAG, "Starting to QUERY...");
-            statement = sConnection
-                    .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement = sConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             int affectedRows = statement.executeUpdate();
             if (affectedRows == 0)
             {
@@ -173,8 +169,7 @@ public abstract class DataManager
             }
             else
             {
-                CommonServiceLog.d(TAG, "QUERY is finished. " + affectedRows
-                        + " row(s) affected.");
+                CommonServiceLog.d(TAG, "QUERY is finished. " + affectedRows + " row(s) affected.");
                 JSONObject returnJSON = new JSONObject();
                 returnJSON.put(resultType, ResponseKeys.KEY_RESULT_SUCCESS);
                 resultSet = statement.getGeneratedKeys();
@@ -215,8 +210,7 @@ public abstract class DataManager
         try
         {
             CommonServiceLog.d(TAG, "Starting to QUERY...");
-            statement = sConnection
-                    .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement = sConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             int affectedRows = statement.executeUpdate();
             if (affectedRows == 0)
             {
@@ -225,8 +219,7 @@ public abstract class DataManager
             }
             else
             {
-                CommonServiceLog.d(TAG, "QUERY is finished. " + affectedRows
-                        + " row(s) affected.");
+                CommonServiceLog.d(TAG, "QUERY is finished. " + affectedRows + " row(s) affected.");
                 resultSet = statement.getGeneratedKeys();
                 return resultSet.getString(keyword);
             }
@@ -253,8 +246,7 @@ public abstract class DataManager
         return null;
     }
 
-    public void executeUpdate(String sql, String resultType,
-            final DataCallback dataCallback)
+    public void executeUpdate(String sql, String resultType, final DataCallback dataCallback)
     {
         Statement statement = null;
         ResultSet resultSet = null;
@@ -273,16 +265,14 @@ public abstract class DataManager
             }
             else
             {
-                CommonServiceLog.d(TAG, "UPDATE is finished. " + affectedRows
-                        + " row affected.");
+                CommonServiceLog.d(TAG, "UPDATE is finished. " + affectedRows + " row affected.");
                 JSONObject returnJSON = new JSONObject();
                 returnJSON.put(resultType, ResponseKeys.KEY_RESULT_SUCCESS);
                 dataCallback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
         {
-            CommonServiceLog
-                    .e(TAG, "SQLException happend when execute the UPDATE sql", e);
+            CommonServiceLog.e(TAG, "SQLException happend when execute the UPDATE sql", e);
             handleErrorCallbackWithServerError(dataCallback);
         } catch (JSONException e)
         {
@@ -331,8 +321,7 @@ public abstract class DataManager
             }
             else
             {
-                throw new SQLException(
-                        "Building result set failed. No generated key obtained.");
+                throw new SQLException("Building result set failed. No generated key obtained.");
             }
         } catch (SQLException e)
         {

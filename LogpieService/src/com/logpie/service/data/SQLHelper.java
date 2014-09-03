@@ -22,8 +22,7 @@ public class SQLHelper
         }
         else
         {
-            CommonServiceLog.d(TAG,
-                    "Parsing the JSONArray of INSERT request to build sql...");
+            CommonServiceLog.d(TAG, "Parsing the JSONArray of INSERT request to build sql...");
             sqlBuilder.append("insert into ");
             sqlBuilder.append(tableName);
             sqlBuilder.append("(");
@@ -68,8 +67,7 @@ public class SQLHelper
         }
         else
         {
-            CommonServiceLog.d(TAG,
-                    "Parsing the JSONArray of QUERY request to build sql...");
+            CommonServiceLog.d(TAG, "Parsing the JSONArray of QUERY request to build sql...");
             sqlBuilder.append("select ");
             for (int i = 0; i < key_set.size(); i++)
             {
@@ -85,7 +83,9 @@ public class SQLHelper
             }
 
         }
-        sqlBuilder.append("from user where ");
+        sqlBuilder.append("from ");
+        sqlBuilder.append(tableName);
+        sqlBuilder.append(" where ");
         sqlBuilder.append(constraint_key);
         sqlBuilder.append(" like \'");
         sqlBuilder.append(constraint_value);
@@ -93,7 +93,7 @@ public class SQLHelper
         return sqlBuilder.toString();
     }
 
-    public static String buildUpdateSQL(ArrayList<String> key_set,
+    public static String buildUpdateSQL(String tableName, ArrayList<String> key_set,
             ArrayList<String> value_set, String constraint_key, String constraint_value)
     {
         StringBuilder sqlBuilder = new StringBuilder();
@@ -107,13 +107,14 @@ public class SQLHelper
         }
         else
         {
-            CommonServiceLog.d(TAG,
-                    "Parsing the JSONArray of UPDATE request to build sql...");
+            CommonServiceLog.d(TAG, "Parsing the JSONArray of UPDATE request to build sql...");
             for (int i = 0; i < key_set.size(); i++)
             {
                 String key = key_set.get(i);
                 String value = value_set.get(i);
-                sqlBuilder.append("update user set ");
+                sqlBuilder.append("update ");
+                sqlBuilder.append(tableName);
+                sqlBuilder.append(" set ");
                 sqlBuilder.append(key);
                 sqlBuilder.append(" = \'");
                 sqlBuilder.append(value);

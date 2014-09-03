@@ -73,8 +73,7 @@ public class CustomerManager
         } catch (HttpRequestIsNullException e)
         {
             CommonServiceLog.e(TAG,
-                    "HttpRequestParser is null when parsing a customer service request.",
-                    e);
+                    "HttpRequestParser is null when parsing a customer service request.", e);
             return;
         }
         if (postBody != null)
@@ -82,8 +81,7 @@ public class CustomerManager
             String requestType = RequestKeys.KEY_CUSTOMER_TYPE;
             String requestID = ManagerHelper.getRequestID(postBody);
 
-            RequestType type = ManagerHelper.getRequestType(postBody, requestType,
-                    requestID);
+            RequestType type = ManagerHelper.getRequestType(postBody, requestType, requestID);
             switch (type)
             {
             case INSERT:
@@ -99,8 +97,7 @@ public class CustomerManager
                 break;
             default:
             {
-                CommonServiceLog.e(TAG, "Unsupported type of Customer Service.",
-                        requestID);
+                CommonServiceLog.e(TAG, "Unsupported type of Customer Service.", requestID);
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 break;
             }
@@ -137,8 +134,8 @@ public class CustomerManager
             value_set.add(postData.getString(RequestKeys.KEY_CITY));
             CommonServiceLog.d(TAG, "Parsed the INSERT request.");
 
-            String sql = SQLHelper.buildInsertSQL(DatabaseSchema.SCHEMA_TABLE_USER,
-                    key_set, value_set);
+            String sql = SQLHelper.buildInsertSQL(DatabaseSchema.SCHEMA_TABLE_USER, key_set,
+                    value_set);
             CommonServiceLog.d(TAG, "Built the SQL to register a user: " + sql);
 
             sCustomerDataManager.executeInsert(sql, RequestKeys.KEY_CUSTOMER_TYPE,
@@ -151,12 +148,10 @@ public class CustomerManager
                             {
                                 result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
                                 ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result,
-                                        response);
+                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
                             } catch (JSONException e)
                             {
-                                CommonServiceLog.logRequest(TAG, requestID,
-                                        e.getMessage());
+                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
                                 CommonServiceLog
                                         .e(TAG,
                                                 "JSONException happened when getting INSERT result successfully.",
@@ -169,10 +164,8 @@ public class CustomerManager
                         {
                             try
                             {
-                                ManagerHelper.handleResponseWithError(
-                                        response,
-                                        ErrorType.valueOf(error
-                                                .getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                                ManagerHelper.handleResponseWithError(response, ErrorType
+                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                             } catch (JSONException e)
                             {
                                 CommonServiceLog
@@ -221,8 +214,8 @@ public class CustomerManager
             CommonServiceLog.d(TAG, "Parsed the QUERY request.");
 
             // Generate the sql for query a record
-            String sql = SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_USER,
-                    keySet, constraintKey, constraintValue);
+            String sql = SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_USER, keySet,
+                    constraintKey, constraintValue);
             CommonServiceLog.d(TAG, "Built the SQL to query: " + sql);
 
             sCustomerDataManager.executeQuery(keySet, sql, RequestKeys.KEY_CUSTOMER_TYPE,
@@ -235,12 +228,10 @@ public class CustomerManager
                             {
                                 result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
                                 ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result,
-                                        response);
+                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
                             } catch (JSONException e)
                             {
-                                CommonServiceLog.logRequest(TAG, requestID,
-                                        e.getMessage());
+                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
                                 CommonServiceLog
                                         .e(TAG,
                                                 "JSONException happened when getting QUERY result successfully.",
@@ -253,10 +244,8 @@ public class CustomerManager
                         {
                             try
                             {
-                                ManagerHelper.handleResponseWithError(
-                                        response,
-                                        ErrorType.valueOf(error
-                                                .getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                                ManagerHelper.handleResponseWithError(response, ErrorType
+                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                             } catch (JSONException e)
                             {
                                 CommonServiceLog
@@ -271,10 +260,8 @@ public class CustomerManager
         {
             CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog
-                    .e(TAG,
-                            "JSONException happened when getting key/value before QUERY operation.",
-                            e);
+            CommonServiceLog.e(TAG,
+                    "JSONException happened when getting key/value before QUERY operation.", e);
         }
     }
 
@@ -306,8 +293,8 @@ public class CustomerManager
             CommonServiceLog.d(TAG, "Parsed the UPDATE request.");
 
             // Generate the sql for query a record
-            String sql = SQLHelper.buildUpdateSQL(keySet, valueSet, constraintKey,
-                    constraintValue);
+            String sql = SQLHelper.buildUpdateSQL(DatabaseSchema.SCHEMA_TABLE_USER, keySet,
+                    valueSet, constraintKey, constraintValue);
             CommonServiceLog.d(TAG, "Built the SQL to query: " + sql);
 
             sCustomerDataManager.executeUpdate(sql, RequestKeys.KEY_CUSTOMER_TYPE,
@@ -320,12 +307,10 @@ public class CustomerManager
                             {
                                 result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
                                 ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result,
-                                        response);
+                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
                             } catch (JSONException e)
                             {
-                                CommonServiceLog.logRequest(TAG, requestID,
-                                        e.getMessage());
+                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
                                 CommonServiceLog
                                         .e(TAG,
                                                 "JSONException happened when getting UPDATE result successfully.",
@@ -338,10 +323,8 @@ public class CustomerManager
                         {
                             try
                             {
-                                ManagerHelper.handleResponseWithError(
-                                        response,
-                                        ErrorType.valueOf(error
-                                                .getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                                ManagerHelper.handleResponseWithError(response, ErrorType
+                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                             } catch (JSONException e)
                             {
                                 CommonServiceLog
@@ -356,10 +339,8 @@ public class CustomerManager
         {
             CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog
-                    .e(TAG,
-                            "JSONException happened when getting key/value before UPDATE operation.",
-                            e);
+            CommonServiceLog.e(TAG,
+                    "JSONException happened when getting key/value before UPDATE operation.", e);
         }
     }
 

@@ -9,7 +9,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.RequestKeys;
 import com.logpie.service.common.helper.ResponseKeys;
 import com.logpie.service.config.DatabaseConfig;
 
@@ -19,7 +18,7 @@ public class CustomerDataManager extends DataManager
     private static CustomerDataManager sCustomerDataManager;
     private static boolean tag = false;
 
-    public static final String USER_TABLE = RequestKeys.KEY_TABLE_USER;
+    public static final String USER_TABLE = DatabaseSchema.SCHEMA_TABLE_USER;
 
     /**
      * CustomerDataManager is singleton
@@ -81,10 +80,8 @@ public class CustomerDataManager extends DataManager
             Date birthday = resultSet.getDate(DatabaseSchema.SCHEMA_BIRTHDAY);
             String country = resultSet.getString(DatabaseSchema.SCHEMA_COUNTRY);
             int city = resultSet.getInt(DatabaseSchema.SCHEMA_CITY);
-            Date lastUpdateTime = resultSet
-                    .getDate(DatabaseSchema.SCHEMA_LAST_UPDATE_TIME);
-            boolean organization = resultSet
-                    .getBoolean(DatabaseSchema.SCHEMA_IS_ORGANIZATION);
+            Date lastUpdateTime = resultSet.getDate(DatabaseSchema.SCHEMA_LAST_UPDATE_TIME);
+            boolean organization = resultSet.getBoolean(DatabaseSchema.SCHEMA_IS_ORGANIZATION);
 
             returnJSON.put(ResponseKeys.KEY_UID, String.valueOf(uid));
             returnJSON.put(ResponseKeys.KEY_EMAIL, email);
@@ -93,22 +90,16 @@ public class CustomerDataManager extends DataManager
             returnJSON.put(ResponseKeys.KEY_BIRTHDAY, String.valueOf(birthday));
             returnJSON.put(ResponseKeys.KEY_COUNTRY, country);
             returnJSON.put(ResponseKeys.KEY_CITY, String.valueOf(city));
-            returnJSON.put(ResponseKeys.KEY_LAST_UPDATE_TIME,
-                    String.valueOf(lastUpdateTime));
-            returnJSON
-                    .put(ResponseKeys.KEY_IS_ORGANIZATION, String.valueOf(organization));
+            returnJSON.put(ResponseKeys.KEY_LAST_UPDATE_TIME, String.valueOf(lastUpdateTime));
+            returnJSON.put(ResponseKeys.KEY_IS_ORGANIZATION, String.valueOf(organization));
         } catch (SQLException e)
         {
-            CommonServiceLog
-                    .e(TAG,
-                            "SQLException happened when building all result set of query request",
-                            e);
+            CommonServiceLog.e(TAG,
+                    "SQLException happened when building all result set of query request", e);
         } catch (JSONException e)
         {
-            CommonServiceLog
-                    .e(TAG,
-                            "JSONException happened when building all result set of query request",
-                            e);
+            CommonServiceLog.e(TAG,
+                    "JSONException happened when building all result set of query request", e);
         }
     }
 }
