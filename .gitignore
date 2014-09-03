@@ -1,5 +1,5 @@
 #ignore the files below:
 *.class
 */build
-*.classpath
-/.settings
+*/.classpath
+*/.settings
