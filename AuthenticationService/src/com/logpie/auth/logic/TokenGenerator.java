@@ -1,55 +1,82 @@
 package com.logpie.auth.logic;
 
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
+import com.logpie.auth.security.AbstractDataEncryptor;
+import com.logpie.auth.security.TokenEncryptor;
 import com.logpie.service.common.helper.CommonServiceLog;
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import com.logpie.service.common.helper.TimeHelper;
 
 public class TokenGenerator
 {
     private static final String TAG = TokenGenerator.class.getName();
+    private static final AbstractDataEncryptor sEncryptor = new TokenEncryptor();
 
     /**
-     * Build the base key source for AccessToken without any information about token's scope.
+     * Build the base key source for AccessToken without any information about
+     * token's scope.
      * 
-     * @param uid  the user id
+     * @param uid
+     *            the user id
      * @return
      */
     public static String generateAccessTokenBaseKeySource(String uid)
     {
-        String source = String.format("%s+%s", uid, UUID.randomUUID().toString());
+        String source = String.format("%s+%s#%s", uid, TimeHelper.getCurrentTimestamp().toString(),
+                getRandomUUIDWithoutDash());
         return source;
     }
+
     /**
-     * Build the base key source for RefreshToken.
-     * Containing the currentTimeMillis.
+     * Build the base key source for RefreshToken. Containing the
+     * currentTimeMillis.
+     * 
      * @return
      */
-    public static String generateRefreshTokenBaseKeySource()
+    public static String generateRefreshTokenBaseKeySource(String uid)
     {
-    	String source = String.format("%s+%s", String.valueOf(System.currentTimeMillis()), UUID.randomUUID().toString());
+        String source = String.format("%s+%s#%s", TimeHelper.getCurrentTimestamp().toString(),
+                getRandomUUIDWithoutDash());
         return source;
     }
 
     public static String generateToken(String keySource)
     {
-        String raw_token = Base64.encode(keySource.getBytes());
-        //Base64 will automatically add a new line when the length more than 64.
-        //Remove the unnecessary \n
-        return raw_token.replace("\n", "");
+        byte[] encodeKeyBytes = sEncryptor.encryptData(keySource);
+        String encodeToken = null;
+        try
+        {
+            encodeToken = new String(encodeKeyBytes, "UTF-8");
+        } catch (UnsupportedEncodingException e)
+        {
+            CommonServiceLog.e(TAG, "UnsupportedEncodingException for UTF-8", e);
+        }
+        return encodeToken;
     }
 
     public static String decodeToken(String token)
     {
-            try
-            {
-                return new String(Base64.decode(token));
-            } catch (Base64DecodingException e)
-            {
-                CommonServiceLog.e(TAG, "Base64DecodingException when decoing the token");
-                e.printStackTrace();
-                return null;
-            }
+        try
+        {
+            byte[] tokenBytes = token.getBytes("UTF-8");
+            return sEncryptor.decryptData(tokenBytes);
+
+        } catch (UnsupportedEncodingException e1)
+        {
+            CommonServiceLog.e(TAG, "UnsupportedEncodingException for UTF-8", e1);
+        }
+        return null;
+    }
+
+    private static String getRandomUUIDWithoutDash()
+    {
+        String rawUUID = getRandomUUID();
+        return rawUUID.replace("-", "");
+    }
+
+    private static String getRandomUUID()
+    {
+        return UUID.randomUUID().toString();
     }
 }

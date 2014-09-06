@@ -19,7 +19,7 @@ public class TokenScopeManager
 
     public static enum Scope
     {
-        RocketService, UserService, ActivityService, AuthenticationService
+        RocketService, LogpieService, AuthenticationService
     }
 
     public static String addScope(String keySource, List<Scope> scopes)
@@ -103,7 +103,7 @@ public class TokenScopeManager
 
         return true;
     }
-    
+
     /**
      * Build the scopes for new user. The token would contain the information
      * about whether the user can access specific logpie service
@@ -114,8 +114,7 @@ public class TokenScopeManager
     {
         List<Scope> scopes = new LinkedList<Scope>();
         scopes.add(Scope.RocketService);
-        scopes.add(Scope.ActivityService);
-        scopes.add(Scope.UserService);
+        scopes.add(Scope.LogpieService);
         scopes.add(Scope.AuthenticationService);
         return scopes;
     }

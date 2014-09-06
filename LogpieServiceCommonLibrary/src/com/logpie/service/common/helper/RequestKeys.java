@@ -59,6 +59,14 @@ public class RequestKeys
     public static final String KEY_PROVINCE = "province";
 
     /**
+     * Keys for token validation
+     */
+    public static final String KEY_DECLARE_UID = "uid";
+    public static final String KEY_TOKEN = "token";
+    public static final String KEY_TOKEN_TYPE = "token_type";
+    public static final String KEY_ACCESS_SERVICE = "access_service";
+
+    /**
      * Keys for OOD
      */
 
