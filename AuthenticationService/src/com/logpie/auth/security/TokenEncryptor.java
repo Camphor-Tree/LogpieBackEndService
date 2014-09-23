@@ -8,7 +8,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import com.logpie.service.common.helper.CommonServiceLog;
+import com.logpie.service.util.ServiceLog;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class TokenEncryptor extends AbstractDataEncryptor
@@ -39,10 +39,10 @@ public class TokenEncryptor extends AbstractDataEncryptor
             return Base64.encode(key.getEncoded());
         } catch (NoSuchAlgorithmException e1)
         {
-            CommonServiceLog.e(TAG, "Doesn't support such algorithm", e1);
+            ServiceLog.e(TAG, "Doesn't support such algorithm", e1);
         } catch (InvalidKeySpecException e2)
         {
-            CommonServiceLog.e(TAG, "InvalidKeySpecException", e2);
+            ServiceLog.e(TAG, "InvalidKeySpecException", e2);
         }
         return null;
     }

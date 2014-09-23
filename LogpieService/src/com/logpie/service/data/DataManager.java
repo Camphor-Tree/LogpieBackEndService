@@ -9,13 +9,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.common.error.ErrorType;
-import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.ResponseKeys;
 import com.logpie.service.config.ServiceConfig;
+import com.logpie.service.error.ErrorType;
+import com.logpie.service.util.RequestKeys;
+import com.logpie.service.util.ResponseKeys;
+import com.logpie.service.util.ServiceLog;
 
 public abstract class DataManager
 {
@@ -36,26 +38,26 @@ public abstract class DataManager
         try
         {
             Class.forName("org.postgresql.Driver");
-            CommonServiceLog.d(TAG, "JDBC is loaded.");
+            ServiceLog.d(TAG, "JDBC is loaded.");
 
             setsConnection(openConnection());
-            CommonServiceLog.d(TAG, "Database is connected.");
+            ServiceLog.d(TAG, "Database is connected.");
         } catch (ClassNotFoundException e)
         {
-            CommonServiceLog
+            ServiceLog
                     .e(TAG,
-                            "ClassNotFoundException happended when trying to initiliaze postgreSQL driver.",
+                            "ClassNotFoundException happended when trying to initialize postgreSQL driver.",
                             e);
         } catch (SQLException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            ServiceLog.e(TAG,
+                    "SQLException happened when trying to initialize the database");
         }
     }
 
     private Connection openConnection() throws SQLException
     {
-        CommonServiceLog.d(TAG, "Database is connecting...");
+        ServiceLog.d(TAG, "Database is connecting...");
         return DriverManager.getConnection(ServiceConfig.PostgreSQL_URL,
                 ServiceConfig.PostgreSQL_Username, ServiceConfig.PostgreSQL_Password);
     }
@@ -69,22 +71,22 @@ public abstract class DataManager
                 DatabaseMetaData metaData = sConnection.getMetaData();
                 if (metaData != null)
                 {
-                    CommonServiceLog.d(TAG, "Checking table '" + tableName + "'...");
+                    ServiceLog.d(TAG, "Checking table '" + tableName + "'...");
                     return metaData.getTables(null, null, tableName, null).last();
                 }
                 else
                 {
-                    CommonServiceLog.e(TAG, "Cannot get metadata from database.");
+                    ServiceLog.e(TAG, "Cannot get metadata from database.");
                 }
             }
             else
             {
-                CommonServiceLog.e(TAG, "Cannot connect to the database.");
+                ServiceLog.e(TAG, "Cannot connect to the database.");
             }
             return false;
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG, "SQL exception happen when checking table", e);
+            ServiceLog.e(TAG, "SQL exception happen when checking table", e);
             return false;
         }
     }
@@ -97,38 +99,45 @@ public abstract class DataManager
      */
     protected abstract void createTable();
 
-    public void executeInsert(String sql, String resultType, final DataCallback dataCallback)
+    public void executeInsert(String sql, final DataCallback dataCallback)
     {
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG, "SQL is null or empty when executing INSERT operation.");
+            return;
+        }
+
         Statement statement = null;
         ResultSet resultSet = null;
-
         try
         {
-            CommonServiceLog.d(TAG, "Starting to INSERT...");
+            ServiceLog.d(TAG, "Starting to INSERT...");
             statement = sConnection.createStatement();
             int affectedRows = statement.executeUpdate(sql);
 
             if (affectedRows == 0)
             {
-                CommonServiceLog.e(TAG, "INSERT operation failed. No rows affected.");
+                ServiceLog.e(TAG, "INSERT operation failed. No rows affected.");
                 JSONObject error = new JSONObject();
-                error.put(resultType, ResponseKeys.KEY_RESULT_ERROR);
+                error.put(RequestKeys.REQUEST_TYPE_INSERT, ResponseKeys.RESULT_ERROR);
                 dataCallback.onError(error);
             }
             else
             {
-                CommonServiceLog.d(TAG, "INSERT is finished. " + affectedRows + " row affected.");
+                ServiceLog.d(TAG, "INSERT is finished. " + affectedRows
+                        + " row affected.");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(resultType, ResponseKeys.KEY_RESULT_SUCCESS);
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
+                        ResponseKeys.REQUEST_TYPE_INSERT);
                 dataCallback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG, "SQLException happend when executing the INSERT sql", e);
+            ServiceLog.e(TAG, "SQLException happend when executing the INSERT sql", e);
             handleErrorCallbackWithServerError(dataCallback);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException happend when executing callback, e");
+            ServiceLog.e(TAG, "JSONException happend when executing callback, e");
             handleErrorCallbackWithServerError(dataCallback);
         } finally
         {
@@ -149,39 +158,45 @@ public abstract class DataManager
         }
     }
 
-    public void executeQuery(ArrayList<String> keySet, String sql, String resultType,
+    public void executeQuery(ArrayList<String> keySet, String sql,
             final DataCallback dataCallback)
     {
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG, "SQL is null or empty when executing QUERY operation.");
+            return;
+        }
+
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-
         try
         {
-            CommonServiceLog.d(TAG, "Starting to QUERY...");
-            statement = sConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            int affectedRows = statement.executeUpdate();
-            if (affectedRows == 0)
+            ServiceLog.d(TAG, "Starting to QUERY...");
+            statement = sConnection.prepareStatement(sql);
+            ServiceLog.d(TAG, "Query SQL: " + sql);
+            resultSet = statement.executeQuery();
+            if (!resultSet.isBeforeFirst())
             {
-                CommonServiceLog.e(TAG, "QUERY operation failed. No rows affected.");
+                ServiceLog.e(TAG, "QUERY operation failed. No rows found.");
                 JSONObject error = new JSONObject();
-                error.put(resultType, ResponseKeys.KEY_RESULT_ERROR);
+                error.put(RequestKeys.REQUEST_TYPE_QUERY, ResponseKeys.RESULT_ERROR);
                 dataCallback.onError(error);
             }
             else
             {
-                CommonServiceLog.d(TAG, "QUERY is finished. " + affectedRows + " row(s) affected.");
+                ServiceLog.d(TAG, "QUERY is finished. ");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(resultType, ResponseKeys.KEY_RESULT_SUCCESS);
-                resultSet = statement.getGeneratedKeys();
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
+                        ResponseKeys.REQUEST_TYPE_QUERY);
                 buildResultSet(keySet, resultSet, returnJSON, dataCallback);
             }
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG, "SQLException happend when execute the QUERY sql", e);
+            ServiceLog.e(TAG, "SQLException happend when execute the QUERY sql", e);
             handleErrorCallbackWithServerError(dataCallback);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException happend when execute callback", e);
+            ServiceLog.e(TAG, "JSONException happend when execute callback", e);
             handleErrorCallbackWithServerError(dataCallback);
         } finally
         {
@@ -202,30 +217,47 @@ public abstract class DataManager
         }
     }
 
-    public String executeQuery(String sql, String keyword)
+    public String executeSingleQuery(String sql, String keyword)
     {
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG,
+                    "SQL is null or empty when executing single QUERY operation.");
+            return null;
+        }
+
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-
+        ServiceLog.d(TAG, "Single Query SQL: " + sql);
         try
         {
-            CommonServiceLog.d(TAG, "Starting to QUERY...");
-            statement = sConnection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            int affectedRows = statement.executeUpdate();
-            if (affectedRows == 0)
+            ServiceLog.d(TAG, "Starting to QUERY...");
+            statement = sConnection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            if (!resultSet.next())
             {
-                CommonServiceLog.e(TAG, "QUERY operation failed. No rows affected.");
-                return null;
+                ServiceLog.e(TAG, "QUERY operation failed. No rows found.");
             }
             else
             {
-                CommonServiceLog.d(TAG, "QUERY is finished. " + affectedRows + " row(s) affected.");
-                resultSet = statement.getGeneratedKeys();
-                return resultSet.getString(keyword);
+                ServiceLog.d(TAG, "QUERY is finished. ");
+                Object o = resultSet.getObject(keyword);
+                if (o == null)
+                {
+                    ServiceLog.e(TAG,
+                            "Cannot get the return value when using the keyword '"
+                                    + keyword + "'.");
+                }
+                else
+                {
+                    String value = o.toString();
+                    resultSet.close();
+                    return value;
+                }
             }
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG, "SQLException happend when execute the QUERY sql", e);
+            ServiceLog.e(TAG, "SQLException happend when execute the QUERY sql", e);
         } finally
         {
             if (resultSet != null)
@@ -246,37 +278,45 @@ public abstract class DataManager
         return null;
     }
 
-    public void executeUpdate(String sql, String resultType, final DataCallback dataCallback)
+    public void executeUpdate(String sql, final DataCallback dataCallback)
     {
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG, "SQL is null or empty when executing UPDATE operation.");
+            return;
+        }
+
         Statement statement = null;
         ResultSet resultSet = null;
         try
         {
             sConnection = openConnection();
-            CommonServiceLog.d(TAG, "Starting to UPDATE...");
+            ServiceLog.d(TAG, "Starting to UPDATE...");
             statement = sConnection.createStatement();
             int affectedRows = statement.executeUpdate(sql);
             if (affectedRows == 0)
             {
-                CommonServiceLog.e(TAG, "UPDATE operation failed. No rows affected.");
+                ServiceLog.e(TAG, "UPDATE operation failed. No rows affected.");
                 JSONObject error = new JSONObject();
-                error.put(resultType, ResponseKeys.KEY_RESULT_ERROR);
+                error.put(RequestKeys.REQUEST_TYPE_UPDATE, ResponseKeys.RESULT_ERROR);
                 dataCallback.onError(error);
             }
             else
             {
-                CommonServiceLog.d(TAG, "UPDATE is finished. " + affectedRows + " row affected.");
+                ServiceLog.d(TAG, "UPDATE is finished. " + affectedRows
+                        + " row affected.");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(resultType, ResponseKeys.KEY_RESULT_SUCCESS);
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
+                        ResponseKeys.REQUEST_TYPE_UPDATE);
                 dataCallback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG, "SQLException happend when execute the UPDATE sql", e);
+            ServiceLog.e(TAG, "SQLException happend when execute the UPDATE sql", e);
             handleErrorCallbackWithServerError(dataCallback);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException happend when execute callback", e);
+            ServiceLog.e(TAG, "JSONException happend when execute callback", e);
             handleErrorCallbackWithServerError(dataCallback);
         } finally
         {
@@ -302,33 +342,44 @@ public abstract class DataManager
     {
         try
         {
-            if (resultSet.next())
+            // Means select * from table
+            if (keySet == null || keySet.size() == 0)
             {
-                CommonServiceLog.d(TAG, "Starting to build result set...");
-                if (keySet == null) // Means find * from table...
+                buildAllResultSet(resultSet, returnJSON, dataCallback);
+                return;
+            }
+
+            JSONArray array = new JSONArray();
+            while (resultSet.next())
+            {
+                ServiceLog.d(TAG, "Starting to build result set...");
+                JSONObject object = new JSONObject();
+                for (String key : keySet)
                 {
-                    buildAllResultSet(resultSet, returnJSON);
-                }
-                else
-                {
-                    for (String key : keySet)
+                    Object o = resultSet.getObject(key);
+                    if (o != null)
                     {
-                        String returnValue = resultSet.getString(key);
-                        returnJSON.put(key, returnValue);
+                        String returnValue = o.toString();
+                        object.put(key, returnValue);
+                    }
+                    else
+                    {
+                        ServiceLog.e(TAG,
+                                "Cannot get the return value when using the keyword '"
+                                        + key + "'.");
                     }
                 }
-                dataCallback.onSuccess(returnJSON);
+                array.put(object);
             }
-            else
-            {
-                throw new SQLException("Building result set failed. No generated key obtained.");
-            }
+            returnJSON.put(ResponseKeys.KEY_METADATA, array);
+            dataCallback.onSuccess(returnJSON);
+
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG, "SQLException happend when build the result set", e);
+            ServiceLog.e(TAG, "SQLException happend when build the result set", e);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException happend when build the result set", e);
+            ServiceLog.e(TAG, "JSONException happend when build the result set", e);
         }
     }
 
@@ -339,7 +390,8 @@ public abstract class DataManager
      * @param resultSet
      * @param returnJSON
      */
-    protected abstract void buildAllResultSet(ResultSet resultSet, JSONObject returnJSON);
+    protected abstract void buildAllResultSet(ResultSet resultSet, JSONObject returnJSON,
+            DataCallback callback);
 
     private void handleErrorCallbackWithServerError(DataCallback callback)
     {

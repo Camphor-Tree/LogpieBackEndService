@@ -13,7 +13,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.logpie.service.common.helper.CommonServiceLog;
+import com.logpie.service.util.ServiceLog;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
@@ -35,7 +35,8 @@ public abstract class AbstractDataEncryptor
             mEncryptionKey = Base64.decode(getEncryptionKey());
         } catch (Base64DecodingException e1)
         {
-            CommonServiceLog.e(TAG, "No Such Algorithm Exception, AES/CBC is not supported", e1);
+            ServiceLog
+                    .e(TAG, "No Such Algorithm Exception, AES/CBC is not supported", e1);
         }
         mKeySpec = new SecretKeySpec(mEncryptionKey, "AES");
         try
@@ -43,10 +44,10 @@ public abstract class AbstractDataEncryptor
             mCipher = Cipher.getInstance(AES_MODE);
         } catch (NoSuchAlgorithmException e)
         {
-            CommonServiceLog.e(TAG, "No Such Algorithm Exception, AES/CBC is not supported", e);
+            ServiceLog.e(TAG, "No Such Algorithm Exception, AES/CBC is not supported", e);
         } catch (NoSuchPaddingException e)
         {
-            CommonServiceLog.e(TAG, "No Such Padding Exception, AES/CBC is not supported");
+            ServiceLog.e(TAG, "No Such Padding Exception, AES/CBC is not supported");
         }
     }
 
@@ -64,7 +65,7 @@ public abstract class AbstractDataEncryptor
             dataBytes = data.getBytes(UTF8);
         } catch (UnsupportedEncodingException e1)
         {
-            CommonServiceLog.e(TAG, "UnsupportedEncodingException", e1);
+            ServiceLog.e(TAG, "UnsupportedEncodingException", e1);
         }
         byte[] iv = generateIVForEncryption();
         try
@@ -77,10 +78,10 @@ public abstract class AbstractDataEncryptor
 
         } catch (InvalidKeyException e)
         {
-            CommonServiceLog.e(TAG, "InvalidKeyException", e);
+            ServiceLog.e(TAG, "InvalidKeyException", e);
         } catch (InvalidAlgorithmParameterException e)
         {
-            CommonServiceLog.e(TAG, "InvalidAlgorithmParameterException", e);
+            ServiceLog.e(TAG, "InvalidAlgorithmParameterException", e);
         }
         return null;
     };
@@ -96,24 +97,26 @@ public abstract class AbstractDataEncryptor
             mCipher.init(Cipher.DECRYPT_MODE, mKeySpec, new IvParameterSpec(dataBytes, 0,
                     INITIALIZATION_VECTOR_LENGTH));
             byte[] plainDataBytes = doCipherOperation(mCipher, dataBytes,
-                    INITIALIZATION_VECTOR_LENGTH, dataBytes.length - INITIALIZATION_VECTOR_LENGTH);
+                    INITIALIZATION_VECTOR_LENGTH, dataBytes.length
+                            - INITIALIZATION_VECTOR_LENGTH);
             // The final encryption result consists of iv and encryption data
             // Attach iv array in front of encryption byte array.
             return new String(plainDataBytes, UTF8);
         } catch (InvalidKeyException e)
         {
-            CommonServiceLog.e(TAG, "InvalidKeyException", e);
+            ServiceLog.e(TAG, "InvalidKeyException", e);
         } catch (InvalidAlgorithmParameterException e)
         {
-            CommonServiceLog.e(TAG, "InvalidAlgorithmParameterException", e);
+            ServiceLog.e(TAG, "InvalidAlgorithmParameterException", e);
         } catch (UnsupportedEncodingException e)
         {
-            CommonServiceLog.e(TAG, "Doesn't support UTF-8, which is impossible", e);
+            ServiceLog.e(TAG, "Doesn't support UTF-8, which is impossible", e);
         }
         return null;
     };
 
-    private byte[] doCipherOperation(Cipher cipher, byte[] dataToEncrypt, int offset, int length)
+    private byte[] doCipherOperation(Cipher cipher, byte[] dataToEncrypt, int offset,
+            int length)
     {
         try
         {
@@ -146,7 +149,7 @@ public abstract class AbstractDataEncryptor
                     encryptedDataBytes.length);
         } catch (Exception e)
         {
-            CommonServiceLog.e(TAG, "Exception happens when try to concat two bytes array", e);
+            ServiceLog.e(TAG, "Exception happens when try to concat two bytes array", e);
             return null;
         }
         return finalResult;

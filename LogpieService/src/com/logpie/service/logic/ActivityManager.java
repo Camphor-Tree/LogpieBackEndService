@@ -1,6 +1,5 @@
 package com.logpie.service.logic;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import javax.servlet.ServletContext;
@@ -11,23 +10,26 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.common.error.ErrorType;
-import com.logpie.service.common.error.HttpRequestIsNullException;
-import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.HttpRequestParser;
-import com.logpie.service.common.helper.RequestKeys;
-import com.logpie.service.common.helper.ResponseKeys;
-import com.logpie.service.common.helper.TimeHelper;
 import com.logpie.service.data.ActivityDataManager;
+import com.logpie.service.data.CityDataManager;
 import com.logpie.service.data.DataCallback;
 import com.logpie.service.data.DataManager;
-import com.logpie.service.data.DatabaseSchema;
-import com.logpie.service.data.SQLHelper;
+import com.logpie.service.error.ErrorType;
+import com.logpie.service.error.HttpRequestIsNullException;
 import com.logpie.service.logic.ManagerHelper.RequestType;
+import com.logpie.service.util.DatabaseSchema;
+import com.logpie.service.util.HttpRequestParser;
+import com.logpie.service.util.JSONHelper;
+import com.logpie.service.util.RequestKeys;
+import com.logpie.service.util.ResponseKeys;
+import com.logpie.service.util.SQLHelper;
+import com.logpie.service.util.ServiceLog;
 
 public class ActivityManager
 {
-    private static String TAG = ActivityManager.class.getName();
+    private static final String TAG = ActivityManager.class.getName();
+    private static final String DEFAULT_NUMBER = "25";
+
     private static ActivityManager sActivityManager;
     private static ServletContext sGlobalUniqueContext;
     private static DataManager sActivityDataManager;
@@ -57,40 +59,72 @@ public class ActivityManager
 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response)
     {
-        JSONObject postBody = null;
+        JSONObject postData = null;
         try
         {
-            postBody = HttpRequestParser.httpRequestParser(request);
+            postData = HttpRequestParser.httpRequestParser(request);
+            ServiceLog.d(TAG, "Received postData:" + postData);
         } catch (HttpRequestIsNullException e)
         {
-            CommonServiceLog.e(TAG,
-                    "HttpRequestParser is null when parsing an activity service request.", e);
-            return;
+            ServiceLog
+                    .e(TAG,
+                            "HttpRequestParser is null when parsing an activity service request.",
+                            e);
         }
-        if (postBody != null)
+        if (postData != null)
         {
-            String requestType = RequestKeys.KEY_ACTIVITY_TYPE;
-            String requestID = ManagerHelper.getRequestID(postBody);
+            // requestID will never be null
+            String requestID = ManagerHelper.getRequestID(postData);
 
             // TODO: verify token by auth service
 
-            RequestType type = ManagerHelper.getRequestType(postBody, requestType, requestID);
+            RequestType type = ManagerHelper.getRequestType(postData,
+                    RequestKeys.KEY_REQUEST_TYPE, requestID);
+            if (type == null)
+            {
+                ServiceLog.e(TAG, "Failed to find the request type from the request.",
+                        requestID);
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+            }
+
+            String service = null;
+            if (postData.has(RequestKeys.KEY_REQUEST_SERVICE))
+            {
+                try
+                {
+                    service = postData.getString(RequestKeys.KEY_REQUEST_SERVICE);
+                } catch (JSONException e)
+                {
+                    // TODO Auto-generated catch block
+                    ServiceLog
+                            .e(TAG,
+                                    "JSONException happened when get the request service from the JSON data",
+                                    requestID);
+                }
+            }
+            else
+            {
+                ServiceLog.e(requestID,
+                        "Failed to find the request service key from the request.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+            }
+
             switch (type)
             {
-            case INSERT:
-                handleInsert(postBody, response, requestID);
+            case insert:
+                handleInsert(postData, service, response, requestID);
                 break;
-            case QUERY:
-                handleQuery(postBody, response, requestID);
+            case query:
+                handleQuery(postData, service, response, requestID);
                 break;
-            case UPDATE:
-                handleUpdate(postBody, response, requestID);
+            case update:
+                handleUpdate(postData, service, response, requestID);
                 break;
-            case DELETE:
+            case delete:
                 break;
             default:
             {
-                CommonServiceLog.e(TAG, "Unsupported type of Activity Service.", requestID);
+                ServiceLog.e(TAG, "Unsupported type of activity service.", requestID);
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 break;
             }
@@ -102,238 +136,421 @@ public class ActivityManager
         }
     }
 
-    private void handleInsert(JSONObject postData, final HttpServletResponse response,
-            final String requestID)
+    private void handleInsert(JSONObject postData, final String service,
+            final HttpServletResponse response, final String requestID)
     {
         try
         {
-            ArrayList<String> key_set = new ArrayList<String>();
-            key_set.add(RequestKeys.KEY_UID);
-            key_set.add(RequestKeys.KEY_DESCRIPTION);
-            key_set.add(RequestKeys.KEY_LOCATION);
-            key_set.add(RequestKeys.KEY_START_TIME);
-            key_set.add(RequestKeys.KEY_END_TIME);
-            key_set.add(RequestKeys.KEY_CATEGORY);
-            key_set.add(RequestKeys.KEY_CITY);
-            key_set.add(RequestKeys.KEY_LATITUDE);
-            key_set.add(RequestKeys.KEY_LONGITUDE);
-
-            ArrayList<String> value_set = new ArrayList<String>();
-            value_set.add(postData.getString(RequestKeys.KEY_UID));
-            value_set.add(postData.getString(RequestKeys.KEY_DESCRIPTION));
-            value_set.add(postData.getString(RequestKeys.KEY_LOCATION));
-            value_set.add(postData.getString(RequestKeys.KEY_CATEGORY));
-            Timestamp startTime = TimeHelper.getTimestamp(postData
-                    .getString(RequestKeys.KEY_START_TIME));
-            Timestamp endTime = TimeHelper.getTimestamp(postData
-                    .getString(RequestKeys.KEY_END_TIME));
-            if (startTime == null || endTime == null)
+            if (!postData.has(RequestKeys.KEY_INSERT_KEYVALUE_PAIR))
             {
-                CommonServiceLog.e(TAG,
-                        "start time/end time is null when parsed the activity INSERT request",
-                        requestID);
+                ServiceLog.e(TAG,
+                        "Failed to find the insert key value pair from the request.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
             }
-            String cid = postData.getString(RequestKeys.KEY_CITY);
-            String lat = postData.getString(RequestKeys.KEY_LATITUDE);
-            String lon = postData.getString(RequestKeys.KEY_LONGITUDE);
 
-            CommonServiceLog.d(TAG, "Parsed the INSERT request.");
+            String sql = null;
+            switch (service)
+            {
+            case RequestKeys.SERVICE_CREATE_ACTIVITY:
+                sql = createActivity(postData);
+                break;
+            default:
+                ServiceLog.e(requestID, "Unsupported request service type.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
 
-            // Generate the sql for register a user
-            String sql = SQLHelper.buildInsertSQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, key_set,
-                    value_set);
-            CommonServiceLog.d(TAG, "Built the SQL to create an antivity: " + sql);
-
-            sActivityDataManager.executeInsert(sql, RequestKeys.KEY_ACTIVITY_TYPE,
-                    new DataCallback()
+            sActivityDataManager.executeInsert(sql, new DataCallback()
+            {
+                @Override
+                public void onSuccess(JSONObject result)
+                {
+                    try
                     {
-                        @Override
-                        public void onSuccess(JSONObject result)
-                        {
-                            try
-                            {
-                                result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                                ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_ACTIVITY_RESULT, result, response);
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when getting INSERT result successfully.",
-                                                requestID, e);
-                            }
-                        }
+                        result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
+                        ManagerHelper.handleResponse(true,
+                                ResponseKeys.KEY_ACTIVITY_RESULT, result, response);
+                    } catch (JSONException e)
+                    {
+                        ServiceLog.logRequest(TAG, requestID, e.getMessage());
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when getting INSERT result successfully.",
+                                        requestID, e);
+                    }
+                }
 
-                        @Override
-                        public void onError(JSONObject error)
-                        {
-                            try
-                            {
-                                ManagerHelper.handleResponseWithError(response, ErrorType
-                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when there is an error on getting INSERT result.",
-                                                requestID, e);
-                            }
-                        }
-                    });
+                @Override
+                public void onError(JSONObject error)
+                {
+                    try
+                    {
+                        ManagerHelper.handleResponseWithError(response, ErrorType
+                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                    } catch (JSONException e)
+                    {
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when there is an error on getting INSERT result.",
+                                        requestID, e);
+                    }
+                }
+            });
         } catch (JSONException e)
         {
-            CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
+            ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog
+            ServiceLog
                     .e(TAG,
-                            "JSONException happened when getting uid/email/nickname before INSERT operation.",
+                            "JSONException happened when making an INSERT operation of activity service.",
                             e);
         }
     }
 
-    private void handleQuery(JSONObject postData, final HttpServletResponse response,
-            final String requestID)
+    private void handleQuery(JSONObject postData, final String service,
+            final HttpServletResponse response, final String requestID)
     {
         try
         {
-            JSONArray requestArray = postData.getJSONArray(RequestKeys.KEY_QUERY);
-            ArrayList<String> keySet = new ArrayList<String>();
-            if (requestArray != null)
+            if (!postData.has(RequestKeys.KEY_QUERY_KEY))
             {
-                for (int i = 0; i < requestArray.length(); i++)
+                ServiceLog.e(TAG, "Failed to find the query key from the request.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
+
+            String sql = null;
+            ArrayList<String> returnSet = null;
+
+            switch (service)
+            {
+            case RequestKeys.SERVICE_FIND_NEARBY_ACTIVITY:
+                ActivityListQueryNearby queryNearby = new ActivityListQueryNearby();
+                returnSet = queryNearby.getReturnSet(postData);
+                sql = queryNearby.handleQuery(postData, requestID);
+                break;
+            case RequestKeys.SERVICE_FIND_ACTIVITY_BY_CITY:
+                ActivityListQueryByCity queryByCity = new ActivityListQueryByCity();
+                returnSet = queryByCity.getReturnSet(postData);
+                sql = queryByCity.handleQuery(postData, requestID);
+                break;
+            case RequestKeys.SERVICE_FIND_ACTIVITY_BY_CATEGORY:
+                ActivityListQueryByCategory queryByCategory = new ActivityListQueryByCategory();
+                returnSet = queryByCategory.getReturnSet(postData);
+                sql = queryByCategory.handleQuery(postData, requestID);
+                break;
+            default:
+                ServiceLog.e(requestID, "Unsupported request service type.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
+
+            sActivityDataManager.executeQuery(returnSet, sql, new DataCallback()
+            {
+                @Override
+                public void onSuccess(JSONObject result)
                 {
-                    JSONObject object = requestArray.getJSONObject(i);
-                    String key = object.getString(RequestKeys.KEY_KEYWORD);
-                    keySet.add(key);
+                    try
+                    {
+                        result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
+                        ManagerHelper.handleResponse(true,
+                                ResponseKeys.KEY_ACTIVITY_RESULT, result, response);
+                    } catch (JSONException e)
+                    {
+                        ServiceLog.logRequest(TAG, requestID, e.getMessage());
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when getting QUERY result successfully.",
+                                        requestID, e);
+                    }
+                }
+
+                @Override
+                public void onError(JSONObject error)
+                {
+                    try
+                    {
+                        ManagerHelper.handleResponseWithError(response, ErrorType
+                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                    } catch (JSONException e)
+                    {
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when there is an error on getting QUERY result.",
+                                        requestID, e);
+                    }
+
+                }
+            });
+        } catch (JSONException e)
+        {
+            ServiceLog.logRequest(TAG, requestID, e.getMessage());
+            ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+            ServiceLog
+                    .e(TAG,
+                            "JSONException happened when making a QUERY operation of activity service.",
+                            e);
+        }
+    }
+
+    private void handleUpdate(JSONObject postData, final String service,
+            final HttpServletResponse response, final String requestID)
+    {
+        try
+        {
+            if (!postData.has(RequestKeys.KEY_UPDATE_KEYVALUE_PAIR))
+            {
+                ServiceLog.e(TAG,
+                        "Failed to find the update key value pair from the request.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
+
+            String sql = null;
+            switch (service)
+            {
+            case RequestKeys.SERVICE_EDIT_ACTIVITY_DETAIL:
+                sql = editActivity(postData);
+                break;
+            default:
+                ServiceLog.e(requestID, "Unsupported request service type.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
+
+            sActivityDataManager.executeUpdate(sql, new DataCallback()
+            {
+                @Override
+                public void onSuccess(JSONObject result)
+                {
+                    try
+                    {
+                        result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
+                        ManagerHelper.handleResponse(true,
+                                ResponseKeys.KEY_ACTIVITY_RESULT, result, response);
+                    } catch (JSONException e)
+                    {
+                        ServiceLog.logRequest(TAG, requestID, e.getMessage());
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when getting UPDATE result successfully.",
+                                        requestID, e);
+                    }
+                }
+
+                @Override
+                public void onError(JSONObject error)
+                {
+                    try
+                    {
+                        ManagerHelper.handleResponseWithError(response, ErrorType
+                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                    } catch (JSONException e)
+                    {
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when there is an error on getting UPDATE result.",
+                                        requestID, e);
+                    }
+
+                }
+            });
+        } catch (JSONException e)
+        {
+            ServiceLog.logRequest(TAG, requestID, e.getMessage());
+            ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+            ServiceLog
+                    .e(TAG,
+                            "JSONException happened making an UPDATE operation of activity service.",
+                            e);
+        }
+    }
+
+    private String createActivity(JSONObject postData) throws JSONException
+    {
+        // Build the set of required keys
+        ArrayList<String> keySet = new ArrayList<String>();
+        keySet.add(RequestKeys.KEY_UID);
+        keySet.add(RequestKeys.KEY_DESCRIPTION);
+        keySet.add(RequestKeys.KEY_LOCATION);
+        keySet.add(RequestKeys.KEY_START_TIME);
+        keySet.add(RequestKeys.KEY_END_TIME);
+        keySet.add(RequestKeys.KEY_CATEGORY);
+        keySet.add(RequestKeys.KEY_CITY);
+        keySet.add(RequestKeys.KEY_LATITUDE);
+        keySet.add(RequestKeys.KEY_LONGITUDE);
+
+        String sql = JSONHelper.parseToSQL(postData, keySet,
+                DatabaseSchema.SCHEMA_TABLE_ACTIVITY, RequestKeys.REQUEST_TYPE_INSERT,
+                null);
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG, "Failed to build SQL when creating an activity.");
+        }
+        else
+        {
+            ServiceLog.d(TAG, "Built the SQL to create an antivity: " + sql);
+        }
+
+        return sql;
+    }
+
+    private String editActivity(JSONObject postData) throws JSONException
+    {
+        String sql = JSONHelper.parseToSQL(postData, null,
+                DatabaseSchema.SCHEMA_TABLE_ACTIVITY, RequestKeys.REQUEST_TYPE_UPDATE,
+                null);
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG, "Failed to build SQL when editting an activity.");
+        }
+        else
+        {
+            ServiceLog.d(TAG, "Built the SQL to edit an antivity: " + sql);
+        }
+
+        return sql;
+    }
+
+    private abstract class ActivityListQueryHandler
+    {
+        ArrayList<String> returnSet;
+
+        final String handleQuery(JSONObject postData, String requestID)
+                throws JSONException
+        {
+            returnSet = getReturnSet(postData);
+
+            return buildQuerySQL(postData, returnSet, requestID);
+        }
+
+        ArrayList<String> getReturnSet(JSONObject postData) throws JSONException
+        {
+
+            JSONArray queryKey = postData.getJSONArray(RequestKeys.KEY_QUERY_KEY);
+
+            if (queryKey == null)
+            {
+                ServiceLog
+                        .d(TAG,
+                                "There is no query key in the request that means select all keys from the table.");
+                return null;
+            }
+            for (int i = 0; i < queryKey.length(); i++)
+            {
+                if (queryKey.getJSONObject(i).has(RequestKeys.KEY_QUERY_COLUMN))
+                {
+                    returnSet.add(queryKey.getJSONObject(i).getString(
+                            RequestKeys.KEY_QUERY_COLUMN));
                 }
             }
-            String constraintKey = postData.getString(RequestKeys.KEY_CONSTRAINT_KEYWORD);
-            String constraintValue = postData.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
-            CommonServiceLog.d(TAG, "Parsed the QUERY request.");
 
-            // Generate the sql for query a record
-            String sql = SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, keySet,
-                    constraintKey, constraintValue);
-            CommonServiceLog.d(TAG, "Built the SQL to query: " + sql);
-
-            sActivityDataManager.executeQuery(keySet, sql, RequestKeys.KEY_CUSTOMER_TYPE,
-                    new DataCallback()
-                    {
-                        @Override
-                        public void onSuccess(JSONObject result)
-                        {
-                            try
-                            {
-                                result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                                ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when getting QUERY result successfully.",
-                                                requestID, e);
-                            }
-                        }
-
-                        @Override
-                        public void onError(JSONObject error)
-                        {
-                            try
-                            {
-                                ManagerHelper.handleResponseWithError(response, ErrorType
-                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when there is an error on getting QUERY result.",
-                                                requestID, e);
-                            }
-
-                        }
-                    });
-        } catch (JSONException e)
-        {
-            CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
-            ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog.e(TAG,
-                    "JSONException happened when getting key/value before QUERY operation.", e);
+            return returnSet;
         }
+
+        abstract String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet,
+                String requestID) throws JSONException;
     }
 
-    private void handleUpdate(JSONObject postData, final HttpServletResponse response,
-            final String requestID)
+    private class ActivityListQueryNearby extends ActivityListQueryHandler
     {
-        try
+
+        @Override
+        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet,
+                String requestID)
         {
-            JSONArray requestArray = postData.getJSONArray(RequestKeys.KEY_KEYWORD);
-            ArrayList<String> keySet = new ArrayList<String>();
-            ArrayList<String> valueSet = new ArrayList<String>();
-            for (int i = 0; i < requestArray.length(); i++)
+            // TODO Implement this function
+            return null;
+        }
+
+    }
+
+    private class ActivityListQueryByCity extends ActivityListQueryHandler
+    {
+
+        @Override
+        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet,
+                String requestID) throws JSONException
+        {
+            JSONArray constraintKeyvaluePair;
+            if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
             {
-                JSONObject object = requestArray.getJSONObject(i);
-                String key = object.getString(RequestKeys.KEY_KEYWORD);
-                String value = object.getString(RequestKeys.KEY_VALUE);
-                keySet.add(key);
-                valueSet.add(value);
+                ServiceLog
+                        .e(TAG,
+                                "Failed to find the constraint key value pair from query request.",
+                                requestID);
+                return null;
             }
-            String constraintKey = postData.getString(RequestKeys.KEY_CONSTRAINT_KEYWORD);
-            String constraintValue = postData.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
-            CommonServiceLog.d(TAG, "Parsed the UPDATE request.");
 
-            // Generate the sql for query a record
-            String sql = SQLHelper.buildUpdateSQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, keySet,
-                    valueSet, constraintKey, constraintValue);
-            CommonServiceLog.d(TAG, "Built the SQL to query: " + sql);
+            constraintKeyvaluePair = postData
+                    .getJSONArray(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR);
+            String city = null;
 
-            sActivityDataManager.executeUpdate(sql, RequestKeys.KEY_CUSTOMER_TYPE,
-                    new DataCallback()
+            for (int i = 0; i < constraintKeyvaluePair.length(); i++)
+            {
+                JSONObject data = constraintKeyvaluePair.getJSONObject(i);
+                if (data.has(RequestKeys.KEY_CONSTRAINT_COLUMN))
+                {
+                    if (data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN).equals(
+                            RequestKeys.KEY_CITY))
                     {
-                        @Override
-                        public void onSuccess(JSONObject result)
-                        {
-                            try
-                            {
-                                result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                                ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when getting UPDATE result successfully.",
-                                                requestID, e);
-                            }
-                        }
+                        city = data.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
+                        ServiceLog.d(TAG, "Parsed the city data is: " + city);
+                        break;
+                    }
+                }
+            }
 
-                        @Override
-                        public void onError(JSONObject error)
-                        {
-                            try
-                            {
-                                ManagerHelper.handleResponseWithError(response, ErrorType
-                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when there is an error on getting UPDATE result.",
-                                                requestID, e);
-                            }
+            if (city == null)
+            {
+                ServiceLog.e(TAG, "Failed to find the city data from the query request.",
+                        requestID);
+                return null;
+            }
 
-                        }
-                    });
-        } catch (JSONException e)
-        {
-            CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
-            ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog.e(TAG,
-                    "JSONException happened when getting key/value before UPDATE operation.", e);
+            String sql = "select cid from city where city = '" + city + "'";
+            String cid = CityDataManager.getInstance().executeSingleQuery(sql,
+                    DatabaseSchema.SCHEMA_CITY_CID);
+            if (cid == null || cid.equals(""))
+            {
+                ServiceLog.e(TAG, "Failed to get the cid", requestID);
+                return null;
+            }
+
+            ArrayList<String> constraintKey = new ArrayList<String>();
+            constraintKey.add(DatabaseSchema.SCHEMA_ACTIVITY_CITY);
+            ArrayList<String> constraintOperator = new ArrayList<String>();
+            constraintOperator.add(RequestKeys.KEY_EQUAL);
+            ArrayList<String> constraintValue = new ArrayList<String>();
+            constraintValue.add(cid);
+
+            String number = null;
+            if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
+            {
+                number = postData.getString(RequestKeys.KEY_LIMIT_NUMBER);
+            }
+            else
+            {
+                number = DEFAULT_NUMBER;
+            }
+
+            return SQLHelper
+                    .buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, returnSet,
+                            constraintKey, constraintOperator, constraintValue, number);
         }
     }
 
+    private class ActivityListQueryByCategory extends ActivityListQueryHandler
+    {
+
+        @Override
+        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet,
+                String requestID)
+        {
+            // TODO Implement this function
+            return null;
+        }
+
+    }
 }

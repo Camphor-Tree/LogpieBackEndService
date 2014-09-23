@@ -6,7 +6,7 @@ import java.util.List;
 import com.logpie.auth.logic.TokenGenerator;
 import com.logpie.auth.logic.TokenScopeManager;
 import com.logpie.auth.logic.TokenScopeManager.Scope;
-import com.logpie.service.common.helper.CommonServiceLog;
+import com.logpie.service.util.ServiceLog;
 
 public class SQLHelper
 {
@@ -45,11 +45,11 @@ public class SQLHelper
         ArrayList<String> result = new ArrayList<String>();
         String access_keysource = TokenScopeManager.addScope(
                 TokenGenerator.generateAccessTokenBaseKeySource(uid), scopes);
-        CommonServiceLog.d(TAG, "access_keysource:" + access_keysource);
+        ServiceLog.d(TAG, "access_keysource:" + access_keysource);
         String access_token = TokenGenerator.generateToken(access_keysource);
         String refresh_keysource = TokenScopeManager.addScope(
                 TokenGenerator.generateRefreshTokenBaseKeySource(uid), scopes);
-        CommonServiceLog.d(TAG, "refresh_keysource:" + refresh_keysource);
+        ServiceLog.d(TAG, "refresh_keysource:" + refresh_keysource);
         String refresh_token = TokenGenerator.generateToken(refresh_keysource);
         // build the sql to update the tokens
         String sql = String
@@ -103,9 +103,9 @@ public class SQLHelper
         List<Scope> scopeList = TokenScopeManager.getScope(token);
         String access_keysource = TokenScopeManager.addScope(
                 TokenGenerator.generateAccessTokenBaseKeySource(uid), scopeList);
-        CommonServiceLog.d(TAG, "new access_token's key_source:" + access_keysource);
+        ServiceLog.d(TAG, "new access_token's key_source:" + access_keysource);
         String new_access_token = TokenGenerator.generateToken(access_keysource);
-        CommonServiceLog.d(TAG, "new access_token:" + new_access_token);
+        ServiceLog.d(TAG, "new access_token:" + new_access_token);
         String sql = String
                 .format("update user_auth set access_token = \'%s\', access_token_expire_time = now() + interval \'1 hour\' where uid = \'%s\';",
                         new_access_token, uid);
@@ -142,7 +142,8 @@ public class SQLHelper
      */
     public static String buildResetPasswordSQL(String uid, String newPassword)
     {
-        String sql = String.format("UPDATE user_auth SET password = \'%s\';", newPassword);
+        String sql = String
+                .format("UPDATE user_auth SET password = \'%s\';", newPassword);
         return sql;
     }
 }

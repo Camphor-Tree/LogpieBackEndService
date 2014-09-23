@@ -6,8 +6,8 @@ import java.util.HashSet;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.ResponseKeys;
+import com.logpie.service.util.ResponseKeys;
+import com.logpie.service.util.ServiceLog;
 
 public class TokenVerificationManager
 {
@@ -67,11 +67,13 @@ public class TokenVerificationManager
             int randomUIDOffset = mPlainToken.indexOf("$");
             int timeStampOffset = mPlainToken.indexOf("#");
 
-            String timeStampString = mPlainToken.substring(uidOffset + 1, timeStampOffset);
+            String timeStampString = mPlainToken
+                    .substring(uidOffset + 1, timeStampOffset);
             mTokenGeneratedTime = Timestamp.valueOf(timeStampString);
 
             mUidInToken = mPlainToken.substring(0, uidOffset);
-            String scopeString = mPlainToken.substring(randomUIDOffset, mPlainToken.length());
+            String scopeString = mPlainToken.substring(randomUIDOffset,
+                    mPlainToken.length());
             String[] scopes = scopeString.split("$");
             for (String scope : scopes)
             {
@@ -86,15 +88,17 @@ public class TokenVerificationManager
         long tokenExpirationTimeMillis = 0;
         if (mTokenType.equals("access_token"))
         {
-            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime() + sAccessTokenExpiration;
+            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime()
+                    + sAccessTokenExpiration;
         }
         else if (mTokenType.equals("refresh_token"))
         {
-            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime() + sRefreshTokenExpiration;
+            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime()
+                    + sRefreshTokenExpiration;
         }
         else
         {
-            CommonServiceLog.e(TAG, "The token_type cannot be recognized! Token_type is:"
+            ServiceLog.e(TAG, "The token_type cannot be recognized! Token_type is:"
                     + mTokenType);
             return false;
         }
@@ -130,7 +134,7 @@ public class TokenVerificationManager
             successJSON.put(ResponseKeys.KEY_AUTHENTICATION_RESULT, "success");
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException when build success result", mRequestId, e);
+            ServiceLog.e(TAG, "JSONException when build success result", mRequestId, e);
             return null;
         }
         return successJSON;
@@ -145,7 +149,7 @@ public class TokenVerificationManager
             failJSON.put(ResponseKeys.KEY_TOKEN_VALIDATION_FAIL_REASON, reason);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException when build fail result", mRequestId, e);
+            ServiceLog.e(TAG, "JSONException when build fail result", mRequestId, e);
             return null;
         }
         return failJSON;

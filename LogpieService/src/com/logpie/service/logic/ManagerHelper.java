@@ -8,11 +8,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.common.error.ErrorType;
-import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.HttpResponseWriter;
-import com.logpie.service.common.helper.RequestKeys;
-import com.logpie.service.common.helper.ResponseKeys;
+import com.logpie.service.error.ErrorType;
+import com.logpie.service.util.HttpResponseWriter;
+import com.logpie.service.util.RequestKeys;
+import com.logpie.service.util.ResponseKeys;
+import com.logpie.service.util.ServiceLog;
 
 /**
  * Helper class for different managers
@@ -28,7 +28,7 @@ public class ManagerHelper
      */
     public static enum RequestType
     {
-        INSERT, QUERY, UPDATE, DELETE;
+        insert, query, update, delete;
         public static RequestType matchType(String type)
         {
             for (RequestType requestType : RequestType.values())
@@ -50,19 +50,18 @@ public class ManagerHelper
      * @param requestID
      * @return RequestType
      */
-    static RequestType getRequestType(JSONObject postData, String requestType,
+    static RequestType getRequestType(JSONObject postData, String keyRequestType,
             String requestID)
     {
-        if (postData.has(requestType))
+        if (postData.has(keyRequestType))
         {
             try
             {
-                return RequestType.matchType(postData.getString(requestType));
+                return RequestType.matchType(postData.getString(keyRequestType));
             } catch (JSONException e)
             {
-                CommonServiceLog.e(TAG,
-                        "JSONException happend when parsing request type.", requestID, e);
-                return null;
+                ServiceLog.e(TAG, "JSONException happend when parsing request type.",
+                        requestID, e);
             }
         }
         return null;
@@ -86,7 +85,7 @@ public class ManagerHelper
             } catch (JSONException e)
             {
                 String requestID = UUID.randomUUID().toString();
-                CommonServiceLog
+                ServiceLog
                         .d(TAG,
                                 "JOSNException happened when parsing request ID. Generating a random request ID: ",
                                 requestID);
@@ -107,23 +106,24 @@ public class ManagerHelper
     static void handleResponse(boolean success, String responseType, JSONObject data,
             HttpServletResponse response)
     {
-        CommonServiceLog.d(TAG, "Handling CustomerService request... JSON data is: "
-                + data.toString());
+        ServiceLog.d(TAG,
+                "Handling Logpie Service request... JSON data is: " + data.toString());
         try
         {
             if (success)
             {
-                data.put(responseType, ResponseKeys.KEY_RESULT_SUCCESS);
+                data.put(responseType, ResponseKeys.RESULT_SUCCESS);
             }
             else
             {
-                data.put(responseType, ResponseKeys.KEY_RESULT_ERROR);
+                data.put(responseType, ResponseKeys.RESULT_ERROR);
             }
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG,
-                    "JSONException happened when handle CustomerService request result",
-                    e);
+            ServiceLog
+                    .e(TAG,
+                            "JSONException happened when handle Logpie Service request result",
+                            e);
         }
         HttpResponseWriter.reponseWithSuccess(responseType, data, response);
     }
@@ -139,12 +139,12 @@ public class ManagerHelper
         try
         {
             response.sendError(errorType.getErrorCode());
-            CommonServiceLog.e(TAG, "Returning error code when handling the response ->"
+            ServiceLog.e(TAG, "Returning error code when handling the response ->"
                     + "ErrorCode:" + errorType.getErrorCode() + " ErrorMessage:"
                     + errorType.getErrorMessage());
         } catch (IOException e)
         {
-            CommonServiceLog.e(TAG, "IOException happend when sendErrorCode.", e);
+            ServiceLog.e(TAG, "IOException happend when sendErrorCode.", e);
         }
     }
 }

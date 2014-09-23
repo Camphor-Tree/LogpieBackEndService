@@ -5,12 +5,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.ResponseKeys;
 import com.logpie.service.config.DatabaseConfig;
+import com.logpie.service.util.DatabaseSchema;
+import com.logpie.service.util.ResponseKeys;
+import com.logpie.service.util.ServiceLog;
 
 public class CustomerDataManager extends DataManager
 {
@@ -60,46 +62,69 @@ public class CustomerDataManager extends DataManager
         try
         {
             Statement statement = getsConnection().createStatement();
-            CommonServiceLog.d(TAG, "Creating '" + USER_TABLE + "' table...");
+            ServiceLog.d(TAG, "Creating '" + USER_TABLE + "' table...");
             statement.execute(DatabaseConfig.SQL_CREATE_USER_TABLE);
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG, "SQL error happen when creating a table", e);
+            ServiceLog.e(TAG, "SQL error happen when creating a table", e);
         }
     }
 
     @Override
-    protected void buildAllResultSet(ResultSet resultSet, JSONObject returnJSON)
+    protected void buildAllResultSet(ResultSet resultSet, JSONObject returnJSON,
+            DataCallback dataCallback)
     {
         try
         {
-            long uid = resultSet.getLong(DatabaseSchema.SCHEMA_UID);
-            String email = resultSet.getString(DatabaseSchema.SCHEMA_EMAIL);
-            String nickname = resultSet.getString(DatabaseSchema.SCHEMA_NICKNAME);
-            boolean gender = resultSet.getBoolean(DatabaseSchema.SCHEMA_GENDER);
-            Date birthday = resultSet.getDate(DatabaseSchema.SCHEMA_BIRTHDAY);
-            String country = resultSet.getString(DatabaseSchema.SCHEMA_COUNTRY);
-            int city = resultSet.getInt(DatabaseSchema.SCHEMA_CITY);
-            Date lastUpdateTime = resultSet.getDate(DatabaseSchema.SCHEMA_LAST_UPDATE_TIME);
-            boolean organization = resultSet.getBoolean(DatabaseSchema.SCHEMA_IS_ORGANIZATION);
+            JSONArray array = new JSONArray();
 
-            returnJSON.put(ResponseKeys.KEY_UID, String.valueOf(uid));
-            returnJSON.put(ResponseKeys.KEY_EMAIL, email);
-            returnJSON.put(ResponseKeys.KEY_NICKNAME, nickname);
-            returnJSON.put(ResponseKeys.KEY_GENDER, String.valueOf(gender));
-            returnJSON.put(ResponseKeys.KEY_BIRTHDAY, String.valueOf(birthday));
-            returnJSON.put(ResponseKeys.KEY_COUNTRY, country);
-            returnJSON.put(ResponseKeys.KEY_CITY, String.valueOf(city));
-            returnJSON.put(ResponseKeys.KEY_LAST_UPDATE_TIME, String.valueOf(lastUpdateTime));
-            returnJSON.put(ResponseKeys.KEY_IS_ORGANIZATION, String.valueOf(organization));
+            while (resultSet.next())
+            {
+                ServiceLog.d(TAG, "Starting to build result set...");
+                JSONObject object = new JSONObject();
+
+                long uid = resultSet.getLong(DatabaseSchema.SCHEMA_USER_UID);
+                String email = resultSet.getString(DatabaseSchema.SCHEMA_USER_EMAIL);
+                String nickname = resultSet
+                        .getString(DatabaseSchema.SCHEMA_USER_NICKNAME);
+                boolean gender = resultSet.getBoolean(DatabaseSchema.SCHEMA_USER_GENDER);
+                Date birthday = resultSet.getDate(DatabaseSchema.SCHEMA_USER_BIRTHDAY);
+                String country = resultSet.getString(DatabaseSchema.SCHEMA_USER_COUNTRY);
+                int city = resultSet.getInt(DatabaseSchema.SCHEMA_USER_CITY);
+                Date lastUpdateTime = resultSet
+                        .getDate(DatabaseSchema.SCHEMA_USER_LAST_UPDATE_TIME);
+                boolean organization = resultSet
+                        .getBoolean(DatabaseSchema.SCHEMA_USER_IS_ORGANIZATION);
+
+                object.put(ResponseKeys.KEY_UID, String.valueOf(uid));
+                object.put(ResponseKeys.KEY_EMAIL, email);
+                object.put(ResponseKeys.KEY_NICKNAME, nickname);
+                object.put(ResponseKeys.KEY_GENDER, String.valueOf(gender));
+                object.put(ResponseKeys.KEY_BIRTHDAY, String.valueOf(birthday));
+                object.put(ResponseKeys.KEY_COUNTRY, country);
+                object.put(ResponseKeys.KEY_CITY, String.valueOf(city));
+                object.put(ResponseKeys.KEY_LAST_UPDATE_TIME,
+                        String.valueOf(lastUpdateTime));
+                object.put(ResponseKeys.KEY_IS_ORGANIZATION, String.valueOf(organization));
+
+                array.put(object);
+            }
+
+            returnJSON.put(ResponseKeys.KEY_METADATA, array);
+            dataCallback.onSuccess(returnJSON);
+
         } catch (SQLException e)
         {
-            CommonServiceLog.e(TAG,
-                    "SQLException happened when building all result set of query request", e);
+            ServiceLog
+                    .e(TAG,
+                            "SQLException happened when building all result set of query request",
+                            e);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG,
-                    "JSONException happened when building all result set of query request", e);
+            ServiceLog
+                    .e(TAG,
+                            "JSONException happened when building all result set of query request",
+                            e);
         }
     }
 }

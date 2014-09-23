@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.logpie.service.common.helper.CommonServiceLog;
+import com.logpie.service.util.ServiceLog;
 
 /**
  * Every token should have a scope. TokenScopeManager is used to manager and
@@ -36,7 +36,7 @@ public class TokenScopeManager
         }
         else
         {
-            CommonServiceLog.e(TAG, "The keySource cannot be null!");
+            ServiceLog.e(TAG, "The keySource cannot be null!");
             return null;
         }
 

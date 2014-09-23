@@ -6,22 +6,21 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.common.error.ErrorType;
-import com.logpie.service.common.error.HttpRequestIsNullException;
-import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.HttpRequestParser;
-import com.logpie.service.common.helper.RequestKeys;
-import com.logpie.service.common.helper.ResponseKeys;
 import com.logpie.service.data.CustomerDataManager;
 import com.logpie.service.data.DataCallback;
 import com.logpie.service.data.DataManager;
-import com.logpie.service.data.DatabaseSchema;
-import com.logpie.service.data.SQLHelper;
+import com.logpie.service.error.ErrorType;
+import com.logpie.service.error.HttpRequestIsNullException;
 import com.logpie.service.logic.ManagerHelper.RequestType;
+import com.logpie.service.util.DatabaseSchema;
+import com.logpie.service.util.HttpRequestParser;
+import com.logpie.service.util.JSONHelper;
+import com.logpie.service.util.RequestKeys;
+import com.logpie.service.util.ResponseKeys;
+import com.logpie.service.util.ServiceLog;
 
 /**
  * Customer Manager class for handling customer type request
@@ -66,38 +65,71 @@ public class CustomerManager
      */
     public void handleRequest(HttpServletRequest request, HttpServletResponse response)
     {
-        JSONObject postBody = null;
+        JSONObject postData = null;
         try
         {
-            postBody = HttpRequestParser.httpRequestParser(request);
+            postData = HttpRequestParser.httpRequestParser(request);
+            ServiceLog.d(TAG, "Received postData:" + postData);
         } catch (HttpRequestIsNullException e)
         {
-            CommonServiceLog.e(TAG,
-                    "HttpRequestParser is null when parsing a customer service request.", e);
-            return;
+            ServiceLog.e(TAG,
+                    "HttpRequestParser is null when parsing a customer service request.",
+                    e);
         }
-        if (postBody != null)
+        if (postData != null)
         {
-            String requestType = RequestKeys.KEY_CUSTOMER_TYPE;
-            String requestID = ManagerHelper.getRequestID(postBody);
+            // requestID will never be null
+            String requestID = ManagerHelper.getRequestID(postData);
 
-            RequestType type = ManagerHelper.getRequestType(postBody, requestType, requestID);
+            // TODO: verify token by auth service
+
+            RequestType type = ManagerHelper.getRequestType(postData,
+                    RequestKeys.KEY_REQUEST_TYPE, requestID);
+            if (type == null)
+            {
+                ServiceLog.e(TAG, "Failed to find the request type from the request.",
+                        requestID);
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+            }
+
+            String service = null;
+            if (postData.has(RequestKeys.KEY_REQUEST_SERVICE))
+            {
+                try
+                {
+                    service = postData.getString(RequestKeys.KEY_REQUEST_SERVICE);
+                } catch (JSONException e)
+                {
+                    // TODO Auto-generated catch block
+                    ServiceLog
+                            .e(TAG,
+                                    "JSONException happened when get the request service from the JSON data",
+                                    requestID);
+                }
+            }
+            else
+            {
+                ServiceLog.e(requestID,
+                        "Failed to find the request service key from the request.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+            }
+
             switch (type)
             {
-            case INSERT:
-                handleInsert(postBody, response, requestID);
+            case insert:
+                handleInsert(postData, service, response, requestID);
                 break;
-            case QUERY:
-                handleQuery(postBody, response, requestID);
+            case query:
+                handleQuery(postData, service, response, requestID);
                 break;
-            case UPDATE:
-                handleUpdate(postBody, response, requestID);
+            case update:
+                handleUpdate(postData, service, response, requestID);
                 break;
-            case DELETE:
+            case delete:
                 break;
             default:
             {
-                CommonServiceLog.e(TAG, "Unsupported type of Customer Service.", requestID);
+                ServiceLog.e(TAG, "Unsupported type of activity service.", requestID);
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 break;
             }
@@ -116,72 +148,74 @@ public class CustomerManager
      * @param response
      * @param requestID
      */
-    private void handleInsert(JSONObject postData, final HttpServletResponse response,
-            final String requestID)
+    private void handleInsert(JSONObject postData, String service,
+            final HttpServletResponse response, final String requestID)
     {
         try
         {
-            ArrayList<String> key_set = new ArrayList<String>();
-            key_set.add(RequestKeys.KEY_UID);
-            key_set.add(RequestKeys.KEY_EMAIL);
-            key_set.add(RequestKeys.KEY_NICKNAME);
-            key_set.add(RequestKeys.KEY_CITY);
+            if (!postData.has(RequestKeys.KEY_INSERT_KEYVALUE_PAIR))
+            {
+                ServiceLog.e(TAG,
+                        "Failed to find the insert key value pair from the request.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
 
-            ArrayList<String> value_set = new ArrayList<String>();
-            value_set.add(postData.getString(RequestKeys.KEY_UID));
-            value_set.add(postData.getString(RequestKeys.KEY_EMAIL));
-            value_set.add(postData.getString(RequestKeys.KEY_NICKNAME));
-            value_set.add(postData.getString(RequestKeys.KEY_CITY));
-            CommonServiceLog.d(TAG, "Parsed the INSERT request.");
+            String sql = null;
+            switch (service)
+            {
+            case RequestKeys.SERVICE_REGISTER:
+                sql = register(postData);
+                break;
+            default:
+                ServiceLog.e(requestID, "Unsupported request service type.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
 
-            String sql = SQLHelper.buildInsertSQL(DatabaseSchema.SCHEMA_TABLE_USER, key_set,
-                    value_set);
-            CommonServiceLog.d(TAG, "Built the SQL to register a user: " + sql);
-
-            sCustomerDataManager.executeInsert(sql, RequestKeys.KEY_CUSTOMER_TYPE,
-                    new DataCallback()
+            sCustomerDataManager.executeInsert(sql, new DataCallback()
+            {
+                @Override
+                public void onSuccess(JSONObject result)
+                {
+                    try
                     {
-                        @Override
-                        public void onSuccess(JSONObject result)
-                        {
-                            try
-                            {
-                                result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                                ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when getting INSERT result successfully.",
-                                                requestID, e);
-                            }
-                        }
+                        result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
+                        ManagerHelper.handleResponse(true,
+                                ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
+                    } catch (JSONException e)
+                    {
+                        ServiceLog.logRequest(TAG, requestID, e.getMessage());
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when getting INSERT result successfully.",
+                                        requestID, e);
+                    }
+                }
 
-                        @Override
-                        public void onError(JSONObject error)
-                        {
-                            try
-                            {
-                                ManagerHelper.handleResponseWithError(response, ErrorType
-                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when there is an error on getting INSERT result.",
-                                                requestID, e);
-                            }
-                        }
-                    });
+                @Override
+                public void onError(JSONObject error)
+                {
+                    try
+                    {
+                        ManagerHelper.handleResponseWithError(response, ErrorType
+                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                    } catch (JSONException e)
+                    {
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when there is an error on getting INSERT result.",
+                                        requestID, e);
+                    }
+                }
+            });
         } catch (JSONException e)
         {
-            CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
+            ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog
+            ServiceLog
                     .e(TAG,
-                            "JSONException happened when getting uid/email/nickname before INSERT operation.",
+                            "JSONException happened when making an INSERT operation of customer service.",
                             e);
         }
     }
@@ -193,75 +227,77 @@ public class CustomerManager
      * @param response
      * @param requestID
      */
-    private void handleQuery(JSONObject postData, final HttpServletResponse response,
-            final String requestID)
+    private void handleQuery(JSONObject postData, String service,
+            final HttpServletResponse response, final String requestID)
     {
         try
         {
-            JSONArray requestArray = postData.getJSONArray(RequestKeys.KEY_QUERY);
-            ArrayList<String> keySet = new ArrayList<String>();
-            if (requestArray != null)
+            if (!postData.has(RequestKeys.KEY_QUERY_KEY))
             {
-                for (int i = 0; i < requestArray.length(); i++)
-                {
-                    JSONObject object = requestArray.getJSONObject(i);
-                    String key = object.getString(RequestKeys.KEY_KEYWORD);
-                    keySet.add(key);
-                }
+                ServiceLog.e(TAG, "Failed to find the query key from the request.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
             }
-            String constraintKey = postData.getString(RequestKeys.KEY_CONSTRAINT_KEYWORD);
-            String constraintValue = postData.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
-            CommonServiceLog.d(TAG, "Parsed the QUERY request.");
 
-            // Generate the sql for query a record
-            String sql = SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_USER, keySet,
-                    constraintKey, constraintValue);
-            CommonServiceLog.d(TAG, "Built the SQL to query: " + sql);
+            String sql = null;
+            ArrayList<String> returnSet = null;
 
-            sCustomerDataManager.executeQuery(keySet, sql, RequestKeys.KEY_CUSTOMER_TYPE,
-                    new DataCallback()
+            switch (service)
+            {
+            case RequestKeys.SERVICE_SHOW_PROFILE:
+                sql = queryUserProfile(postData);
+                break;
+            default:
+                ServiceLog.e(requestID, "Unsupported request service type.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
+
+            sCustomerDataManager.executeQuery(returnSet, sql, new DataCallback()
+            {
+                @Override
+                public void onSuccess(JSONObject result)
+                {
+                    try
                     {
-                        @Override
-                        public void onSuccess(JSONObject result)
-                        {
-                            try
-                            {
-                                result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                                ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when getting QUERY result successfully.",
-                                                requestID, e);
-                            }
-                        }
+                        result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
+                        ManagerHelper.handleResponse(true,
+                                ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
+                    } catch (JSONException e)
+                    {
+                        ServiceLog.logRequest(TAG, requestID, e.getMessage());
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when getting QUERY result successfully.",
+                                        requestID, e);
+                    }
+                }
 
-                        @Override
-                        public void onError(JSONObject error)
-                        {
-                            try
-                            {
-                                ManagerHelper.handleResponseWithError(response, ErrorType
-                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when there is an error on getting QUERY result.",
-                                                requestID, e);
-                            }
+                @Override
+                public void onError(JSONObject error)
+                {
+                    try
+                    {
+                        ManagerHelper.handleResponseWithError(response, ErrorType
+                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                    } catch (JSONException e)
+                    {
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when there is an error on getting QUERY result.",
+                                        requestID, e);
+                    }
 
-                        }
-                    });
+                }
+            });
         } catch (JSONException e)
         {
-            CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
+            ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog.e(TAG,
-                    "JSONException happened when getting key/value before QUERY operation.", e);
+            ServiceLog
+                    .e(TAG,
+                            "JSONException happened when making a QUERY operation of customer service.",
+                            e);
         }
     }
 
@@ -272,76 +308,136 @@ public class CustomerManager
      * @param response
      * @param requestID
      */
-    private void handleUpdate(JSONObject postData, final HttpServletResponse response,
-            final String requestID)
+    private void handleUpdate(JSONObject postData, String service,
+            final HttpServletResponse response, final String requestID)
     {
         try
         {
-            JSONArray requestArray = postData.getJSONArray(RequestKeys.KEY_KEYWORD);
-            ArrayList<String> keySet = new ArrayList<String>();
-            ArrayList<String> valueSet = new ArrayList<String>();
-            for (int i = 0; i < requestArray.length(); i++)
+            if (!postData.has(RequestKeys.KEY_UPDATE_KEYVALUE_PAIR))
             {
-                JSONObject object = requestArray.getJSONObject(i);
-                String key = object.getString(RequestKeys.KEY_KEYWORD);
-                String value = object.getString(RequestKeys.KEY_VALUE);
-                keySet.add(key);
-                valueSet.add(value);
+                ServiceLog.e(TAG,
+                        "Failed to find the update key value pair from the request.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
             }
-            String constraintKey = postData.getString(RequestKeys.KEY_CONSTRAINT_KEYWORD);
-            String constraintValue = postData.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
-            CommonServiceLog.d(TAG, "Parsed the UPDATE request.");
 
-            // Generate the sql for query a record
-            String sql = SQLHelper.buildUpdateSQL(DatabaseSchema.SCHEMA_TABLE_USER, keySet,
-                    valueSet, constraintKey, constraintValue);
-            CommonServiceLog.d(TAG, "Built the SQL to query: " + sql);
+            String sql = null;
+            switch (service)
+            {
+            case RequestKeys.SERVICE_EDIT_PROFILE:
+                sql = editUserProfile(postData);
+                break;
+            default:
+                ServiceLog.e(requestID, "Unsupported request service type.");
+                ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
+            }
 
-            sCustomerDataManager.executeUpdate(sql, RequestKeys.KEY_CUSTOMER_TYPE,
-                    new DataCallback()
+            sCustomerDataManager.executeUpdate(sql, new DataCallback()
+            {
+                @Override
+                public void onSuccess(JSONObject result)
+                {
+                    try
                     {
-                        @Override
-                        public void onSuccess(JSONObject result)
-                        {
-                            try
-                            {
-                                result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                                ManagerHelper.handleResponse(true,
-                                        ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when getting UPDATE result successfully.",
-                                                requestID, e);
-                            }
-                        }
+                        result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
+                        ManagerHelper.handleResponse(true,
+                                ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
+                    } catch (JSONException e)
+                    {
+                        ServiceLog.logRequest(TAG, requestID, e.getMessage());
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when getting UPDATE result successfully.",
+                                        requestID, e);
+                    }
+                }
 
-                        @Override
-                        public void onError(JSONObject error)
-                        {
-                            try
-                            {
-                                ManagerHelper.handleResponseWithError(response, ErrorType
-                                        .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
-                            } catch (JSONException e)
-                            {
-                                CommonServiceLog
-                                        .e(TAG,
-                                                "JSONException happened when there is an error on getting UPDATE result.",
-                                                requestID, e);
-                            }
+                @Override
+                public void onError(JSONObject error)
+                {
+                    try
+                    {
+                        ManagerHelper.handleResponseWithError(response, ErrorType
+                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                    } catch (JSONException e)
+                    {
+                        ServiceLog
+                                .e(TAG,
+                                        "JSONException happened when there is an error on getting UPDATE result.",
+                                        requestID, e);
+                    }
 
-                        }
-                    });
+                }
+            });
         } catch (JSONException e)
         {
-            CommonServiceLog.logRequest(TAG, requestID, e.getMessage());
+            ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            CommonServiceLog.e(TAG,
-                    "JSONException happened when getting key/value before UPDATE operation.", e);
+            ServiceLog
+                    .e(TAG,
+                            "JSONException happened when making an UPDATE operation of customer service.",
+                            e);
         }
     }
 
+    private String register(JSONObject postData) throws JSONException
+    {
+        // Build the set of required keys
+        ArrayList<String> keySet = new ArrayList<String>();
+        keySet.add(RequestKeys.KEY_EMAIL);
+        keySet.add(RequestKeys.KEY_NICKNAME);
+        keySet.add(RequestKeys.KEY_CITY);
+
+        String sql = JSONHelper.parseToSQL(postData, keySet,
+                DatabaseSchema.SCHEMA_TABLE_USER, RequestKeys.REQUEST_TYPE_INSERT, null);
+
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG, "Failed to build SQL when registering a user.");
+        }
+        else
+        {
+            ServiceLog.d(TAG, "Built the SQL to register a user: " + sql);
+        }
+
+        return sql;
+    }
+
+    private String queryUserProfile(JSONObject postData) throws JSONException
+    {
+        ArrayList<String> returnSet = new ArrayList<String>();
+
+        String sql = JSONHelper.parseToSQL(postData, null,
+                DatabaseSchema.SCHEMA_TABLE_USER, RequestKeys.REQUEST_TYPE_QUERY,
+                returnSet);
+
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG, "Failed to build SQL when getting a user profile.");
+        }
+        else
+        {
+            ServiceLog.d(TAG, "Built the SQL to get a user profile: " + sql);
+        }
+
+        return sql;
+    }
+
+    private String editUserProfile(JSONObject postData) throws JSONException
+    {
+        String sql = JSONHelper.parseToSQL(postData, null,
+                DatabaseSchema.SCHEMA_TABLE_USER, RequestKeys.REQUEST_TYPE_UPDATE, null);
+
+        if (sql == null || sql.equals(""))
+        {
+            ServiceLog.e(TAG, "Failed to build SQL when editting a user profile.");
+        }
+        else
+        {
+            ServiceLog.d(TAG, "Built the SQL to edit a user profile: " + sql);
+        }
+
+        return sql;
+    }
 }

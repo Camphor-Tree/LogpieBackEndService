@@ -17,16 +17,16 @@ import com.logpie.auth.data.AuthDataManager.DataCallback;
 import com.logpie.auth.data.SQLHelper;
 import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.TokenScopeManager.Scope;
-import com.logpie.service.common.error.ErrorMessage;
-import com.logpie.service.common.error.ErrorType;
-import com.logpie.service.common.exception.HttpRequestIsNullException;
-import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.HttpRequestParser;
-import com.logpie.service.common.helper.HttpResponseWriter;
-import com.logpie.service.common.helper.LatencyHelper;
-import com.logpie.service.common.helper.RequestKeys;
-import com.logpie.service.common.helper.ResponseKeys;
-import com.logpie.service.common.helper.TimeHelper;
+import com.logpie.service.error.ErrorMessage;
+import com.logpie.service.error.ErrorType;
+import com.logpie.service.error.HttpRequestIsNullException;
+import com.logpie.service.util.HttpRequestParser;
+import com.logpie.service.util.HttpResponseWriter;
+import com.logpie.service.util.LatencyHelper;
+import com.logpie.service.util.RequestKeys;
+import com.logpie.service.util.ResponseKeys;
+import com.logpie.service.util.ServiceLog;
+import com.logpie.service.util.TimeHelper;
 
 public class AuthenticationManager
 {
@@ -60,7 +60,7 @@ public class AuthenticationManager
     {
         if (sAuthenticationManager == null)
         {
-            CommonServiceLog.d(TAG, "Should initialize only once!");
+            ServiceLog.d(TAG, "Should initialize only once!");
             sAuthenticationManager = new AuthenticationManager();
             sAuthDataManager = AuthDataManager.getInstance();
         }
@@ -79,7 +79,8 @@ public class AuthenticationManager
      * 
      * @param request
      */
-    public void handleAuthenticationRequest(HttpServletRequest request, HttpServletResponse response)
+    public void handleAuthenticationRequest(HttpServletRequest request,
+            HttpServletResponse response)
     {
         JSONObject postBody = null;
         try
@@ -87,16 +88,17 @@ public class AuthenticationManager
             postBody = HttpRequestParser.httpRequestParser(request);
         } catch (HttpRequestIsNullException e)
         {
-            CommonServiceLog.e(TAG, "The coming request is null!It should be a bug of tomcat!", e);
+            ServiceLog.e(TAG, "The coming request is null!It should be a bug of tomcat!",
+                    e);
             return;
         }
         if (postBody != null)
         {
-            CommonServiceLog.d(TAG, "[Receiving request data:]" + postBody.toString());
+            ServiceLog.d(TAG, "[Receiving request data:]" + postBody.toString());
             AuthenticationType type = getAuthenticationType(postBody);
             if (type == null)
             {
-                CommonServiceLog.d(TAG, "authentication type is null!");
+                ServiceLog.d(TAG, "authentication type is null!");
                 return;
             }
             final LatencyHelper latencyHelper = new LatencyHelper(type.name());
@@ -128,8 +130,9 @@ public class AuthenticationManager
             }
             default:
             {
-                CommonServiceLog.e(TAG, "Unsupported Type!");
-                handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST, null);
+                ServiceLog.e(TAG, "Unsupported Type!");
+                handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST,
+                        null);
                 break;
             }
 
@@ -150,29 +153,27 @@ public class AuthenticationManager
         try
         {
             response.sendError(errorType.getErrorCode());
-            CommonServiceLog.e(
-                    TAG,
-                    "Returning error code when handling authentication ->" + "ErrorCode:"
-                            + errorType.getErrorCode() + " ErrorMessage:"
-                            + errorType.getErrorMessage(), requestId);
+            ServiceLog.e(TAG, "Returning error code when handling authentication ->"
+                    + "ErrorCode:" + errorType.getErrorCode() + " ErrorMessage:"
+                    + errorType.getErrorMessage(), requestId);
         } catch (IOException e)
         {
-            CommonServiceLog.e(TAG, "IOException happend when sendErrorCode", e);
+            ServiceLog.e(TAG, "IOException happend when sendErrorCode", e);
         }
     }
 
     private AuthenticationType getAuthenticationType(JSONObject postData)
     {
-        if (postData.has(RequestKeys.KEY_AUTHENTICATION_TYPE))
+        if (postData.has(RequestKeys.KEY_REQUEST_SERVICE))
         {
             try
             {
                 return AuthenticationType.matchType(postData
-                        .getString(RequestKeys.KEY_AUTHENTICATION_TYPE));
+                        .getString(RequestKeys.KEY_REQUEST_TYPE));
             } catch (JSONException e)
             {
-                CommonServiceLog
-                        .e(TAG, "JSONException happend when parsing Authentication Type", e);
+                ServiceLog.e(TAG,
+                        "JSONException happend when parsing Authentication Type", e);
                 return null;
             }
         }
@@ -213,7 +214,7 @@ public class AuthenticationManager
             boolean isUserExisted = sAuthDataManager.executeQueryForCheckDuplicate(sql);
             if (isUserExisted)
             {
-                CommonServiceLog.e(TAG, "email already exist", request_id);
+                ServiceLog.e(TAG, "email already exist", request_id);
                 JSONObject errorMessage = new JSONObject();
                 try
                 {
@@ -222,8 +223,8 @@ public class AuthenticationManager
                     handleAuthResult(false, errorMessage, response);
                 } catch (JSONException e1)
                 {
-                    handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
-                            request_id);
+                    handleAuthenticationResponseWithError(response,
+                            ErrorType.SEVER_ERROR, request_id);
                 }
             }
             else
@@ -238,18 +239,20 @@ public class AuthenticationManager
                     {
                         if (result == null || !result.has(ResponseKeys.KEY_UID))
                         {
-                            handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
-                                    request_id);
+                            handleAuthenticationResponseWithError(response,
+                                    ErrorType.SEVER_ERROR, request_id);
                             return;
                         }
                         try
                         {
                             String uid = result.getString(ResponseKeys.KEY_UID);
                             String email = result.getString(ResponseKeys.KEY_EMAIL);
-                            CommonServiceLog.d(TAG, "Generating the new uid:" + uid, request_id);
+                            ServiceLog
+                                    .d(TAG, "Generating the new uid:" + uid, request_id);
                             // the result contains sql and two tokens
-                            ArrayList<String> resultArray = SQLHelper.buildCreateUserStep2SQL(uid,
-                                    TokenScopeManager.buildNewUserScope());
+                            ArrayList<String> resultArray = SQLHelper
+                                    .buildCreateUserStep2SQL(uid,
+                                            TokenScopeManager.buildNewUserScope());
                             String sql = resultArray.get(0);
                             boolean success = sAuthDataManager.executeNoResult(sql);
                             if (success)
@@ -258,25 +261,29 @@ public class AuthenticationManager
                                 // need to roolback the database.
                                 RegisterHelper.callCustomerServiceToRegister(uid, email,
                                         userNickName, city);
-                                CommonServiceLog.d(TAG, "Update token successfully", request_id);
-                                result.put(ResponseKeys.KEY_ACCESS_TOKEN, resultArray.get(1));
-                                result.put(ResponseKeys.KEY_REFRESH_TOKEN, resultArray.get(2));
+                                ServiceLog
+                                        .d(TAG, "Update token successfully", request_id);
+                                result.put(ResponseKeys.KEY_ACCESS_TOKEN,
+                                        resultArray.get(1));
+                                result.put(ResponseKeys.KEY_REFRESH_TOKEN,
+                                        resultArray.get(2));
                                 handleAuthResult(true, result, response);
                             }
                             else
                             {
-                                CommonServiceLog.d(TAG, "Update token fail", request_id);
+                                ServiceLog.d(TAG, "Update token fail", request_id);
                                 handleAuthenticationResponseWithError(response,
                                         ErrorType.SEVER_ERROR, request_id);
                                 return;
                             }
                         } catch (JSONException e)
                         {
-                            CommonServiceLog.logRequest(TAG, request_id, e.getMessage());
-                            CommonServiceLog.e(TAG, ":JSONException when getting insert result",
+                            ServiceLog.logRequest(TAG, request_id, e.getMessage());
+                            ServiceLog.e(TAG,
+                                    ":JSONException when getting insert result",
                                     request_id, e);
-                            handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
-                                    request_id);
+                            handleAuthenticationResponseWithError(response,
+                                    ErrorType.SEVER_ERROR, request_id);
                             return;
                         }
 
@@ -287,8 +294,11 @@ public class AuthenticationManager
                     {
                         try
                         {
-                            handleAuthenticationResponseWithError(response, ErrorType.valueOf(error
-                                    .getString(AuthDataManager.KEY_CALLBACK_ERROR)), request_id);
+                            handleAuthenticationResponseWithError(
+                                    response,
+                                    ErrorType.valueOf(error
+                                            .getString(AuthDataManager.KEY_CALLBACK_ERROR)),
+                                    request_id);
                         } catch (JSONException e)
                         {
                         }
@@ -298,13 +308,14 @@ public class AuthenticationManager
             }
         } catch (JSONException e)
         {
-            CommonServiceLog.logRequest(TAG, request_id, e.getMessage());
-            handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST, request_id);
-            CommonServiceLog.e(TAG, "JSONException when getting email/password", request_id, e);
+            ServiceLog.logRequest(TAG, request_id, e.getMessage());
+            handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST,
+                    request_id);
+            ServiceLog.e(TAG, "JSONException when getting email/password", request_id, e);
 
         } catch (EmailAlreadyExistException e)
         {
-            CommonServiceLog.e(TAG, "email already exist", e);
+            ServiceLog.e(TAG, "email already exist", e);
             JSONObject errorMessage = new JSONObject();
             try
             {
@@ -313,7 +324,8 @@ public class AuthenticationManager
                 handleAuthResult(false, errorMessage, response);
             } catch (JSONException e1)
             {
-                handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR, request_id);
+                handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
+                        request_id);
             }
 
         }
@@ -327,17 +339,17 @@ public class AuthenticationManager
         {
             data = new JSONObject();
         }
-        CommonServiceLog.d(TAG, data.toString());
+        ServiceLog.d(TAG, data.toString());
         if (success)
         {
-            data.put(ResponseKeys.KEY_AUTHENTICATION_RESULT, ResponseKeys.KEY_RESULT_SUCCESS);
+            data.put(ResponseKeys.KEY_AUTHENTICATION_RESULT, ResponseKeys.RESULT_SUCCESS);
         }
         else
         {
-            data.put(ResponseKeys.KEY_AUTHENTICATION_RESULT, ResponseKeys.KEY_RESULT_ERROR);
+            data.put(ResponseKeys.KEY_AUTHENTICATION_RESULT, ResponseKeys.RESULT_ERROR);
         }
-        HttpResponseWriter.reponseWithSuccess(ResponseKeys.KEY_AUTHENTICATION_RESULT, data,
-                response);
+        HttpResponseWriter.reponseWithSuccess(ResponseKeys.KEY_AUTHENTICATION_RESULT,
+                data, response);
     }
 
     /**
@@ -346,7 +358,8 @@ public class AuthenticationManager
      * @param regData
      * @param response
      */
-    private void handleAuthenticate(JSONObject loginData, final HttpServletResponse response)
+    private void handleAuthenticate(JSONObject loginData,
+            final HttpServletResponse response)
     {
         final String request_id = getAndLogRequestId(loginData);
 
@@ -357,7 +370,8 @@ public class AuthenticationManager
             String password = loginData.getString(RequestKeys.KEY_PASSWORD);
             if (email == null || password == null)
             {
-                handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR, request_id);
+                handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR,
+                        request_id);
                 return;
             }
 
@@ -367,7 +381,8 @@ public class AuthenticationManager
             JSONObject step1_result = sAuthDataManager.executeQueryForLoginStep1(sql);
             if (step1_result == null)
             {
-                handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR, request_id);
+                handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR,
+                        request_id);
                 return;
             }
 
@@ -384,43 +399,48 @@ public class AuthenticationManager
             Timestamp refresh_token_expiration = Timestamp.valueOf(step1_result
                     .getString(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION));
             String currentTime = TimeHelper.getCurrentTimestamp().toString();
-            CommonServiceLog.d(TAG, "currentTime:" + currentTime);
-            CommonServiceLog
-                    .d(TAG, "access_token_expiration:" + access_token_expiration.toString());
-            CommonServiceLog.d(TAG,
+            ServiceLog.d(TAG, "currentTime:" + currentTime);
+            ServiceLog.d(TAG,
+                    "access_token_expiration:" + access_token_expiration.toString());
+            ServiceLog.d(TAG,
                     "refresh_token_expiration:" + refresh_token_expiration.toString());
             if (!access_token_expiration.before(TimeHelper.getCurrentTimestamp()))
             {
-                CommonServiceLog.d(TAG, "access_token already expire, refresh the access_token");
+                ServiceLog
+                        .d(TAG, "access_token already expire, refresh the access_token");
                 // (Step 3.1): If the access_token already expire, update the
                 // token for the user.
                 ArrayList<String> sqlResultWithAccessToken = (ArrayList<String>) SQLHelper
                         .buildUpdateAccessTokenSQL(uid, access_token);
                 String sql_step3_1 = sqlResultWithAccessToken.get(0);
                 access_token = sqlResultWithAccessToken.get(1);
-                boolean step3_1_result = sAuthDataManager.executeQueryForLoginStep2(sql_step3_1);
+                boolean step3_1_result = sAuthDataManager
+                        .executeQueryForLoginStep2(sql_step3_1);
                 if (!step3_1_result)
                 {
-                    CommonServiceLog.e(sql,
-                            "Error happend in authentication Step2, refresh the access_token",
-                            request_id);
-                    CommonServiceLog.logRequest(TAG, request_id,
-                            "Error happend in authentication Step2, refresh the access_token");
-                    handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
-                            request_id);
+                    ServiceLog
+                            .e(sql,
+                                    "Error happend in authentication Step2, refresh the access_token",
+                                    request_id);
+                    ServiceLog
+                            .logRequest(TAG, request_id,
+                                    "Error happend in authentication Step2, refresh the access_token");
+                    handleAuthenticationResponseWithError(response,
+                            ErrorType.SEVER_ERROR, request_id);
                     return;
                 }
             }
             else
             {
-                CommonServiceLog
+                ServiceLog
                         .d(TAG,
                                 "access_token still valid, won't refresh to disturb the account in other device",
                                 request_id);
             }
             if (!refresh_token_expiration.before(TimeHelper.getCurrentTimestamp()))
             {
-                CommonServiceLog.d(TAG, "refresh_token already expire, refresh the refresh_token",
+                ServiceLog.d(TAG,
+                        "refresh_token already expire, refresh the refresh_token",
                         request_id);
                 // (Step 3.2): If the refresh_token already expire, update the
                 // token for the user.
@@ -428,22 +448,25 @@ public class AuthenticationManager
                         .buildUpdateRefreshTokenSQL(uid, access_token);
                 String sql_step3_2 = sqlResultWithRefreshToken.get(0);
                 refresh_token = sqlResultWithRefreshToken.get(1);
-                boolean step3_2_result = sAuthDataManager.executeQueryForLoginStep2(sql_step3_2);
+                boolean step3_2_result = sAuthDataManager
+                        .executeQueryForLoginStep2(sql_step3_2);
                 if (!step3_2_result)
                 {
-                    CommonServiceLog.e(sql,
-                            "Error happend in authentication Step3, refresh the refresh_token",
-                            request_id);
-                    CommonServiceLog.logRequest(TAG, request_id,
-                            "Error happend in authentication Step3, refresh the refresh_token");
-                    handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
-                            request_id);
+                    ServiceLog
+                            .e(sql,
+                                    "Error happend in authentication Step3, refresh the refresh_token",
+                                    request_id);
+                    ServiceLog
+                            .logRequest(TAG, request_id,
+                                    "Error happend in authentication Step3, refresh the refresh_token");
+                    handleAuthenticationResponseWithError(response,
+                            ErrorType.SEVER_ERROR, request_id);
                     return;
                 }
             }
             else
             {
-                CommonServiceLog
+                ServiceLog
                         .d(TAG,
                                 "refresh_token still valid, won't refresh to disturb the account in other device");
             }
@@ -462,16 +485,20 @@ public class AuthenticationManager
                 handleAuthResult(true, authResult, response);
             } catch (JSONException e)
             {
-                handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR, request_id);
-                CommonServiceLog.e(TAG,
-                        "Authenticate Step4, JSONException when getting insert result", e);
+                handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
+                        request_id);
+                ServiceLog
+                        .e(TAG,
+                                "Authenticate Step4, JSONException when getting insert result",
+                                e);
             }
 
         } catch (JSONException e)
         {
-            handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR, request_id);
-            CommonServiceLog.logRequest(TAG, request_id, e.getMessage());
-            CommonServiceLog.e(TAG, "JSONException when getting email/password", request_id, e);
+            handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
+                    request_id);
+            ServiceLog.logRequest(TAG, request_id, e.getMessage());
+            ServiceLog.e(TAG, "JSONException when getting email/password", request_id, e);
         }
     }
 
@@ -487,18 +514,21 @@ public class AuthenticationManager
         try
         {
             email = resetPasswordData.getString(RequestKeys.KEY_PASSWORD);
-            oldPassword = resetPasswordData.getString(RequestKeys.KEY_KEYWORD);
-            newPassword = resetPasswordData.getString(RequestKeys.KEY_VALUE);
+            // TODO: modify this part
+            // oldPassword = resetPasswordData.getString(RequestKeys.);
+            // newPassword = resetPasswordData.getString(RequestKeys.KEY_VALUE);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException when try to get reset password infomation.",
+            ServiceLog.e(TAG, "JSONException when try to get reset password infomation.",
                     request_id, e);
-            handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST, request_id);
+            handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST,
+                    request_id);
         }
 
         if (email == null || oldPassword == null || newPassword == null)
         {
-            handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR, request_id);
+            handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR,
+                    request_id);
             return;
         }
 
@@ -508,7 +538,8 @@ public class AuthenticationManager
         JSONObject step1_result = sAuthDataManager.executeQueryForLoginStep1(sql);
         if (step1_result == null)
         {
-            handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR, request_id);
+            handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR,
+                    request_id);
             return;
         }
 
@@ -520,13 +551,15 @@ public class AuthenticationManager
             uid = step1_result.getString(ResponseKeys.KEY_UID);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException when try to get uid.", request_id, e);
-            handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR, request_id);
+            ServiceLog.e(TAG, "JSONException when try to get uid.", request_id, e);
+            handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR,
+                    request_id);
         }
         if (uid == null)
         {
-            CommonServiceLog.e(TAG, "uid must not be null!", request_id);
-            handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR, request_id);
+            ServiceLog.e(TAG, "uid must not be null!", request_id);
+            handleAuthenticationResponseWithError(response, ErrorType.AUTH_ERROR,
+                    request_id);
         }
         String resetPasswordSQL = SQLHelper.buildResetPasswordSQL(uid, newPassword);
         boolean resetSuccess = sAuthDataManager.executeUpdate(resetPasswordSQL);
@@ -545,16 +578,16 @@ public class AuthenticationManager
                     handleAuthResult(true, null, response);
                 } catch (JSONException e1)
                 {
-                    CommonServiceLog.e(TAG, "JSONException when try to put success signal",
+                    ServiceLog.e(TAG, "JSONException when try to put success signal",
                             request_id);
-                    handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
-                            request_id);
+                    handleAuthenticationResponseWithError(response,
+                            ErrorType.SEVER_ERROR, request_id);
                 }
             }
         }
         else
         {
-            CommonServiceLog.e(TAG, "Update the password fails", request_id);
+            ServiceLog.e(TAG, "Update the password fails", request_id);
             JSONObject errorResult = new JSONObject();
             try
             {
@@ -563,7 +596,8 @@ public class AuthenticationManager
                                 "Cannot open update the password. Mainly due to the password didn't change!");
             } catch (JSONException e)
             {
-                handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR, request_id);
+                handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
+                        request_id);
             }
         }
 
@@ -595,34 +629,40 @@ public class AuthenticationManager
             declare_uid = tokenValidationData.getString(RequestKeys.KEY_DECLARE_UID);
             token = tokenValidationData.getString(RequestKeys.KEY_TOKEN);
             token_type = tokenValidationData.getString(RequestKeys.KEY_TOKEN_TYPE);
-            access_service = tokenValidationData.getString(RequestKeys.KEY_ACCESS_SERVICE);
+            access_service = tokenValidationData
+                    .getString(RequestKeys.KEY_ACCESS_SERVICE);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException when try to get token validation infomation.",
+            ServiceLog.e(TAG,
+                    "JSONException when try to get token validation infomation.",
                     request_id, e);
-            handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST, request_id);
+            handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST,
+                    request_id);
         }
-        if (declare_uid == null || token == null || token_type == null || access_service == null)
+        if (declare_uid == null || token == null || token_type == null
+                || access_service == null)
         {
-            CommonServiceLog.e(TAG, "Missing field. These fields cannot be null", request_id);
-            handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST, request_id);
+            ServiceLog.e(TAG, "Missing field. These fields cannot be null", request_id);
+            handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST,
+                    request_id);
         }
 
-        TokenVerificationManager verificationManager = new TokenVerificationManager(declare_uid,
-                token, token_type, request_id);
+        TokenVerificationManager verificationManager = new TokenVerificationManager(
+                declare_uid, token, token_type, request_id);
         // 1. Try to decode token
         boolean isTokenValid = verificationManager.verifyToken();
         if (!isTokenValid)
         {
             try
             {
-                handleAuthResult(false,
+                handleAuthResult(
+                        false,
                         verificationManager
                                 .buildFailJSON(TokenVerificationManager.sFailReasonTokenInvalid),
                         response);
             } catch (JSONException e)
             {
-                CommonServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
+                ServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
             }
             return;
         }
@@ -640,7 +680,7 @@ public class AuthenticationManager
                         response);
             } catch (JSONException e)
             {
-                CommonServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
+                ServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
             }
             return;
         }
@@ -652,13 +692,14 @@ public class AuthenticationManager
         {
             try
             {
-                handleAuthResult(true,
+                handleAuthResult(
+                        true,
                         verificationManager
                                 .buildFailJSON(TokenVerificationManager.sFailReasonTokenNoScope),
                         response);
             } catch (JSONException e)
             {
-                CommonServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
+                ServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
             }
             return;
         }
@@ -668,7 +709,7 @@ public class AuthenticationManager
             handleAuthResult(true, verificationManager.buildSuccessJSON(), response);
         } catch (JSONException e)
         {
-            CommonServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
+            ServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
         }
     }
 
@@ -680,13 +721,13 @@ public class AuthenticationManager
             // If exception happened, just generate a random requestID
             requestID = requestData.getString(RequestKeys.KEY_REQUEST_ID) != null ? requestData
                     .getString(RequestKeys.KEY_REQUEST_ID) : UUID.randomUUID().toString();
-            CommonServiceLog.d(TAG, "Start handling register: requestID=" + requestID);
-            CommonServiceLog.d(TAG, "Received registration data:" + requestData);
+            ServiceLog.d(TAG, "Start handling register: requestID=" + requestID);
+            ServiceLog.d(TAG, "Received registration data:" + requestData);
         } catch (JSONException e)
         {
             requestID = UUID.randomUUID().toString();
-            CommonServiceLog.e(TAG, "JSONException when getting requestID");
-            CommonServiceLog.e(TAG, e.getMessage());
+            ServiceLog.e(TAG, "JSONException when getting requestID");
+            ServiceLog.e(TAG, e.getMessage());
         }
         return requestID;
     }

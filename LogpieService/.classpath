@@ -13,8 +13,7 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
-	<classpathentry kind="lib" path="/Users/xujiahang/Documents/workspace/LogpieBackEndService/LogpieServiceCommonLibrary/library/org.json-20120521.jar"/>
-	<classpathentry kind="lib" path="/Users/xujiahang/Documents/workspace/LogpieBackEndService/LogpieServiceCommonLibrary/library/postgresql-9.2-1001.jdbc4.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/LogpieServiceCommonLibrary"/>
+	<classpathentry kind="lib" path="/Users/xujiahang/Documents/Android/eclipse/externaljar/postgresql-9.2-1001.jdbc4.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/LogpieServiceLibrary"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import com.logpie.auth.security.AbstractDataEncryptor;
 import com.logpie.auth.security.TokenEncryptor;
-import com.logpie.service.common.helper.CommonServiceLog;
-import com.logpie.service.common.helper.TimeHelper;
+import com.logpie.service.util.ServiceLog;
+import com.logpie.service.util.TimeHelper;
 
 public class TokenGenerator
 {
@@ -23,8 +23,8 @@ public class TokenGenerator
      */
     public static String generateAccessTokenBaseKeySource(String uid)
     {
-        String source = String.format("%s+%s#%s", uid, TimeHelper.getCurrentTimestamp().toString(),
-                getRandomUUIDWithoutDash());
+        String source = String.format("%s+%s#%s", uid, TimeHelper.getCurrentTimestamp()
+                .toString(), getRandomUUIDWithoutDash());
         return source;
     }
 
@@ -36,8 +36,8 @@ public class TokenGenerator
      */
     public static String generateRefreshTokenBaseKeySource(String uid)
     {
-        String source = String.format("%s+%s#%s", TimeHelper.getCurrentTimestamp().toString(),
-                getRandomUUIDWithoutDash());
+        String source = String.format("%s+%s#%s", TimeHelper.getCurrentTimestamp()
+                .toString(), getRandomUUIDWithoutDash());
         return source;
     }
 
@@ -50,7 +50,7 @@ public class TokenGenerator
             encodeToken = new String(encodeKeyBytes, "UTF-8");
         } catch (UnsupportedEncodingException e)
         {
-            CommonServiceLog.e(TAG, "UnsupportedEncodingException for UTF-8", e);
+            ServiceLog.e(TAG, "UnsupportedEncodingException for UTF-8", e);
         }
         return encodeToken;
     }
@@ -64,7 +64,7 @@ public class TokenGenerator
 
         } catch (UnsupportedEncodingException e1)
         {
-            CommonServiceLog.e(TAG, "UnsupportedEncodingException for UTF-8", e1);
+            ServiceLog.e(TAG, "UnsupportedEncodingException for UTF-8", e1);
         }
         return null;
     }
