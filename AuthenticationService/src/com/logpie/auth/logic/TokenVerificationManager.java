@@ -11,9 +11,13 @@ import com.logpie.service.util.ServiceLog;
 
 public class TokenVerificationManager
 {
+    public static final String TOKEN_TYPE_ACCESS_TOKEN = "access_token";
+    public static final String TOKEN_TYPE_REFRESH_TOKEN = "refresh_token";
+
     public static final String sFailReasonTokenExpiration = "token_expire";
     public static final String sFailReasonTokenInvalid = "token_invalid";
     public static final String sFailReasonTokenNoScope = "no_scope";
+    public static final String sFailReasonTokenUidNotMatch = "uid_does_not_match";
 
     private final String mDeclareUID;
     private final String mToken;
@@ -67,13 +71,11 @@ public class TokenVerificationManager
             int randomUIDOffset = mPlainToken.indexOf("$");
             int timeStampOffset = mPlainToken.indexOf("#");
 
-            String timeStampString = mPlainToken
-                    .substring(uidOffset + 1, timeStampOffset);
+            String timeStampString = mPlainToken.substring(uidOffset + 1, timeStampOffset);
             mTokenGeneratedTime = Timestamp.valueOf(timeStampString);
 
             mUidInToken = mPlainToken.substring(0, uidOffset);
-            String scopeString = mPlainToken.substring(randomUIDOffset,
-                    mPlainToken.length());
+            String scopeString = mPlainToken.substring(randomUIDOffset, mPlainToken.length());
             String[] scopes = scopeString.split("$");
             for (String scope : scopes)
             {
@@ -88,18 +90,15 @@ public class TokenVerificationManager
         long tokenExpirationTimeMillis = 0;
         if (mTokenType.equals("access_token"))
         {
-            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime()
-                    + sAccessTokenExpiration;
+            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime() + sAccessTokenExpiration;
         }
         else if (mTokenType.equals("refresh_token"))
         {
-            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime()
-                    + sRefreshTokenExpiration;
+            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime() + sRefreshTokenExpiration;
         }
         else
         {
-            ServiceLog.e(TAG, "The token_type cannot be recognized! Token_type is:"
-                    + mTokenType);
+            ServiceLog.e(TAG, "The token_type cannot be recognized! Token_type is:" + mTokenType);
             return false;
         }
 
@@ -126,18 +125,16 @@ public class TokenVerificationManager
         }
     }
 
-    public JSONObject buildSuccessJSON()
+    public boolean verifyUID(String uid)
     {
-        JSONObject successJSON = new JSONObject();
-        try
+        if (mUidInToken.equals(uid))
         {
-            successJSON.put(ResponseKeys.KEY_AUTHENTICATION_RESULT, "success");
-        } catch (JSONException e)
-        {
-            ServiceLog.e(TAG, "JSONException when build success result", mRequestId, e);
-            return null;
+            return true;
         }
-        return successJSON;
+        else
+        {
+            return false;
+        }
     }
 
     public JSONObject buildFailJSON(String reason)

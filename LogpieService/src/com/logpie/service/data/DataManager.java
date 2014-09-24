@@ -40,7 +40,7 @@ public abstract class DataManager
             Class.forName("org.postgresql.Driver");
             ServiceLog.d(TAG, "JDBC is loaded.");
 
-            setsConnection(openConnection());
+            setConnection(openConnection());
             ServiceLog.d(TAG, "Database is connected.");
         } catch (ClassNotFoundException e)
         {
@@ -50,8 +50,7 @@ public abstract class DataManager
                             e);
         } catch (SQLException e)
         {
-            ServiceLog.e(TAG,
-                    "SQLException happened when trying to initialize the database");
+            ServiceLog.e(TAG, "SQLException happened when trying to initialize the database");
         }
     }
 
@@ -124,11 +123,9 @@ public abstract class DataManager
             }
             else
             {
-                ServiceLog.d(TAG, "INSERT is finished. " + affectedRows
-                        + " row affected.");
+                ServiceLog.d(TAG, "INSERT is finished. " + affectedRows + " row affected.");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
-                        ResponseKeys.REQUEST_TYPE_INSERT);
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE, ResponseKeys.REQUEST_TYPE_INSERT);
                 dataCallback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
@@ -158,8 +155,7 @@ public abstract class DataManager
         }
     }
 
-    public void executeQuery(ArrayList<String> keySet, String sql,
-            final DataCallback dataCallback)
+    public void executeQuery(ArrayList<String> keySet, String sql, final DataCallback dataCallback)
     {
         if (sql == null || sql.equals(""))
         {
@@ -186,8 +182,7 @@ public abstract class DataManager
             {
                 ServiceLog.d(TAG, "QUERY is finished. ");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
-                        ResponseKeys.REQUEST_TYPE_QUERY);
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE, ResponseKeys.REQUEST_TYPE_QUERY);
                 buildResultSet(keySet, resultSet, returnJSON, dataCallback);
             }
         } catch (SQLException e)
@@ -221,8 +216,7 @@ public abstract class DataManager
     {
         if (sql == null || sql.equals(""))
         {
-            ServiceLog.e(TAG,
-                    "SQL is null or empty when executing single QUERY operation.");
+            ServiceLog.e(TAG, "SQL is null or empty when executing single QUERY operation.");
             return null;
         }
 
@@ -244,9 +238,8 @@ public abstract class DataManager
                 Object o = resultSet.getObject(keyword);
                 if (o == null)
                 {
-                    ServiceLog.e(TAG,
-                            "Cannot get the return value when using the keyword '"
-                                    + keyword + "'.");
+                    ServiceLog.e(TAG, "Cannot get the return value when using the keyword '"
+                            + keyword + "'.");
                 }
                 else
                 {
@@ -303,11 +296,9 @@ public abstract class DataManager
             }
             else
             {
-                ServiceLog.d(TAG, "UPDATE is finished. " + affectedRows
-                        + " row affected.");
+                ServiceLog.d(TAG, "UPDATE is finished. " + affectedRows + " row affected.");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
-                        ResponseKeys.REQUEST_TYPE_UPDATE);
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE, ResponseKeys.REQUEST_TYPE_UPDATE);
                 dataCallback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
@@ -364,9 +355,8 @@ public abstract class DataManager
                     }
                     else
                     {
-                        ServiceLog.e(TAG,
-                                "Cannot get the return value when using the keyword '"
-                                        + key + "'.");
+                        ServiceLog.e(TAG, "Cannot get the return value when using the keyword '"
+                                + key + "'.");
                     }
                 }
                 array.put(object);
@@ -414,8 +404,8 @@ public abstract class DataManager
         return sConnection;
     }
 
-    private void setsConnection(Connection sConnection)
+    private void setConnection(Connection connection)
     {
-        DataManager.sConnection = sConnection;
+        DataManager.sConnection = connection;
     }
 }

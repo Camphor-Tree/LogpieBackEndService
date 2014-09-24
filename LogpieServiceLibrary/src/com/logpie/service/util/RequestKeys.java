@@ -126,6 +126,13 @@ public class RequestKeys
     public static final String KEY_ACCESS_SERVICE = "access_service";
 
     /**
+     * Keys for token exchange
+     */
+    public static final String KEY_REFRESH_TOKEN = "refresh_token";
+    public static final String KEY_ACCESS_TOKEN = "access_token";
+    // KEY_DECLARE_UID is same as Key for token validation
+
+    /**
      * Keys for OOD
      */
 
