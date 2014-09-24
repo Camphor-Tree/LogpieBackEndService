@@ -372,6 +372,7 @@ public class ActivityManager
         // Build the set of required keys
         ArrayList<String> keySet = new ArrayList<String>();
         keySet.add(RequestKeys.KEY_UID);
+        keySet.add(RequestKeys.KEY_NICKNAME);
         keySet.add(RequestKeys.KEY_DESCRIPTION);
         keySet.add(RequestKeys.KEY_LOCATION);
         keySet.add(RequestKeys.KEY_START_TIME);

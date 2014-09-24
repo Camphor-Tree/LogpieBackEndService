@@ -16,7 +16,8 @@ public class DatabaseSchema
 
     public static final String SCHEMA_TABLE_ACTIVITY = "activity";
     public static final String SCHEMA_ACTIVITY_AID = "aid";
-    public static final String SCHEMA_ACTIVITY_CREATE_UID = "create_user";
+    public static final String SCHEMA_ACTIVITY_UID = "uid";
+    public static final String SCHEMA_ACTIVITY_NICKNAME = "nickname";
     public static final String SCHEMA_ACTIVITY_DESCRIPTION = "description";
     public static final String SCHEMA_ACTIVITY_CITY = "city";
     public static final String SCHEMA_ACTIVITY_LOCATION = "location";

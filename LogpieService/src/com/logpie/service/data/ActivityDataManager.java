@@ -83,7 +83,9 @@ public class ActivityDataManager extends DataManager
                 JSONObject object = new JSONObject();
 
                 long aid = resultSet.getLong(DatabaseSchema.SCHEMA_ACTIVITY_AID);
-                long uid = resultSet.getLong(DatabaseSchema.SCHEMA_ACTIVITY_CREATE_UID);
+                long uid = resultSet.getLong(DatabaseSchema.SCHEMA_ACTIVITY_UID);
+                String nickname = resultSet
+                        .getString(DatabaseSchema.SCHEMA_ACTIVITY_NICKNAME);
                 String description = resultSet
                         .getString(DatabaseSchema.SCHEMA_ACTIVITY_DESCRIPTION);
                 String location = resultSet
@@ -106,6 +108,7 @@ public class ActivityDataManager extends DataManager
 
                 object.put(ResponseKeys.KEY_AID, String.valueOf(aid));
                 object.put(ResponseKeys.KEY_UID, String.valueOf(uid));
+                object.put(ResponseKeys.KEY_NICKNAME, nickname);
                 object.put(ResponseKeys.KEY_DESCRIPTION, description);
                 object.put(ResponseKeys.KEY_LOCATION, location);
                 object.put(ResponseKeys.KEY_CREATE_TIME, createTime);
