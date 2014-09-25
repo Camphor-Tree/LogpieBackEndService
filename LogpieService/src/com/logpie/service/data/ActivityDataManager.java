@@ -96,7 +96,6 @@ public class ActivityDataManager extends DataManager
                         DatabaseSchema.SCHEMA_ACTIVITY_START_TIME).toString();
                 String endTime = resultSet.getTimestamp(
                         DatabaseSchema.SCHEMA_ACTIVITY_END_TIME).toString();
-                int city = resultSet.getInt(DatabaseSchema.SCHEMA_ACTIVITY_CITY);
                 double lat = resultSet.getDouble(DatabaseSchema.SCHEMA_ACTIVITY_LATITUDE);
                 double lon = resultSet
                         .getDouble(DatabaseSchema.SCHEMA_ACTIVITY_LONGITUDE);
@@ -106,6 +105,15 @@ public class ActivityDataManager extends DataManager
                 int countDislike = resultSet
                         .getInt(DatabaseSchema.SCHEMA_ACTIVITY_COUNT_DISLIKE);
 
+                int cid = resultSet.getInt(DatabaseSchema.SCHEMA_ACTIVITY_CITY);
+                String sql = "select city from city where cid = " + cid;
+                String city = CityDataManager.getInstance().executeSingleQuery(sql,
+                        DatabaseSchema.SCHEMA_CITY_CITY);
+                if (city == null || city.equals(""))
+                {
+                    ServiceLog.e(TAG, "Failed to get the city");
+                }
+
                 object.put(ResponseKeys.KEY_AID, String.valueOf(aid));
                 object.put(ResponseKeys.KEY_UID, String.valueOf(uid));
                 object.put(ResponseKeys.KEY_NICKNAME, nickname);
@@ -114,7 +122,7 @@ public class ActivityDataManager extends DataManager
                 object.put(ResponseKeys.KEY_CREATE_TIME, createTime);
                 object.put(ResponseKeys.KEY_START_TIME, startTime);
                 object.put(ResponseKeys.KEY_END_TIME, endTime);
-                object.put(ResponseKeys.KEY_CITY, String.valueOf(city));
+                object.put(ResponseKeys.KEY_CITY, city);
                 object.put(ResponseKeys.KEY_LATITUDE, String.valueOf(lat));
                 object.put(ResponseKeys.KEY_LONGITUDE, String.valueOf(lon));
                 object.put(ResponseKeys.KEY_CATEGORY, String.valueOf(category));
