@@ -11,25 +11,23 @@ public class EndPoint
 
     public enum ServiceURL
     {
-        RocektService("RocketService", "https://10.0.0.6:8443/RocketService/servlet",
-                "1.0.0", "test", true, false, true),
+        RocektService("RocketService", "https://10.0.0.6:8443/RocketService/servlet", "1.0.0",
+                "test", true, false, true),
 
         AuthenticationService("AuthenticationService",
-                "http://10.0.0.19:8080/LogpieService/auth", "1.0.0", "test", true, true,
+                "http://10.0.0.19:8080/AuthenticationService/auth", "1.0.0", "test", true, true,
                 false),
 
-        CustomerService("CustomerService",
-                "http://10.0.0.19:8080/LogpieService/customer", "1.0.0", "test", true,
-                true, false),
+        CustomerService("CustomerService", "http://10.0.0.19:8080/LogpieService/customer", "1.0.0",
+                "test", true, true, false),
 
-        ActivityService("ActivityService",
-                "http://10.0.0.19:8080/LogpieService/activity", "1.0.0", "test", true,
-                true, false),
+        ActivityService("ActivityService", "http://10.0.0.19:8080/LogpieService/activity", "1.0.0",
+                "test", true, true, false),
 
         // EC2 Service URL
         AuthenticationServiceEC2(
                 "AuthenticationService",
-                "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/auth",
+                "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/AuthenticationService/auth",
                 "1.0.0", "test", true, true, false),
 
         CustomerServiceEC2(
@@ -50,8 +48,8 @@ public class EndPoint
         boolean mDoInput;
         boolean mUseSSL;
 
-        ServiceURL(String name, String url, String version, String environment,
-                boolean doOutput, boolean doInput, boolean useSSL)
+        ServiceURL(String name, String url, String version, String environment, boolean doOutput,
+                boolean doInput, boolean useSSL)
         {
             mServiceName = name;
             mUrl = url;

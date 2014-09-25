@@ -170,7 +170,7 @@ public class AuthenticationManager
 
     private AuthenticationType getAuthenticationType(JSONObject postData)
     {
-        if (postData.has(RequestKeys.KEY_REQUEST_SERVICE))
+        if (postData.has(RequestKeys.KEY_REQUEST_TYPE))
         {
             try
             {
@@ -184,6 +184,7 @@ public class AuthenticationManager
         }
         else
         {
+            ServiceLog.e(TAG, "The request doesn't contain any Request_Type");
             return null;
         }
     }
