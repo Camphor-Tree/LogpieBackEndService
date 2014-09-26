@@ -52,24 +52,28 @@ public class AuthDataManager
             Class.forName("org.postgresql.Driver").newInstance();
         } catch (InstantiationException e)
         {
-            ServiceLog.e(TAG,
-                    "InstantiationException happended when trying to initiliaze postgreSQL driver",
-                    e);
+            ServiceLog
+                    .e(TAG,
+                            "InstantiationException happended when trying to initiliaze postgreSQL driver",
+                            e);
         } catch (IllegalAccessException e)
         {
-            ServiceLog.e(TAG,
-                    "IllegalAccessException happended when trying to initiliaze postgreSQL driver",
-                    e);
+            ServiceLog
+                    .e(TAG,
+                            "IllegalAccessException happended when trying to initiliaze postgreSQL driver",
+                            e);
         } catch (ClassNotFoundException e)
         {
-            ServiceLog.e(TAG,
-                    "ClassNotFoundException happended when trying to initiliaze postgreSQL driver",
-                    e);
+            ServiceLog
+                    .e(TAG,
+                            "ClassNotFoundException happended when trying to initiliaze postgreSQL driver",
+                            e);
         }
     }
 
     public boolean executeNoResult(String sql)
     {
+        ServiceLog.d(TAG, "The SQL going to be execute is: " + sql);
         initializeDB();
         Connection connection = null;
         try
@@ -92,7 +96,8 @@ public class AuthDataManager
                     connection.close();
                 } catch (SQLException e)
                 {
-                    ServiceLog.e(TAG, "SQLException when trying to close the connection", e);
+                    ServiceLog.e(TAG, "SQLException when trying to close the connection",
+                            e);
                 }
             }
 
@@ -100,8 +105,8 @@ public class AuthDataManager
 
     }
 
-    public void executeInsertAndGetUIDandEmail(final String sql, final DataCallback callback)
-            throws EmailAlreadyExistException
+    public void executeInsertAndGetUIDandEmail(final String sql,
+            final DataCallback callback) throws EmailAlreadyExistException
     {
         Connection connection = null;
         PreparedStatement statement = null;
@@ -173,8 +178,8 @@ public class AuthDataManager
         }
     }
 
-    public void executeInsertAndGetWholeRecord(final String sql, final DataCallback callback)
-            throws EmailAlreadyExistException
+    public void executeInsertAndGetWholeRecord(final String sql,
+            final DataCallback callback) throws EmailAlreadyExistException
     {
         Connection connection = null;
         PreparedStatement statement = null;
@@ -198,16 +203,19 @@ public class AuthDataManager
                 String access_token = resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN);
                 String access_token_expiration = resultSet
                         .getString(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION);
-                String refresh_token = resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN);
+                String refresh_token = resultSet
+                        .getString(SQLHelper.SCHEMA_REFRESH_TOKEN);
                 String refresh_token_expiration = resultSet
                         .getString(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION);
                 JSONObject returnJSON = new JSONObject();
                 returnJSON.put(ResponseKeys.KEY_UID, String.valueOf(uid));
                 returnJSON.put(ResponseKeys.KEY_EMAIL, email);
                 returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN, access_token);
-                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, access_token_expiration);
+                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
+                        access_token_expiration);
                 returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
-                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, refresh_token_expiration);
+                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
+                        refresh_token_expiration);
                 callback.onSuccess(returnJSON);
             }
             else
@@ -279,7 +287,8 @@ public class AuthDataManager
             }
         } catch (SQLException e)
         {
-            ServiceLog.e(TAG, "SQLException happend when execute the sql to check user duplicate",
+            ServiceLog.e(TAG,
+                    "SQLException happend when execute the sql to check user duplicate",
                     e);
             return true;
         }
@@ -321,13 +330,12 @@ public class AuthDataManager
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
                 returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
-                returnJSON
-                        .put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
-                                resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION)
-                                        .toString());
-                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
-                        resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION)
-                                .toString());
+                returnJSON.put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION, resultSet
+                        .getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION)
+                        .toString());
+                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION, resultSet
+                        .getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION)
+                        .toString());
 
                 return returnJSON;
             }
@@ -439,7 +447,8 @@ public class AuthDataManager
             // no user found, return auth error.
             if (count == 0)
             {
-                callback.onError(new JSONObject().append(KEY_CALLBACK_ERROR, ErrorType.AUTH_ERROR));
+                callback.onError(new JSONObject().append(KEY_CALLBACK_ERROR,
+                        ErrorType.AUTH_ERROR));
             }
             else
             {

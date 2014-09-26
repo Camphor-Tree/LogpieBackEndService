@@ -112,6 +112,7 @@ public class CustomerManager
                 ServiceLog.e(requestID,
                         "Failed to find the request service key from the request.");
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
+                return;
             }
 
             switch (type)

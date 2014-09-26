@@ -21,7 +21,7 @@ public abstract class AbstractDataEncryptor
 {
     private final static String TAG = AbstractDataEncryptor.class.getName();
     private final static int INITIALIZATION_VECTOR_LENGTH = 16;
-    private final static String AES_MODE = "AES/CBC/PKCS7Padding";
+    private final static String AES_MODE = "AES/CBC/PKCS5Padding";
     private final static String UTF8 = "UTF-8";
     private byte[] mEncryptionKey;
     private SecretKeySpec mKeySpec;
@@ -53,7 +53,7 @@ public abstract class AbstractDataEncryptor
 
     public abstract String getEncryptionKey();
 
-    public byte[] encryptData(final String data)
+    public String encryptData(final String data)
     {
         if (data == null)
         {
@@ -70,11 +70,16 @@ public abstract class AbstractDataEncryptor
         byte[] iv = generateIVForEncryption();
         try
         {
+            if (mCipher == null)
+            {
+                ServiceLog.e(TAG, "Cipher is null!");
+                return null;
+            }
             mCipher.init(Cipher.ENCRYPT_MODE, mKeySpec, new IvParameterSpec(iv));
             byte[] cipherText = doCipherOperation(mCipher, dataBytes, 0, dataBytes.length);
             // The final encryption result consists of iv and encryption data
             // Attach iv array in front of encryption byte array.
-            return concat(iv, cipherText);
+            return Base64.encode(concat(iv, cipherText), Base64.BASE64DEFAULTLENGTH);
 
         } catch (InvalidKeyException e)
         {
@@ -86,12 +91,25 @@ public abstract class AbstractDataEncryptor
         return null;
     };
 
-    public String decryptData(final byte[] dataBytes)
+    public String decryptData(final String dataString)
     {
+        if (dataString == null)
+        {
+            return null;
+        }
+        byte[] dataBytes = null;
+        try
+        {
+            dataBytes = Base64.decode(dataString);
+        } catch (Base64DecodingException e)
+        {
+            ServiceLog.e(TAG, "Base64 Decoding Exception", e);
+        }
         if (dataBytes == null)
         {
             return null;
         }
+
         try
         {
             mCipher.init(Cipher.DECRYPT_MODE, mKeySpec, new IvParameterSpec(dataBytes, 0,

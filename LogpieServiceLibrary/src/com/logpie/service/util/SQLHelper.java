@@ -30,16 +30,16 @@ public class SQLHelper
         }
 
         ServiceLog.d(TAG, "Parsing the JSONArray of INSERT request to build sql...");
-        sqlBuilder.append("insert into ");
+        sqlBuilder.append("insert into \"");
         sqlBuilder.append(tableName);
-        sqlBuilder.append("(");
+        sqlBuilder.append("\" (");
         for (int i = 0; i < key_set.size(); i++)
         {
             String key = key_set.get(i);
             sqlBuilder.append(key);
             if (i == key_set.size() - 1)
             {
-                sqlBuilder.append(") values (\' ");
+                sqlBuilder.append(") values (\'");
             }
             else
             {

@@ -12,6 +12,66 @@ public class JSONHelper
 {
     private static final String TAG = JSONHelper.class.getName();
 
+    public static JSONArray buildInsertKeyValue(ArrayList<String> columns,
+            ArrayList<String> values) throws JSONException
+    {
+        JSONArray array = new JSONArray();
+        for (int i = 0; i < columns.size(); i++)
+        {
+            JSONObject o = new JSONObject();
+            o.put(RequestKeys.KEY_INSERT_COLUMN, columns.get(i));
+            o.put(RequestKeys.KEY_INSERT_VALUE, values.get(i));
+            array.put(o);
+        }
+        return array;
+    }
+
+    public static JSONArray buildUpdateKeyValue(ArrayList<String> columns,
+            ArrayList<String> values) throws JSONException
+    {
+        JSONArray array = new JSONArray();
+        for (int i = 0; i < columns.size(); i++)
+        {
+            JSONObject o = new JSONObject();
+            o.put(RequestKeys.KEY_UPDATE_COLUMN, columns.get(i));
+            o.put(RequestKeys.KEY_UPDATE_VALUE, values.get(i));
+            array.put(o);
+        }
+        return array;
+    }
+
+    public static JSONArray buildQueryKey(ArrayList<String> columns) throws JSONException
+    {
+        JSONArray array = new JSONArray();
+        if (columns == null)
+        {
+            return array;
+        }
+
+        for (int i = 0; i < columns.size(); i++)
+        {
+            JSONObject o = new JSONObject();
+            o.put(RequestKeys.KEY_QUERY_COLUMN, columns.get(i));
+            array.put(o);
+        }
+        return array;
+    }
+
+    public static JSONArray buildConstraintKeyValue(ArrayList<String> columns,
+            ArrayList<String> operators, ArrayList<String> values) throws JSONException
+    {
+        JSONArray array = new JSONArray();
+        for (int i = 0; i < columns.size(); i++)
+        {
+            JSONObject o = new JSONObject();
+            o.put(RequestKeys.KEY_CONSTRAINT_COLUMN, columns.get(i));
+            o.put(RequestKeys.KEY_CONSTRAINT_OPERATOR, operators.get(i));
+            o.put(RequestKeys.KEY_CONSTRAINT_VALUE, values.get(i));
+            array.put(o);
+        }
+        return array;
+    }
+
     public static String parseToSQL(JSONObject postData, ArrayList<String> keySet,
             String table, String requestType, ArrayList<String> returnSet)
             throws JSONException
@@ -169,7 +229,7 @@ public class JSONHelper
         HashSet<String> hs = new HashSet<String>();
         hs.addAll(parameters);
 
-        if (!requiredhs.containsAll(hs))
+        if (!hs.containsAll(requiredhs))
         {
             throw new JSONException("JSONException happened when check key parameters.");
         }
