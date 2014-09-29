@@ -133,6 +133,12 @@ public class RequestKeys
     // KEY_DECLARE_UID is same as Key for token validation
 
     /**
+     * Keys for reset password
+     */
+    public static final String KEY_NEW_PASSWORD = "new_password";
+    // KEY_DECLARE_UID is same as Key for token validation
+
+    /**
      * Keys for OOD
      */
 

@@ -529,10 +529,9 @@ public class AuthenticationManager
         String newPassword = null;
         try
         {
-            email = resetPasswordData.getString(RequestKeys.KEY_PASSWORD);
-            // TODO: modify this part
-            // oldPassword = resetPasswordData.getString(RequestKeys.);
-            // newPassword = resetPasswordData.getString(RequestKeys.KEY_VALUE);
+            email = resetPasswordData.getString(RequestKeys.KEY_EMAIL);
+            oldPassword = resetPasswordData.getString(RequestKeys.KEY_PASSWORD);
+            newPassword = resetPasswordData.getString(RequestKeys.KEY_NEW_PASSWORD);
         } catch (JSONException e)
         {
             ServiceLog.e(TAG, "JSONException when try to get reset password infomation.",
