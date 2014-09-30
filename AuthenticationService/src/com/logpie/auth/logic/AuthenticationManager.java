@@ -393,6 +393,7 @@ public class AuthenticationManager
 
             // Generate the new tokens for all new users
             String sql = SQLHelper.buildLoginSQL(email, password);
+            ServiceLog.d(TAG, "The query email-password sql is:" + sql);
             // Step 1: Verify the email and password
             JSONObject step1_result = sAuthDataManager.executeQueryForLoginStep1(sql);
             if (step1_result == null)
@@ -549,6 +550,7 @@ public class AuthenticationManager
 
         // Generate the new tokens for all new users
         String sql = SQLHelper.buildLoginSQL(email, oldPassword);
+        ServiceLog.d(TAG, "Reset password SQL is: " + sql);
         // Step1: Verify the email and old password
         JSONObject step1_result = sAuthDataManager.executeQueryForLoginStep1(sql);
         if (step1_result == null)
@@ -577,6 +579,7 @@ public class AuthenticationManager
                     request_id);
         }
         String resetPasswordSQL = SQLHelper.buildResetPasswordSQL(uid, newPassword);
+        ServiceLog.d(TAG, "Reset password SQL is: " + resetPasswordSQL);
         boolean resetSuccess = sAuthDataManager.executeUpdate(resetPasswordSQL);
         if (resetSuccess)
         {
@@ -685,6 +688,7 @@ public class AuthenticationManager
         }
 
         // 2. Try to verify expiration
+        verificationManager.decomposeToken();
         boolean isTokenExpired = verificationManager.checkTokenExpiration();
         if (isTokenExpired)
         {
@@ -780,7 +784,7 @@ public class AuthenticationManager
         try
         {
             declare_uid = tokenExchangeData.getString(RequestKeys.KEY_DECLARE_UID);
-            refresh_token = tokenExchangeData.getString(RequestKeys.KEY_TOKEN);
+            refresh_token = tokenExchangeData.getString(RequestKeys.KEY_REFRESH_TOKEN);
             access_token = tokenExchangeData.getString(RequestKeys.KEY_ACCESS_TOKEN);
         } catch (JSONException e)
         {
@@ -820,6 +824,7 @@ public class AuthenticationManager
         }
 
         // 2. Try to verify expiration
+        verificationManager.decomposeToken();
         boolean isTokenExpired = verificationManager.checkTokenExpiration();
         if (isTokenExpired)
         {

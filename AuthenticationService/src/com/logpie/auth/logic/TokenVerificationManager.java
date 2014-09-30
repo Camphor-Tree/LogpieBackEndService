@@ -63,7 +63,7 @@ public class TokenVerificationManager
         return true;
     }
 
-    private void decomposeToken()
+    public void decomposeToken()
     {
         if (mIsDecomposed == false)
         {
@@ -71,12 +71,18 @@ public class TokenVerificationManager
             int randomUIDOffset = mPlainToken.indexOf("$");
             int timeStampOffset = mPlainToken.indexOf("#");
 
-            String timeStampString = mPlainToken.substring(uidOffset + 1, timeStampOffset);
+            String timeStampString = mPlainToken
+                    .substring(uidOffset + 1, timeStampOffset);
             mTokenGeneratedTime = Timestamp.valueOf(timeStampString);
 
             mUidInToken = mPlainToken.substring(0, uidOffset);
-            String scopeString = mPlainToken.substring(randomUIDOffset, mPlainToken.length());
+            String scopeString = mPlainToken.substring(randomUIDOffset,
+                    mPlainToken.length());
             String[] scopes = scopeString.split("$");
+            if (mScopes == null)
+            {
+                mScopes = new HashSet<String>();
+            }
             for (String scope : scopes)
             {
                 mScopes.add(scope);
@@ -85,29 +91,47 @@ public class TokenVerificationManager
         }
     }
 
+    /**
+     * Check whether the token expires or not
+     * 
+     * @return
+     * 
+     *         true: token expired
+     * 
+     *         false: token still valid
+     */
     public boolean checkTokenExpiration()
     {
         long tokenExpirationTimeMillis = 0;
         if (mTokenType.equals("access_token"))
         {
-            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime() + sAccessTokenExpiration;
+            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime()
+                    + sAccessTokenExpiration;
         }
         else if (mTokenType.equals("refresh_token"))
         {
-            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime() + sRefreshTokenExpiration;
+            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime()
+                    + sRefreshTokenExpiration;
         }
         else
         {
-            ServiceLog.e(TAG, "The token_type cannot be recognized! Token_type is:" + mTokenType);
+            ServiceLog.e(TAG, "The token_type cannot be recognized! Token_type is:"
+                    + mTokenType);
             return false;
         }
 
-        if (System.currentTimeMillis() < tokenExpirationTimeMillis)
+        // If current time already bigger than expiration time, it means the
+        // token is already invalid
+        ServiceLog.d(TAG, "The tokenExpiration time is: " + tokenExpirationTimeMillis);
+        ServiceLog.d(TAG, "The currentTimeMillis time is: " + System.currentTimeMillis());
+        if (System.currentTimeMillis() > tokenExpirationTimeMillis)
         {
+            ServiceLog.i(TAG, "Token already expired");
             return true;
         }
         else
         {
+            ServiceLog.i(TAG, "Token has NOT expired");
             return false;
         }
 

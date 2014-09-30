@@ -142,8 +142,9 @@ public class SQLHelper
      */
     public static String buildResetPasswordSQL(String uid, String newPassword)
     {
-        String sql = String
-                .format("UPDATE user_auth SET password = \'%s\';", newPassword);
+        String sql = String.format(
+                "UPDATE user_auth SET password = \'%s\' where uid = \'%s\';",
+                newPassword, uid);
         return sql;
     }
 }
