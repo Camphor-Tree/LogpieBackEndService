@@ -257,17 +257,20 @@ public class GenericConnection
 
     }
 
-    private void handleCallbackWithResponseData(String message, ServiceCallback callback)
-
+    private void handleCallbackWithResponseData(final String responseString,
+            final ServiceCallback callback)
     {
         JSONObject returnMessage = new JSONObject();
         try
         {
-            returnMessage.put(KEY_RESPONSE_DATA, message);
+            JSONObject responseJSON = new JSONObject(responseString);
+            returnMessage.put(KEY_RESPONSE_DATA, responseJSON);
         } catch (JSONException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            ServiceLog
+                    .e(TAG,
+                            "JSON Exception happened when parsing response from server, mainly due to the Server is returning mal-formed data",
+                            e);
         }
         callback.onSuccess(returnMessage);
     }
