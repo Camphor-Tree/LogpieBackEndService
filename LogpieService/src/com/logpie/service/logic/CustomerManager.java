@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.logpie.commonlib.RequestKeys;
+import com.logpie.commonlib.ResponseKeys;
 import com.logpie.service.data.CustomerDataManager;
 import com.logpie.service.data.DataCallback;
 import com.logpie.service.data.DataManager;
@@ -18,8 +20,6 @@ import com.logpie.service.logic.ManagerHelper.RequestType;
 import com.logpie.service.util.DatabaseSchema;
 import com.logpie.service.util.HttpRequestParser;
 import com.logpie.service.util.JSONHelper;
-import com.logpie.service.util.RequestKeys;
-import com.logpie.service.util.ResponseKeys;
 import com.logpie.service.util.ServiceLog;
 
 /**

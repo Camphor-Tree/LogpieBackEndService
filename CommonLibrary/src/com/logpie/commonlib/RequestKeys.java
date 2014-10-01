@@ -1,4 +1,4 @@
-package com.logpie.service.util;
+package com.logpie.commonlib;
 
 public class RequestKeys
 {

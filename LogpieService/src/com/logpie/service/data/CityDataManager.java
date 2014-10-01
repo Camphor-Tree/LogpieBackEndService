@@ -8,9 +8,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.logpie.commonlib.ResponseKeys;
 import com.logpie.service.config.DatabaseConfig;
 import com.logpie.service.util.DatabaseSchema;
-import com.logpie.service.util.ResponseKeys;
 import com.logpie.service.util.ServiceLog;
 
 public class CityDataManager extends DataManager

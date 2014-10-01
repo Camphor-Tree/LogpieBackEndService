@@ -51,4 +51,15 @@ public class DatabaseSchema
     public static final String SCHEMA_CITY_CITY = "city";
     public static final String SCHEMA_CITY_GRADE = "grade";
     public static final String SCHEMA_CITY_PROVINCE = "province";
+
+    public static final String SCHEMA_TABLE_FIRST_CATEGORY = "activity_category_first_level";
+    public static final String SCHEMA_FIRST_CATEGORY_CID = "acpid";
+    public static final String SCHEMA_FIRST_CATEGORY_CATEGORYCN = "category_cn";
+    public static final String SCHEMA_FIRST_CATEGORY_CATEGORYUS = "category_us";
+    public static final String SCHEMA_TABLE_SECOND_CATEGORY = "activity_category_second_level";
+    public static final String SCHEMA_SECOND_CATEGORY_CID = "accid";
+    public static final String SCHEMA_SECOND_CATEGORY_CATEGORYCN = "category_cn";
+    public static final String SCHEMA_SECOND_CATEGORY_CATEGORYUS = "category_us";
+    public static final String SCHEMA_SECOND_CATEGORY_PARENT = "parent";
+
 }

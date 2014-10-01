@@ -1,9 +1,7 @@
-package com.logpie.service.connection;
+package com.logpie.commonlib;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import com.logpie.service.util.ServiceLog;
 
 public class EndPoint
 {
@@ -11,18 +9,20 @@ public class EndPoint
 
     public enum ServiceURL
     {
-        RocektService("RocketService", "https://10.0.0.6:8443/RocketService/servlet", "1.0.0",
-                "test", true, false, true),
+        RocektService("RocketService", "https://10.0.0.6:8443/RocketService/servlet",
+                "1.0.0", "test", true, false, true),
 
         AuthenticationService("AuthenticationService",
-                "http://10.0.0.19:8080/AuthenticationService/auth", "1.0.0", "test", true, true,
-                false),
+                "http://10.0.0.19:8080/AuthenticationService/auth", "1.0.0", "test",
+                true, true, false),
 
-        CustomerService("CustomerService", "http://10.0.0.19:8080/LogpieService/customer", "1.0.0",
-                "test", true, true, false),
+        CustomerService("CustomerService",
+                "http://10.0.0.19:8080/LogpieService/customer", "1.0.0", "test", true,
+                true, false),
 
-        ActivityService("ActivityService", "http://10.0.0.19:8080/LogpieService/activity", "1.0.0",
-                "test", true, true, false),
+        ActivityService("ActivityService",
+                "http://10.0.0.19:8080/LogpieService/activity", "1.0.0", "test", true,
+                true, false),
 
         // EC2 Service URL
         AuthenticationServiceEC2(
@@ -48,8 +48,8 @@ public class EndPoint
         boolean mDoInput;
         boolean mUseSSL;
 
-        ServiceURL(String name, String url, String version, String environment, boolean doOutput,
-                boolean doInput, boolean useSSL)
+        ServiceURL(String name, String url, String version, String environment,
+                boolean doOutput, boolean doInput, boolean useSSL)
         {
             mServiceName = name;
             mUrl = url;
@@ -88,7 +88,6 @@ public class EndPoint
             } catch (MalformedURLException e)
             {
                 e.printStackTrace();
-                ServiceLog.e(TAG, e.getMessage());
             }
             return null;
         }

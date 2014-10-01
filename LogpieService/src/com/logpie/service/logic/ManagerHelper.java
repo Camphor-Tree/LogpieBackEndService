@@ -8,10 +8,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.logpie.commonlib.RequestKeys;
+import com.logpie.commonlib.ResponseKeys;
 import com.logpie.service.error.ErrorType;
 import com.logpie.service.util.HttpResponseWriter;
-import com.logpie.service.util.RequestKeys;
-import com.logpie.service.util.ResponseKeys;
 import com.logpie.service.util.ServiceLog;
 
 /**

@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.logpie.commonlib.RequestKeys;
+import com.logpie.commonlib.ResponseKeys;
 import com.logpie.service.data.ActivityDataManager;
 import com.logpie.service.data.CityDataManager;
 import com.logpie.service.data.DataCallback;
@@ -20,8 +22,6 @@ import com.logpie.service.logic.ManagerHelper.RequestType;
 import com.logpie.service.util.DatabaseSchema;
 import com.logpie.service.util.HttpRequestParser;
 import com.logpie.service.util.JSONHelper;
-import com.logpie.service.util.RequestKeys;
-import com.logpie.service.util.ResponseKeys;
 import com.logpie.service.util.SQLHelper;
 import com.logpie.service.util.ServiceLog;
 

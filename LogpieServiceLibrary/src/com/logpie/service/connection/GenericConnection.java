@@ -25,7 +25,7 @@ import javax.net.ssl.X509TrustManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.connection.EndPoint.ServiceURL;
+import com.logpie.commonlib.EndPoint.ServiceURL;
 import com.logpie.service.util.ServiceCallback;
 import com.logpie.service.util.ServiceLog;
 
@@ -115,7 +115,8 @@ public class GenericConnection
         } catch (JSONException e1)
         {
             // Do nothing if cannot add requestID
-            ServiceLog.e(TAG, "JSONException when putting request_id. Putting empty request_id");
+            ServiceLog.e(TAG,
+                    "JSONException when putting request_id. Putting empty request_id");
         }
         String data = mRequestData.toString();
         if (data == null)
@@ -171,36 +172,43 @@ public class GenericConnection
                 if (mServiceURL.isDoInput())
                 {
                     // read the response data from server.
-                    String responseData = inputStringReader(mHttpURLConnection.getInputStream());
+                    String responseData = inputStringReader(mHttpURLConnection
+                            .getInputStream());
                     ServiceLog.i(TAG, "Response from server:" + responseData);
                     handleCallbackWithResponseData(responseData, callback);
                 }
                 else
                 {
                     handleCallback(true, "succesfully sending data to server", callback);
-                    ServiceLog.i(TAG, "successful sending data to: " + mServiceURL.getServiceName()
-                            + "<--->hitting url:" + mServiceURL.getURL().toString());
+                    ServiceLog.i(TAG,
+                            "successful sending data to: " + mServiceURL.getServiceName()
+                                    + "<--->hitting url:"
+                                    + mServiceURL.getURL().toString());
                 }
             }
             else if (responsecode >= 300 && responsecode < 400)
             {
-                handleCallback(false, "redirection happen when sending data to server. error code:"
-                        + responsecode, callback);
-                ServiceLog.e(TAG, "redirection happen when sending data to server. error code:"
-                        + responsecode);
+                handleCallback(false,
+                        "redirection happen when sending data to server. error code:"
+                                + responsecode, callback);
+                ServiceLog.e(TAG,
+                        "redirection happen when sending data to server. error code:"
+                                + responsecode);
             }
             else if (responsecode >= 400 && responsecode < 500)
             {
                 handleCallback(false,
                         "client error happen when sending data to server. error code:"
                                 + responsecode, callback);
-                ServiceLog.e(TAG, "client error happen when sending data to server. error code:"
-                        + responsecode);
+                ServiceLog.e(TAG,
+                        "client error happen when sending data to server. error code:"
+                                + responsecode);
             }
             else if (responsecode >= 500)
             {
-                handleCallback(false, "server error when sending data to server. error code:"
-                        + responsecode, callback);
+                handleCallback(false,
+                        "server error when sending data to server. error code:"
+                                + responsecode, callback);
                 ServiceLog.e(TAG, "server error when sending data to server. error code:"
                         + responsecode);
             }
@@ -209,25 +217,30 @@ public class GenericConnection
                 handleCallback(false,
                         "no valid response code when sending data to server. error code:"
                                 + responsecode, callback);
-                ServiceLog.e(TAG, "no valid response code when sending data to server. error code:"
-                        + responsecode);
+                ServiceLog.e(TAG,
+                        "no valid response code when sending data to server. error code:"
+                                + responsecode);
             }
             else
             {
-                handleCallback(false, "unknown error when sending data to server. error code:"
-                        + responsecode, callback);
-                ServiceLog.e(TAG, "unknown error when sending data to server. error code:"
-                        + responsecode);
+                handleCallback(false,
+                        "unknown error when sending data to server. error code:"
+                                + responsecode, callback);
+                ServiceLog.e(TAG,
+                        "unknown error when sending data to server. error code:"
+                                + responsecode);
             }
         } catch (IOException e)
         {
-            handleCallback(false, "IOException when sending data to server and getresponseCode",
+            handleCallback(false,
+                    "IOException when sending data to server and getresponseCode",
                     callback);
             e.printStackTrace();
         }
     }
 
-    private void handleCallback(boolean isSuccess, String message, ServiceCallback callback)
+    private void handleCallback(boolean isSuccess, String message,
+            ServiceCallback callback)
     {
         JSONObject returnMessage = new JSONObject();
         if (isSuccess)
