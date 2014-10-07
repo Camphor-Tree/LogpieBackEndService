@@ -66,7 +66,7 @@ public class SQLHelper
 
     public static String buildQuerySQL(String tableName, ArrayList<String> key_set,
             ArrayList<String> constraint_keys, ArrayList<String> constraint_operators,
-            ArrayList<String> constraint_values, String number)
+            ArrayList<String> constraint_values, String number, String orderBy, boolean isASC)
     {
         StringBuilder sqlBuilder = new StringBuilder();
         ServiceLog.d(TAG, "Building sql of QUERY request...");
@@ -80,8 +80,7 @@ public class SQLHelper
         ServiceLog.d(TAG, "Parsing the JSONArray of QUERY request to build sql...");
         if (key_set == null || key_set.size() == 0)
         {
-            ServiceLog.d(TAG,
-                    "Key set is null or empty that means it should query all keys.");
+            ServiceLog.d(TAG, "Key set is null or empty that means it should query all keys.");
             sqlBuilder.append("select * ");
         }
         else
@@ -114,6 +113,13 @@ public class SQLHelper
         else
         {
             sqlBuilder.append(constraintSQL);
+        }
+
+        if (orderBy != null)
+        {
+            sqlBuilder.append("ORDER BY ");
+            sqlBuilder.append(orderBy);
+            sqlBuilder.append(isASC ? " ASC" : " DESC");
         }
 
         if (number != null)
@@ -185,9 +191,9 @@ public class SQLHelper
     private static String buildConstraintSQL(ArrayList<String> constraint_keys,
             ArrayList<String> constraint_operators, ArrayList<String> constraint_values)
     {
-        if (constraint_keys != null && constraint_values != null
-                && constraint_operators != null && constraint_keys.size() != 0
-                && constraint_values.size() != 0 && constraint_operators.size() != 0)
+        if (constraint_keys != null && constraint_values != null && constraint_operators != null
+                && constraint_keys.size() != 0 && constraint_values.size() != 0
+                && constraint_operators.size() != 0)
         {
             if (constraint_keys.size() == constraint_values.size()
                     && constraint_keys.size() == constraint_operators.size())
@@ -215,13 +221,11 @@ public class SQLHelper
                 }
                 return sqlBuilder.toString();
             }
-            ServiceLog.e(TAG,
-                    "The length of each parameter list is not the same as others.");
+            ServiceLog.e(TAG, "The length of each parameter list is not the same as others.");
             return null;
         }
         ServiceLog
-                .d(TAG,
-                        "Cannot get constraint key and constrint value when building a query sql");
+                .d(TAG, "Cannot get constraint key and constrint value when building a query sql");
         return null;
     }
 }

@@ -71,6 +71,8 @@ public class RequestKeys
     public static final String KEY_MAX = "max";
     public static final String KEY_MIN = "min";
     public static final String KEY_LIMIT_NUMBER = "limit_number";
+    public static final String KEY_ORDER_BY = "order_by";
+    public static final String KEY_DESC = "desc";
     public static final String KEY_EQUAL = "=";
     public static final String KEY_LESS_THAN = "<";
     public static final String KEY_MORE_THAN = ">";
@@ -102,6 +104,7 @@ public class RequestKeys
     public static final String KEY_COUNT_DISLIKE = "count_dislike";
     public static final String KEY_ACTIVATED = "activated";
     public static final String KEY_CATEGORY = "category";
+    public static final String KEY_SUBCATEGORY = "subcategory";
     public static final String KEY_ACTIVITY_MODE = "mode";
 
     public static final String KEY_SENDER_USER_ID = "sender_user_id";

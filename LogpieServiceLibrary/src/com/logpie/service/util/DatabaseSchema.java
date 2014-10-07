@@ -21,9 +21,7 @@ public class DatabaseSchema
     public static final String SCHEMA_ACTIVITY_DESCRIPTION = "description";
     public static final String SCHEMA_ACTIVITY_CITY = "city";
     public static final String SCHEMA_ACTIVITY_LOCATION = "location";
-    public static final String SCHEMA_ACTIVITY_LATITUDE = "lat";
-    public static final String SCHEMA_ACTIVITY_LONGITUDE = "lon";
-    public static final String SCHEMA_ACTIVITY_ADDRESS = "address";
+    public static final String SCHEMA_ACTIVITY_LATLON = "latlon";
     public static final String SCHEMA_ACTIVITY_CREATE_TIME = "create_time";
     public static final String SCHEMA_ACTIVITY_START_TIME = "start_time";
     public static final String SCHEMA_ACTIVITY_END_TIME = "end_time";
@@ -32,6 +30,7 @@ public class DatabaseSchema
     public static final String SCHEMA_ACTIVITY_COUNT_DISLIKE = "count_dislike";
     public static final String SCHEMA_ACTIVITY_ACTIVATED = "activated";
     public static final String SCHEMA_ACTIVITY_CATEGORY = "category";
+    public static final String SCHEMA_ACTIVITY_SUBCATEGORY = "subcategory";
 
     public static final String SCHEMA_TABLE_COMMENTS = "comments";
     public static final String SCHEMA_COMMENTS_USER_ID = "user_id";
@@ -52,14 +51,14 @@ public class DatabaseSchema
     public static final String SCHEMA_CITY_GRADE = "grade";
     public static final String SCHEMA_CITY_PROVINCE = "province";
 
-    public static final String SCHEMA_TABLE_FIRST_CATEGORY = "activity_category_first_level";
-    public static final String SCHEMA_FIRST_CATEGORY_CID = "acpid";
-    public static final String SCHEMA_FIRST_CATEGORY_CATEGORYCN = "category_cn";
-    public static final String SCHEMA_FIRST_CATEGORY_CATEGORYUS = "category_us";
-    public static final String SCHEMA_TABLE_SECOND_CATEGORY = "activity_category_second_level";
-    public static final String SCHEMA_SECOND_CATEGORY_CID = "accid";
-    public static final String SCHEMA_SECOND_CATEGORY_CATEGORYCN = "category_cn";
-    public static final String SCHEMA_SECOND_CATEGORY_CATEGORYUS = "category_us";
-    public static final String SCHEMA_SECOND_CATEGORY_PARENT = "parent";
+    public static final String SCHEMA_TABLE_CATEGORY = "act_cate_parent";
+    public static final String SCHEMA_CATEGORY_CID = "acpid";
+    public static final String SCHEMA_CATEGORY_CATEGORYCN = "category_cn";
+    public static final String SCHEMA_CATEGORY_CATEGORYUS = "category_us";
+    public static final String SCHEMA_TABLE_SUBCATEGORY = "act_cate_child";
+    public static final String SCHEMA_SUBCATEGORY_CID = "accid";
+    public static final String SCHEMA_SUBCATEGORY_CATEGORYCN = "category_cn";
+    public static final String SCHEMA_SUBCATEGORY_CATEGORYUS = "category_us";
+    public static final String SCHEMA_SUBCATEGORY_PARENT = "parent";
 
 }

@@ -66,10 +66,8 @@ public class ActivityManager
             ServiceLog.d(TAG, "Received postData:" + postData);
         } catch (HttpRequestIsNullException e)
         {
-            ServiceLog
-                    .e(TAG,
-                            "HttpRequestParser is null when parsing an activity service request.",
-                            e);
+            ServiceLog.e(TAG,
+                    "HttpRequestParser is null when parsing an activity service request.", e);
         }
         if (postData != null)
         {
@@ -78,12 +76,11 @@ public class ActivityManager
 
             // TODO: verify token by auth service
 
-            RequestType type = ManagerHelper.getRequestType(postData,
-                    RequestKeys.KEY_REQUEST_TYPE, requestID);
+            RequestType type = ManagerHelper.getRequestType(postData, RequestKeys.KEY_REQUEST_TYPE,
+                    requestID);
             if (type == null)
             {
-                ServiceLog.e(TAG, "Failed to find the request type from the request.",
-                        requestID);
+                ServiceLog.e(TAG, "Failed to find the request type from the request.", requestID);
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
             }
 
@@ -104,8 +101,7 @@ public class ActivityManager
             }
             else
             {
-                ServiceLog.e(requestID,
-                        "Failed to find the request service key from the request.");
+                ServiceLog.e(requestID, "Failed to find the request service key from the request.");
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
             }
 
@@ -143,8 +139,7 @@ public class ActivityManager
         {
             if (!postData.has(RequestKeys.KEY_INSERT_KEYVALUE_PAIR))
             {
-                ServiceLog.e(TAG,
-                        "Failed to find the insert key value pair from the request.");
+                ServiceLog.e(TAG, "Failed to find the insert key value pair from the request.");
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 return;
             }
@@ -169,15 +164,14 @@ public class ActivityManager
                     try
                     {
                         result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                        ManagerHelper.handleResponse(true,
-                                ResponseKeys.KEY_ACTIVITY_RESULT, result, response);
+                        ManagerHelper.handleResponse(true, ResponseKeys.KEY_ACTIVITY_RESULT,
+                                result, response);
                     } catch (JSONException e)
                     {
                         ServiceLog.logRequest(TAG, requestID, e.getMessage());
-                        ServiceLog
-                                .e(TAG,
-                                        "JSONException happened when getting INSERT result successfully.",
-                                        requestID, e);
+                        ServiceLog.e(TAG,
+                                "JSONException happened when getting INSERT result successfully.",
+                                requestID, e);
                     }
                 }
 
@@ -186,8 +180,8 @@ public class ActivityManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response, ErrorType
-                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        ManagerHelper.handleResponseWithError(response,
+                                ErrorType.valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                     } catch (JSONException e)
                     {
                         ServiceLog
@@ -201,10 +195,9 @@ public class ActivityManager
         {
             ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            ServiceLog
-                    .e(TAG,
-                            "JSONException happened when making an INSERT operation of activity service.",
-                            e);
+            ServiceLog.e(TAG,
+                    "JSONException happened when making an INSERT operation of activity service.",
+                    e);
         }
     }
 
@@ -254,15 +247,14 @@ public class ActivityManager
                     try
                     {
                         result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                        ManagerHelper.handleResponse(true,
-                                ResponseKeys.KEY_ACTIVITY_RESULT, result, response);
+                        ManagerHelper.handleResponse(true, ResponseKeys.KEY_ACTIVITY_RESULT,
+                                result, response);
                     } catch (JSONException e)
                     {
                         ServiceLog.logRequest(TAG, requestID, e.getMessage());
-                        ServiceLog
-                                .e(TAG,
-                                        "JSONException happened when getting QUERY result successfully.",
-                                        requestID, e);
+                        ServiceLog.e(TAG,
+                                "JSONException happened when getting QUERY result successfully.",
+                                requestID, e);
                     }
                 }
 
@@ -271,8 +263,8 @@ public class ActivityManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response, ErrorType
-                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        ManagerHelper.handleResponseWithError(response,
+                                ErrorType.valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                     } catch (JSONException e)
                     {
                         ServiceLog
@@ -287,10 +279,8 @@ public class ActivityManager
         {
             ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            ServiceLog
-                    .e(TAG,
-                            "JSONException happened when making a QUERY operation of activity service.",
-                            e);
+            ServiceLog.e(TAG,
+                    "JSONException happened when making a QUERY operation of activity service.", e);
         }
     }
 
@@ -301,8 +291,7 @@ public class ActivityManager
         {
             if (!postData.has(RequestKeys.KEY_UPDATE_KEYVALUE_PAIR))
             {
-                ServiceLog.e(TAG,
-                        "Failed to find the update key value pair from the request.");
+                ServiceLog.e(TAG, "Failed to find the update key value pair from the request.");
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 return;
             }
@@ -327,15 +316,14 @@ public class ActivityManager
                     try
                     {
                         result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                        ManagerHelper.handleResponse(true,
-                                ResponseKeys.KEY_ACTIVITY_RESULT, result, response);
+                        ManagerHelper.handleResponse(true, ResponseKeys.KEY_ACTIVITY_RESULT,
+                                result, response);
                     } catch (JSONException e)
                     {
                         ServiceLog.logRequest(TAG, requestID, e.getMessage());
-                        ServiceLog
-                                .e(TAG,
-                                        "JSONException happened when getting UPDATE result successfully.",
-                                        requestID, e);
+                        ServiceLog.e(TAG,
+                                "JSONException happened when getting UPDATE result successfully.",
+                                requestID, e);
                     }
                 }
 
@@ -344,8 +332,8 @@ public class ActivityManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response, ErrorType
-                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        ManagerHelper.handleResponseWithError(response,
+                                ErrorType.valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
                     } catch (JSONException e)
                     {
                         ServiceLog
@@ -360,10 +348,8 @@ public class ActivityManager
         {
             ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            ServiceLog
-                    .e(TAG,
-                            "JSONException happened making an UPDATE operation of activity service.",
-                            e);
+            ServiceLog.e(TAG,
+                    "JSONException happened making an UPDATE operation of activity service.", e);
         }
     }
 
@@ -382,9 +368,8 @@ public class ActivityManager
         keySet.add(RequestKeys.KEY_LATITUDE);
         keySet.add(RequestKeys.KEY_LONGITUDE);
 
-        String sql = JSONHelper.parseToSQL(postData, keySet,
-                DatabaseSchema.SCHEMA_TABLE_ACTIVITY, RequestKeys.REQUEST_TYPE_INSERT,
-                null);
+        String sql = JSONHelper.parseToSQL(postData, keySet, DatabaseSchema.SCHEMA_TABLE_ACTIVITY,
+                RequestKeys.REQUEST_TYPE_INSERT, null);
         if (sql == null || sql.equals(""))
         {
             ServiceLog.e(TAG, "Failed to build SQL when creating an activity.");
@@ -399,9 +384,8 @@ public class ActivityManager
 
     private String editActivity(JSONObject postData) throws JSONException
     {
-        String sql = JSONHelper.parseToSQL(postData, null,
-                DatabaseSchema.SCHEMA_TABLE_ACTIVITY, RequestKeys.REQUEST_TYPE_UPDATE,
-                null);
+        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_ACTIVITY,
+                RequestKeys.REQUEST_TYPE_UPDATE, null);
         if (sql == null || sql.equals(""))
         {
             ServiceLog.e(TAG, "Failed to build SQL when editting an activity.");
@@ -418,8 +402,7 @@ public class ActivityManager
     {
         ArrayList<String> returnSet;
 
-        final String handleQuery(JSONObject postData, String requestID)
-                throws JSONException
+        final String handleQuery(JSONObject postData, String requestID) throws JSONException
         {
             returnSet = getReturnSet(postData);
 
@@ -442,8 +425,8 @@ public class ActivityManager
             {
                 if (queryKey.getJSONObject(i).has(RequestKeys.KEY_QUERY_COLUMN))
                 {
-                    returnSet.add(queryKey.getJSONObject(i).getString(
-                            RequestKeys.KEY_QUERY_COLUMN));
+                    returnSet
+                            .add(queryKey.getJSONObject(i).getString(RequestKeys.KEY_QUERY_COLUMN));
                 }
             }
 
@@ -458,11 +441,65 @@ public class ActivityManager
     {
 
         @Override
-        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet,
-                String requestID)
+        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet, String requestID)
+                throws JSONException
         {
-            // TODO Implement this function
-            return null;
+
+            JSONArray constraintKeyvaluePair;
+            if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
+            {
+                ServiceLog.e(TAG,
+                        "Failed to find the constraint key value pair from query request.",
+                        requestID);
+                return null;
+            }
+
+            constraintKeyvaluePair = postData
+                    .getJSONArray(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR);
+
+            String lat = null;
+            String lon = null;
+
+            for (int i = 0; i < constraintKeyvaluePair.length(); i++)
+            {
+                JSONObject data = constraintKeyvaluePair.getJSONObject(i);
+                if (data.has(RequestKeys.KEY_CONSTRAINT_COLUMN))
+                {
+                    if (data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN).equals(
+                            RequestKeys.KEY_LATITUDE))
+                    {
+                        lat = data.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
+                        ServiceLog.d(TAG, "Parsed the latitude data is: " + lat);
+                    }
+                    if (data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN).equals(
+                            RequestKeys.KEY_LONGITUDE))
+                    {
+                        lon = data.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
+                        ServiceLog.d(TAG, "Parsed the longitude data is: " + lon);
+                    }
+                }
+            }
+
+            if (lat == null || lon == null)
+            {
+                ServiceLog.e(TAG, "Failed to find the lat/lon data from the query request.",
+                        requestID);
+                return null;
+            }
+
+            String number = null;
+            if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
+            {
+                number = postData.getString(RequestKeys.KEY_LIMIT_NUMBER);
+            }
+            else
+            {
+                number = DEFAULT_NUMBER;
+            }
+
+            String sql = "select * from activity order by " + DatabaseSchema.SCHEMA_ACTIVITY_LATLON
+                    + " <-> point(" + lat + ", " + lon + ") limit " + number + ";";
+            return sql;
         }
 
     }
@@ -471,16 +508,15 @@ public class ActivityManager
     {
 
         @Override
-        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet,
-                String requestID) throws JSONException
+        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet, String requestID)
+                throws JSONException
         {
             JSONArray constraintKeyvaluePair;
             if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
             {
-                ServiceLog
-                        .e(TAG,
-                                "Failed to find the constraint key value pair from query request.",
-                                requestID);
+                ServiceLog.e(TAG,
+                        "Failed to find the constraint key value pair from query request.",
+                        requestID);
                 return null;
             }
 
@@ -505,8 +541,8 @@ public class ActivityManager
 
             if (city == null)
             {
-                ServiceLog.e(TAG, "Failed to find the city data from the query request.",
-                        requestID);
+                ServiceLog
+                        .e(TAG, "Failed to find the city data from the query request.", requestID);
                 return null;
             }
 
@@ -536,9 +572,12 @@ public class ActivityManager
                 number = DEFAULT_NUMBER;
             }
 
-            return SQLHelper
-                    .buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, returnSet,
-                            constraintKey, constraintOperator, constraintValue, number);
+            String orderBy = DatabaseSchema.SCHEMA_ACTIVITY_AID;
+            boolean isASC = false;
+
+            return SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, returnSet,
+                    constraintKey, constraintOperator, constraintValue, number, orderBy, isASC);
+
         }
     }
 
@@ -546,11 +585,79 @@ public class ActivityManager
     {
 
         @Override
-        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet,
-                String requestID)
+        String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet, String requestID)
+                throws JSONException
         {
-            // TODO Implement this function
-            return null;
+            JSONArray constraintKeyvaluePair;
+            if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
+            {
+                ServiceLog.e(TAG,
+                        "Failed to find the constraint key value pair from query request.",
+                        requestID);
+                return null;
+            }
+
+            constraintKeyvaluePair = postData
+                    .getJSONArray(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR);
+            String category = null;
+            String subCategory = null;
+
+            for (int i = 0; i < constraintKeyvaluePair.length(); i++)
+            {
+                JSONObject data = constraintKeyvaluePair.getJSONObject(i);
+                if (data.has(RequestKeys.KEY_CONSTRAINT_COLUMN))
+                {
+                    if (data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN).equals(
+                            RequestKeys.KEY_CATEGORY))
+                    {
+                        category = data.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
+                        ServiceLog.d(TAG, "Parsed the category data is: " + category);
+                    }
+                    else if (data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN).equals(
+                            RequestKeys.KEY_SUBCATEGORY))
+                    {
+                        subCategory = data.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
+                        ServiceLog.d(TAG, "Parsed the subcategory data is: " + subCategory);
+                    }
+                }
+            }
+
+            // Category must be existed
+            if (category == null)
+            {
+                ServiceLog
+                        .e(TAG, "Failed to find category data from the query request.", requestID);
+                return null;
+            }
+
+            ArrayList<String> constraintKey = new ArrayList<String>();
+            constraintKey.add(DatabaseSchema.SCHEMA_ACTIVITY_CATEGORY);
+            ArrayList<String> constraintOperator = new ArrayList<String>();
+            constraintOperator.add(RequestKeys.KEY_EQUAL);
+            ArrayList<String> constraintValue = new ArrayList<String>();
+            constraintValue.add(category);
+            if (subCategory != null)
+            {
+                constraintKey.add(DatabaseSchema.SCHEMA_ACTIVITY_SUBCATEGORY);
+                constraintOperator.add(RequestKeys.KEY_EQUAL);
+                constraintValue.add(subCategory);
+            }
+
+            String number = null;
+            if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
+            {
+                number = postData.getString(RequestKeys.KEY_LIMIT_NUMBER);
+            }
+            else
+            {
+                number = DEFAULT_NUMBER;
+            }
+
+            String orderBy = DatabaseSchema.SCHEMA_ACTIVITY_AID;
+            boolean isASC = false;
+
+            return SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, returnSet,
+                    constraintKey, constraintOperator, constraintValue, number, orderBy, isASC);
         }
 
     }

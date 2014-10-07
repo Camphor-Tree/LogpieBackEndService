@@ -33,4 +33,8 @@
 		<url-pattern>/activity</url-pattern>
 	</servlet-mapping>
 
+	<listener>
+		<listener-class>com.logpie.service.servlet.LogpieServletListener</listener-class>
+	</listener>
+
 </web-app>

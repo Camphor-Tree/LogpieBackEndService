@@ -14,8 +14,8 @@ public class JSONHelper
 {
     private static final String TAG = JSONHelper.class.getName();
 
-    public static JSONArray buildInsertKeyValue(ArrayList<String> columns,
-            ArrayList<String> values) throws JSONException
+    public static JSONArray buildInsertKeyValue(ArrayList<String> columns, ArrayList<String> values)
+            throws JSONException
     {
         JSONArray array = new JSONArray();
         for (int i = 0; i < columns.size(); i++)
@@ -28,8 +28,8 @@ public class JSONHelper
         return array;
     }
 
-    public static JSONArray buildUpdateKeyValue(ArrayList<String> columns,
-            ArrayList<String> values) throws JSONException
+    public static JSONArray buildUpdateKeyValue(ArrayList<String> columns, ArrayList<String> values)
+            throws JSONException
     {
         JSONArray array = new JSONArray();
         for (int i = 0; i < columns.size(); i++)
@@ -74,9 +74,8 @@ public class JSONHelper
         return array;
     }
 
-    public static String parseToSQL(JSONObject postData, ArrayList<String> keySet,
-            String table, String requestType, ArrayList<String> returnSet)
-            throws JSONException
+    public static String parseToSQL(JSONObject postData, ArrayList<String> keySet, String table,
+            String requestType, ArrayList<String> returnSet) throws JSONException
     {
         switch (requestType)
         {
@@ -93,20 +92,18 @@ public class JSONHelper
         return null;
     }
 
-    private static String parseInsertRequest(JSONObject postData,
-            ArrayList<String> requiredKeySet, String table) throws JSONException
+    private static String parseInsertRequest(JSONObject postData, ArrayList<String> requiredKeySet,
+            String table) throws JSONException
     {
         ArrayList<String> keySet = new ArrayList<String>();
         ArrayList<String> valueSet = new ArrayList<String>();
 
-        JSONArray insertKeyvaluePair = postData
-                .getJSONArray(RequestKeys.KEY_INSERT_KEYVALUE_PAIR);
+        JSONArray insertKeyvaluePair = postData.getJSONArray(RequestKeys.KEY_INSERT_KEYVALUE_PAIR);
 
         for (int i = 0; i < insertKeyvaluePair.length(); i++)
         {
             if (insertKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_INSERT_COLUMN)
-                    && insertKeyvaluePair.getJSONObject(i).has(
-                            RequestKeys.KEY_INSERT_VALUE))
+                    && insertKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_INSERT_VALUE))
             {
                 keySet.add(insertKeyvaluePair.getJSONObject(i).getString(
                         RequestKeys.KEY_INSERT_COLUMN));
@@ -124,8 +121,8 @@ public class JSONHelper
 
     }
 
-    private static String parseQueryRequest(JSONObject postData,
-            ArrayList<String> returnSet, String table) throws JSONException
+    private static String parseQueryRequest(JSONObject postData, ArrayList<String> returnSet,
+            String table) throws JSONException
     {
         JSONArray queryKey = postData.getJSONArray(RequestKeys.KEY_QUERY_KEY);
 
@@ -133,8 +130,7 @@ public class JSONHelper
         {
             if (queryKey.getJSONObject(i).has(RequestKeys.KEY_QUERY_COLUMN))
             {
-                returnSet.add(queryKey.getJSONObject(i).getString(
-                        RequestKeys.KEY_QUERY_COLUMN));
+                returnSet.add(queryKey.getJSONObject(i).getString(RequestKeys.KEY_QUERY_COLUMN));
             }
         }
 
@@ -142,8 +138,7 @@ public class JSONHelper
         ArrayList<String> constraintOperatorSet = new ArrayList<String>();
         ArrayList<String> constraintValueSet = new ArrayList<String>();
 
-        parseConstraint(postData, constraintKeySet, constraintOperatorSet,
-                constraintValueSet);
+        parseConstraint(postData, constraintKeySet, constraintOperatorSet, constraintValueSet);
 
         String number = null;
         if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
@@ -151,8 +146,19 @@ public class JSONHelper
             number = postData.getString(RequestKeys.KEY_LIMIT_NUMBER);
         }
 
-        return SQLHelper.buildQuerySQL(table, returnSet, constraintKeySet,
-                constraintOperatorSet, constraintValueSet, number);
+        String orderBy = null;
+        boolean isASC = true;
+        if (postData.has(RequestKeys.KEY_ORDER_BY))
+        {
+            orderBy = postData.getString(RequestKeys.KEY_ORDER_BY);
+            if (postData.has(RequestKeys.KEY_DESC))
+            {
+                isASC = false;
+            }
+        }
+
+        return SQLHelper.buildQuerySQL(table, returnSet, constraintKeySet, constraintOperatorSet,
+                constraintValueSet, number, orderBy, isASC);
     }
 
     private static String parseUpdateRequest(JSONObject postData, String table)
@@ -161,14 +167,12 @@ public class JSONHelper
         ArrayList<String> keySet = new ArrayList<String>();
         ArrayList<String> valueSet = new ArrayList<String>();
 
-        JSONArray updateKeyvaluePair = postData
-                .getJSONArray(RequestKeys.KEY_UPDATE_KEYVALUE_PAIR);
+        JSONArray updateKeyvaluePair = postData.getJSONArray(RequestKeys.KEY_UPDATE_KEYVALUE_PAIR);
 
         for (int i = 0; i < updateKeyvaluePair.length(); i++)
         {
             if (updateKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_UPDATE_COLUMN)
-                    && updateKeyvaluePair.getJSONObject(i).has(
-                            RequestKeys.KEY_UPDATE_VALUE))
+                    && updateKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_UPDATE_VALUE))
             {
                 keySet.add(updateKeyvaluePair.getJSONObject(i).getString(
                         RequestKeys.KEY_UPDATE_COLUMN));
@@ -181,17 +185,16 @@ public class JSONHelper
         ArrayList<String> constraintOperatorSet = new ArrayList<String>();
         ArrayList<String> constraintValueSet = new ArrayList<String>();
 
-        parseConstraint(postData, constraintKeySet, constraintOperatorSet,
-                constraintValueSet);
+        parseConstraint(postData, constraintKeySet, constraintOperatorSet, constraintValueSet);
 
         return SQLHelper.buildUpdateSQL(table, keySet, valueSet, constraintKeySet,
                 constraintOperatorSet, constraintValueSet);
 
     }
 
-    private static void parseConstraint(JSONObject postData,
-            ArrayList<String> constraintKeySet, ArrayList<String> constraintOperatorSet,
-            ArrayList<String> constraintValueSet) throws JSONException
+    private static void parseConstraint(JSONObject postData, ArrayList<String> constraintKeySet,
+            ArrayList<String> constraintOperatorSet, ArrayList<String> constraintValueSet)
+            throws JSONException
     {
         if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
         {
@@ -210,8 +213,7 @@ public class JSONHelper
                     && data.has(RequestKeys.KEY_CONSTRAINT_VALUE))
             {
                 constraintKeySet.add(data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN));
-                constraintOperatorSet.add(data
-                        .getString(RequestKeys.KEY_CONSTRAINT_OPERATOR));
+                constraintOperatorSet.add(data.getString(RequestKeys.KEY_CONSTRAINT_OPERATOR));
                 constraintValueSet.add(data.getString(RequestKeys.KEY_CONSTRAINT_VALUE));
             }
         }
@@ -250,8 +252,7 @@ public class JSONHelper
         for (String value : values)
         {
             if (value == null || value.equals(""))
-                throw new JSONException(
-                        "JSONException happened when check value parameters.");
+                throw new JSONException("JSONException happened when check value parameters.");
         }
 
     }

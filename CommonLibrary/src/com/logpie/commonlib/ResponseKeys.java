@@ -52,7 +52,6 @@ public class ResponseKeys
     public static final String KEY_LOCATION = "com.logpie.location";
     public static final String KEY_LATITUDE = "com.logpie.latitude";
     public static final String KEY_LONGITUDE = "com.logpie.longitude";
-    public static final String KEY_ADDRESS = "com.logpie.address";
     public static final String KEY_CREATE_TIME = "com.logpie.create.time";
     public static final String KEY_START_TIME = "com.logpie.start.time";
     public static final String KEY_END_TIME = "com.logpie.end.time";
@@ -61,6 +60,7 @@ public class ResponseKeys
     public static final String KEY_COUNT_DISLIKE = "com.logpie.count.dislike";
     public static final String KEY_ACTIVATED = "com.logpie.activated";
     public static final String KEY_CATEGORY = "com.logpie.category";
+    public static final String KEY_SUBCATEGORY = "com.logpie.subcategory";
 
     public static final String KEY_SENDER_USER_ID = "com.logpie.sender.user.id";
     public static final String KEY_SEND_TO_USER_ID = "com.logpie.sendto.user.id";
@@ -70,9 +70,5 @@ public class ResponseKeys
     public static final String KEY_COMMENT_TIME = "com.logpie.comment.time";
     public static final String KEY_READ_BY_REPLY = "com.logpie.read.by.reply";
     public static final String KEY_READ_BY_HOST = "com.logpie.read.by.host";
-
-    public static final String KEY_CID = "com.logpie.cid";
-    public static final String KEY_LEVEL = "com.logpie.level";
-    public static final String KEY_PROVINCE = "com.logpie.province";
 
 }

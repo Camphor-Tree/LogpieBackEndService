@@ -63,6 +63,7 @@ public class ActivityDataManager extends DataManager
             Statement statement = getsConnection().createStatement();
             ServiceLog.d(TAG, "Creating '" + ACTIVITY_TABLE + "' table...");
             statement.execute(DatabaseConfig.SQL_CREATE_ACTIVITY_TABLE);
+            statement.execute(DatabaseConfig.SQL_CREATE_ACTIVIY_INDEX);
         } catch (SQLException e)
         {
             ServiceLog.e(TAG, "SQL error happen when creating a table", e);
@@ -84,26 +85,38 @@ public class ActivityDataManager extends DataManager
 
                 long aid = resultSet.getLong(DatabaseSchema.SCHEMA_ACTIVITY_AID);
                 long uid = resultSet.getLong(DatabaseSchema.SCHEMA_ACTIVITY_UID);
-                String nickname = resultSet
-                        .getString(DatabaseSchema.SCHEMA_ACTIVITY_NICKNAME);
+                String nickname = resultSet.getString(DatabaseSchema.SCHEMA_ACTIVITY_NICKNAME);
                 String description = resultSet
                         .getString(DatabaseSchema.SCHEMA_ACTIVITY_DESCRIPTION);
-                String location = resultSet
-                        .getString(DatabaseSchema.SCHEMA_ACTIVITY_LOCATION);
+                String location = resultSet.getString(DatabaseSchema.SCHEMA_ACTIVITY_LOCATION);
                 String createTime = resultSet.getTimestamp(
                         DatabaseSchema.SCHEMA_ACTIVITY_CREATE_TIME).toString();
-                String startTime = resultSet.getTimestamp(
-                        DatabaseSchema.SCHEMA_ACTIVITY_START_TIME).toString();
-                String endTime = resultSet.getTimestamp(
-                        DatabaseSchema.SCHEMA_ACTIVITY_END_TIME).toString();
-                double lat = resultSet.getDouble(DatabaseSchema.SCHEMA_ACTIVITY_LATITUDE);
-                double lon = resultSet
-                        .getDouble(DatabaseSchema.SCHEMA_ACTIVITY_LONGITUDE);
+                String startTime = resultSet
+                        .getTimestamp(DatabaseSchema.SCHEMA_ACTIVITY_START_TIME).toString();
+                String endTime = resultSet.getTimestamp(DatabaseSchema.SCHEMA_ACTIVITY_END_TIME)
+                        .toString();
                 int category = resultSet.getInt(DatabaseSchema.SCHEMA_ACTIVITY_CATEGORY);
-                int countLike = resultSet
-                        .getInt(DatabaseSchema.SCHEMA_ACTIVITY_COUNT_LIKE);
-                int countDislike = resultSet
-                        .getInt(DatabaseSchema.SCHEMA_ACTIVITY_COUNT_DISLIKE);
+                int subCategory = resultSet.getInt(DatabaseSchema.SCHEMA_ACTIVITY_SUBCATEGORY);
+                int countLike = resultSet.getInt(DatabaseSchema.SCHEMA_ACTIVITY_COUNT_LIKE);
+                int countDislike = resultSet.getInt(DatabaseSchema.SCHEMA_ACTIVITY_COUNT_DISLIKE);
+
+                String latlon = resultSet.getString(DatabaseSchema.SCHEMA_ACTIVITY_LATLON);
+                double lat = 0;
+                double lon = 0;
+                if (latlon != null && !latlon.equals(""))
+                {
+                    latlon = latlon.substring(1, latlon.length() - 2);
+                    String[] result = latlon.split(",");
+                    if (result.length == 2)
+                    {
+                        lat = Double.valueOf(result[0]);
+                        lon = Double.valueOf(result[1]);
+                    }
+                    else
+                    {
+                        ServiceLog.e(TAG, "Cannot get the latlon correctly from the database.");
+                    }
+                }
 
                 int cid = resultSet.getInt(DatabaseSchema.SCHEMA_ACTIVITY_CITY);
                 String sql = "select city from city where cid = " + cid;
@@ -126,6 +139,7 @@ public class ActivityDataManager extends DataManager
                 object.put(ResponseKeys.KEY_LATITUDE, String.valueOf(lat));
                 object.put(ResponseKeys.KEY_LONGITUDE, String.valueOf(lon));
                 object.put(ResponseKeys.KEY_CATEGORY, String.valueOf(category));
+                object.put(ResponseKeys.KEY_SUBCATEGORY, String.valueOf(subCategory));
                 object.put(ResponseKeys.KEY_COUNT_LIKE, String.valueOf(countLike));
                 object.put(ResponseKeys.KEY_COUNT_DISLIKE, String.valueOf(countDislike));
 
@@ -137,16 +151,12 @@ public class ActivityDataManager extends DataManager
 
         } catch (SQLException e)
         {
-            ServiceLog
-                    .e(TAG,
-                            "SQLException happened when building all result set of query request",
-                            e);
+            ServiceLog.e(TAG,
+                    "SQLException happened when building all result set of query request", e);
         } catch (JSONException e)
         {
-            ServiceLog
-                    .e(TAG,
-                            "JSONException happened when building all result set of query request",
-                            e);
+            ServiceLog.e(TAG,
+                    "JSONException happened when building all result set of query request", e);
         }
     }
 }
