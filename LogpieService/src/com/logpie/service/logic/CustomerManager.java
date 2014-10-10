@@ -72,8 +72,7 @@ public class CustomerManager
             ServiceLog.d(TAG, "Received postData:" + postData);
         } catch (HttpRequestIsNullException e)
         {
-            ServiceLog.e(TAG,
-                    "HttpRequestParser is null when parsing a customer service request.",
+            ServiceLog.e(TAG, "HttpRequestParser is null when parsing a customer service request.",
                     e);
         }
         if (postData != null)
@@ -83,12 +82,11 @@ public class CustomerManager
 
             // TODO: verify token by auth service
 
-            RequestType type = ManagerHelper.getRequestType(postData,
-                    RequestKeys.KEY_REQUEST_TYPE, requestID);
+            RequestType type = ManagerHelper.getRequestType(postData, RequestKeys.KEY_REQUEST_TYPE,
+                    requestID);
             if (type == null)
             {
-                ServiceLog.e(TAG, "Failed to find the request type from the request.",
-                        requestID);
+                ServiceLog.e(TAG, "Failed to find the request type from the request.", requestID);
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
             }
 
@@ -109,8 +107,7 @@ public class CustomerManager
             }
             else
             {
-                ServiceLog.e(requestID,
-                        "Failed to find the request service key from the request.");
+                ServiceLog.e(requestID, "Failed to find the request service key from the request.");
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 return;
             }
@@ -156,8 +153,7 @@ public class CustomerManager
         {
             if (!postData.has(RequestKeys.KEY_INSERT_KEYVALUE_PAIR))
             {
-                ServiceLog.e(TAG,
-                        "Failed to find the insert key value pair from the request.");
+                ServiceLog.e(TAG, "Failed to find the insert key value pair from the request.");
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 return;
             }
@@ -182,15 +178,14 @@ public class CustomerManager
                     try
                     {
                         result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                        ManagerHelper.handleResponse(true,
-                                ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
+                        ManagerHelper.handleResponse(true, ResponseKeys.KEY_CUSTOMER_RESULT,
+                                result, response);
                     } catch (JSONException e)
                     {
                         ServiceLog.logRequest(TAG, requestID, e.getMessage());
-                        ServiceLog
-                                .e(TAG,
-                                        "JSONException happened when getting INSERT result successfully.",
-                                        requestID, e);
+                        ServiceLog.e(TAG,
+                                "JSONException happened when getting INSERT result successfully.",
+                                requestID, e);
                     }
                 }
 
@@ -199,8 +194,8 @@ public class CustomerManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response, ErrorType
-                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        ManagerHelper.handleResponseWithError(response, ErrorType.valueOf(error
+                                .getString(ResponseKeys.KEY_SERVER_ERROR_MESSAGE)));
                     } catch (JSONException e)
                     {
                         ServiceLog
@@ -214,10 +209,9 @@ public class CustomerManager
         {
             ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            ServiceLog
-                    .e(TAG,
-                            "JSONException happened when making an INSERT operation of customer service.",
-                            e);
+            ServiceLog.e(TAG,
+                    "JSONException happened when making an INSERT operation of customer service.",
+                    e);
         }
     }
 
@@ -262,15 +256,14 @@ public class CustomerManager
                     try
                     {
                         result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                        ManagerHelper.handleResponse(true,
-                                ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
+                        ManagerHelper.handleResponse(true, ResponseKeys.KEY_CUSTOMER_RESULT,
+                                result, response);
                     } catch (JSONException e)
                     {
                         ServiceLog.logRequest(TAG, requestID, e.getMessage());
-                        ServiceLog
-                                .e(TAG,
-                                        "JSONException happened when getting QUERY result successfully.",
-                                        requestID, e);
+                        ServiceLog.e(TAG,
+                                "JSONException happened when getting QUERY result successfully.",
+                                requestID, e);
                     }
                 }
 
@@ -279,8 +272,8 @@ public class CustomerManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response, ErrorType
-                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        ManagerHelper.handleResponseWithError(response, ErrorType.valueOf(error
+                                .getString(ResponseKeys.KEY_SERVER_ERROR_MESSAGE)));
                     } catch (JSONException e)
                     {
                         ServiceLog
@@ -295,10 +288,8 @@ public class CustomerManager
         {
             ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            ServiceLog
-                    .e(TAG,
-                            "JSONException happened when making a QUERY operation of customer service.",
-                            e);
+            ServiceLog.e(TAG,
+                    "JSONException happened when making a QUERY operation of customer service.", e);
         }
     }
 
@@ -316,8 +307,7 @@ public class CustomerManager
         {
             if (!postData.has(RequestKeys.KEY_UPDATE_KEYVALUE_PAIR))
             {
-                ServiceLog.e(TAG,
-                        "Failed to find the update key value pair from the request.");
+                ServiceLog.e(TAG, "Failed to find the update key value pair from the request.");
                 ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
                 return;
             }
@@ -342,15 +332,14 @@ public class CustomerManager
                     try
                     {
                         result.put(ResponseKeys.KEY_RESPONSE_ID, requestID);
-                        ManagerHelper.handleResponse(true,
-                                ResponseKeys.KEY_CUSTOMER_RESULT, result, response);
+                        ManagerHelper.handleResponse(true, ResponseKeys.KEY_CUSTOMER_RESULT,
+                                result, response);
                     } catch (JSONException e)
                     {
                         ServiceLog.logRequest(TAG, requestID, e.getMessage());
-                        ServiceLog
-                                .e(TAG,
-                                        "JSONException happened when getting UPDATE result successfully.",
-                                        requestID, e);
+                        ServiceLog.e(TAG,
+                                "JSONException happened when getting UPDATE result successfully.",
+                                requestID, e);
                     }
                 }
 
@@ -359,8 +348,8 @@ public class CustomerManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response, ErrorType
-                                .valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        ManagerHelper.handleResponseWithError(response, ErrorType.valueOf(error
+                                .getString(ResponseKeys.KEY_SERVER_ERROR_MESSAGE)));
                     } catch (JSONException e)
                     {
                         ServiceLog
@@ -375,10 +364,9 @@ public class CustomerManager
         {
             ServiceLog.logRequest(TAG, requestID, e.getMessage());
             ManagerHelper.handleResponseWithError(response, ErrorType.BAD_REQUEST);
-            ServiceLog
-                    .e(TAG,
-                            "JSONException happened when making an UPDATE operation of customer service.",
-                            e);
+            ServiceLog.e(TAG,
+                    "JSONException happened when making an UPDATE operation of customer service.",
+                    e);
         }
     }
 
@@ -390,8 +378,8 @@ public class CustomerManager
         keySet.add(RequestKeys.KEY_NICKNAME);
         keySet.add(RequestKeys.KEY_CITY);
 
-        String sql = JSONHelper.parseToSQL(postData, keySet,
-                DatabaseSchema.SCHEMA_TABLE_USER, RequestKeys.REQUEST_TYPE_INSERT, null);
+        String sql = JSONHelper.parseToSQL(postData, keySet, DatabaseSchema.SCHEMA_TABLE_USER,
+                RequestKeys.REQUEST_TYPE_INSERT, null);
 
         if (sql == null || sql.equals(""))
         {
@@ -409,9 +397,8 @@ public class CustomerManager
     {
         ArrayList<String> returnSet = new ArrayList<String>();
 
-        String sql = JSONHelper.parseToSQL(postData, null,
-                DatabaseSchema.SCHEMA_TABLE_USER, RequestKeys.REQUEST_TYPE_QUERY,
-                returnSet);
+        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_USER,
+                RequestKeys.REQUEST_TYPE_QUERY, returnSet);
 
         if (sql == null || sql.equals(""))
         {
@@ -427,8 +414,8 @@ public class CustomerManager
 
     private String editUserProfile(JSONObject postData) throws JSONException
     {
-        String sql = JSONHelper.parseToSQL(postData, null,
-                DatabaseSchema.SCHEMA_TABLE_USER, RequestKeys.REQUEST_TYPE_UPDATE, null);
+        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_USER,
+                RequestKeys.REQUEST_TYPE_UPDATE, null);
 
         if (sql == null || sql.equals(""))
         {

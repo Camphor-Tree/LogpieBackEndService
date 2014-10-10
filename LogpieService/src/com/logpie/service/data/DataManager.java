@@ -13,9 +13,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.commonlib.RequestKeys;
 import com.logpie.commonlib.ResponseKeys;
 import com.logpie.service.config.ServiceConfig;
+import com.logpie.service.error.ErrorMessage;
 import com.logpie.service.error.ErrorType;
 import com.logpie.service.util.ServiceLog;
 
@@ -50,8 +50,7 @@ public abstract class DataManager
                             e);
         } catch (SQLException e)
         {
-            ServiceLog.e(TAG,
-                    "SQLException happened when trying to initialize the database");
+            ServiceLog.e(TAG, "SQLException happened when trying to initialize the database");
         }
     }
 
@@ -119,26 +118,24 @@ public abstract class DataManager
             {
                 ServiceLog.e(TAG, "INSERT operation failed. No rows affected.");
                 JSONObject error = new JSONObject();
-                error.put(RequestKeys.REQUEST_TYPE_INSERT, ResponseKeys.RESULT_ERROR);
-                dataCallback.onError(error);
+                error.put(ResponseKeys.KEY_RESULT_ERROR_MESSAGE, ErrorMessage.ERROR_INSERT_FAILED);
+                handleErrorCallbackWithServerError(error, dataCallback);
             }
             else
             {
-                ServiceLog.d(TAG, "INSERT is finished. " + affectedRows
-                        + " row affected.");
+                ServiceLog.d(TAG, "INSERT is finished. " + affectedRows + " row affected.");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
-                        ResponseKeys.REQUEST_TYPE_INSERT);
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE, ResponseKeys.REQUEST_TYPE_INSERT);
                 dataCallback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
         {
             ServiceLog.e(TAG, "SQLException happend when executing the INSERT sql", e);
-            handleErrorCallbackWithServerError(dataCallback);
+            handleErrorCallbackWithServerError(null, dataCallback);
         } catch (JSONException e)
         {
             ServiceLog.e(TAG, "JSONException happend when executing callback, e");
-            handleErrorCallbackWithServerError(dataCallback);
+            handleErrorCallbackWithServerError(null, dataCallback);
         } finally
         {
             if (resultSet != null)
@@ -158,8 +155,7 @@ public abstract class DataManager
         }
     }
 
-    public void executeQuery(ArrayList<String> keySet, String sql,
-            final DataCallback dataCallback)
+    public void executeQuery(ArrayList<String> keySet, String sql, final DataCallback dataCallback)
     {
         if (sql == null || sql.equals(""))
         {
@@ -179,25 +175,24 @@ public abstract class DataManager
             {
                 ServiceLog.e(TAG, "QUERY operation failed. No rows found.");
                 JSONObject error = new JSONObject();
-                error.put(RequestKeys.REQUEST_TYPE_QUERY, ResponseKeys.RESULT_ERROR);
-                dataCallback.onError(error);
+                error.put(ResponseKeys.KEY_RESULT_ERROR_MESSAGE, ErrorMessage.ERROR_QUERY_FAILED);
+                handleErrorCallbackWithServerError(error, dataCallback);
             }
             else
             {
                 ServiceLog.d(TAG, "QUERY is finished. ");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
-                        ResponseKeys.REQUEST_TYPE_QUERY);
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE, ResponseKeys.REQUEST_TYPE_QUERY);
                 buildResultSet(keySet, resultSet, returnJSON, dataCallback);
             }
         } catch (SQLException e)
         {
             ServiceLog.e(TAG, "SQLException happend when execute the QUERY sql", e);
-            handleErrorCallbackWithServerError(dataCallback);
+            handleErrorCallbackWithServerError(null, dataCallback);
         } catch (JSONException e)
         {
             ServiceLog.e(TAG, "JSONException happend when execute callback", e);
-            handleErrorCallbackWithServerError(dataCallback);
+            handleErrorCallbackWithServerError(null, dataCallback);
         } finally
         {
             if (resultSet != null)
@@ -221,8 +216,7 @@ public abstract class DataManager
     {
         if (sql == null || sql.equals(""))
         {
-            ServiceLog.e(TAG,
-                    "SQL is null or empty when executing single QUERY operation.");
+            ServiceLog.e(TAG, "SQL is null or empty when executing single QUERY operation.");
             return null;
         }
 
@@ -244,9 +238,8 @@ public abstract class DataManager
                 Object o = resultSet.getObject(keyword);
                 if (o == null)
                 {
-                    ServiceLog.e(TAG,
-                            "Cannot get the return value when using the keyword '"
-                                    + keyword + "'.");
+                    ServiceLog.e(TAG, "Cannot get the return value when using the keyword '"
+                            + keyword + "'.");
                 }
                 else
                 {
@@ -298,26 +291,24 @@ public abstract class DataManager
             {
                 ServiceLog.e(TAG, "UPDATE operation failed. No rows affected.");
                 JSONObject error = new JSONObject();
-                error.put(RequestKeys.REQUEST_TYPE_UPDATE, ResponseKeys.RESULT_ERROR);
-                dataCallback.onError(error);
+                error.put(ResponseKeys.KEY_RESULT_ERROR_MESSAGE, ErrorMessage.ERROR_UPDATE_FAILED);
+                handleErrorCallbackWithServerError(error, dataCallback);
             }
             else
             {
-                ServiceLog.d(TAG, "UPDATE is finished. " + affectedRows
-                        + " row affected.");
+                ServiceLog.d(TAG, "UPDATE is finished. " + affectedRows + " row affected.");
                 JSONObject returnJSON = new JSONObject();
-                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE,
-                        ResponseKeys.REQUEST_TYPE_UPDATE);
+                returnJSON.put(ResponseKeys.KEY_REQUEST_TYPE, ResponseKeys.REQUEST_TYPE_UPDATE);
                 dataCallback.onSuccess(returnJSON);
             }
         } catch (SQLException e)
         {
             ServiceLog.e(TAG, "SQLException happend when execute the UPDATE sql", e);
-            handleErrorCallbackWithServerError(dataCallback);
+            handleErrorCallbackWithServerError(null, dataCallback);
         } catch (JSONException e)
         {
             ServiceLog.e(TAG, "JSONException happend when execute callback", e);
-            handleErrorCallbackWithServerError(dataCallback);
+            handleErrorCallbackWithServerError(null, dataCallback);
         } finally
         {
             if (resultSet != null)
@@ -364,9 +355,8 @@ public abstract class DataManager
                     }
                     else
                     {
-                        ServiceLog.e(TAG,
-                                "Cannot get the return value when using the keyword '"
-                                        + key + "'.");
+                        ServiceLog.e(TAG, "Cannot get the return value when using the keyword '"
+                                + key + "'.");
                     }
                 }
                 array.put(object);
@@ -393,13 +383,17 @@ public abstract class DataManager
     protected abstract void buildAllResultSet(ResultSet resultSet, JSONObject returnJSON,
             DataCallback callback);
 
-    private void handleErrorCallbackWithServerError(DataCallback callback)
+    private void handleErrorCallbackWithServerError(JSONObject error, DataCallback callback)
     {
         try
         {
-            callback.onError(new JSONObject().append(ResponseKeys.KEY_ERROR_MESSAGE,
-                    ErrorType.SEVER_ERROR.toString()));
-        } catch (JSONException e1)
+            if (error == null)
+            {
+                error = new JSONObject();
+            }
+            error.put(ResponseKeys.KEY_SERVER_ERROR_MESSAGE, ErrorType.SEVER_ERROR.toString());
+            callback.onError(error);
+        } catch (JSONException e)
         {
         }
     }

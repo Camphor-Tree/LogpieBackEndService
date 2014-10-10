@@ -180,8 +180,8 @@ public class ActivityManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response,
-                                ErrorType.valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        ManagerHelper.handleResponseWithError(response, ErrorType.valueOf(error
+                                .getString(ResponseKeys.KEY_SERVER_ERROR_MESSAGE)));
                     } catch (JSONException e)
                     {
                         ServiceLog
@@ -263,8 +263,18 @@ public class ActivityManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response,
-                                ErrorType.valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        if (error.has(ResponseKeys.KEY_SERVER_ERROR_MESSAGE))
+                        {
+                            String errorMessage = error
+                                    .getString(ResponseKeys.KEY_SERVER_ERROR_MESSAGE);
+                            ServiceLog.d(TAG, "Server Error Message:" + errorMessage);
+                            ManagerHelper.handleResponseWithError(response,
+                                    ErrorType.valueOf(errorMessage));
+                        }
+                        else
+                        {
+                            ServiceLog.e(TAG, "Cannot find the server error message key.");
+                        }
                     } catch (JSONException e)
                     {
                         ServiceLog
@@ -332,8 +342,8 @@ public class ActivityManager
                 {
                     try
                     {
-                        ManagerHelper.handleResponseWithError(response,
-                                ErrorType.valueOf(error.getString(ResponseKeys.KEY_ERROR_MESSAGE)));
+                        ManagerHelper.handleResponseWithError(response, ErrorType.valueOf(error
+                                .getString(ResponseKeys.KEY_SERVER_ERROR_MESSAGE)));
                     } catch (JSONException e)
                     {
                         ServiceLog

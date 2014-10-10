@@ -117,7 +117,7 @@ public class SQLHelper
 
         if (orderBy != null)
         {
-            sqlBuilder.append("ORDER BY ");
+            sqlBuilder.append(" ORDER BY ");
             sqlBuilder.append(orderBy);
             sqlBuilder.append(isASC ? " ASC" : " DESC");
         }
