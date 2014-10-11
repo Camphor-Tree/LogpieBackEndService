@@ -157,9 +157,9 @@ public class SQLHelper
         }
 
         ServiceLog.d(TAG, "Parsing the JSONArray of UPDATE request to build sql...");
-        sqlBuilder.append("update ");
+        sqlBuilder.append("update \"");
         sqlBuilder.append(tableName);
-        sqlBuilder.append(" set ");
+        sqlBuilder.append("\" set ");
         for (int i = 0; i < key_set.size(); i++)
         {
             sqlBuilder.append(key_set.get(i));
@@ -185,6 +185,7 @@ public class SQLHelper
         {
             sqlBuilder.append(constraintSQL);
         }
+        sqlBuilder.append(";");
         return sqlBuilder.toString();
     }
 
