@@ -21,6 +21,8 @@ public class ResponseKeys
     public static final String KEY_REQUEST_TYPE = "com.logpie.request.type";
     public static final String KEY_METADATA = "com.logpie.result.metadata";
     public static final String KEY_RESPONSE_ID = "com.logpie.response.id";
+    public static final String KEY_ERROR_MESSAGE = "com.logpie.error.message";
+    
     public static final String KEY_SERVER_ERROR_MESSAGE = "com.logpie.server.error.message";
     public static final String KEY_RESULT_ERROR_MESSAGE = "com.logpie.result.error.message";
 
