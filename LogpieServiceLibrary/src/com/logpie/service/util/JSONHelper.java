@@ -1,8 +1,12 @@
 package com.logpie.service.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,35 +18,53 @@ public class JSONHelper
 {
     private static final String TAG = JSONHelper.class.getName();
 
-    public static JSONArray buildInsertKeyValue(ArrayList<String> columns, ArrayList<String> values)
+    public static JSONArray buildInsertKeyValue(Map<String, String> insertKeyvalue)
             throws JSONException
     {
-        JSONArray array = new JSONArray();
-        for (int i = 0; i < columns.size(); i++)
+        if (insertKeyvalue.isEmpty())
         {
+            ServiceLog.e(TAG, "There is no key value mappings in Insert Keyvalue Pair.");
+            return null;
+        }
+
+        JSONArray array = new JSONArray();
+        Set<String> keys = insertKeyvalue.keySet();
+        Iterator<String> i = keys.iterator();
+        while (i.hasNext())
+        {
+            String key = i.next();
             JSONObject o = new JSONObject();
-            o.put(RequestKeys.KEY_INSERT_COLUMN, columns.get(i));
-            o.put(RequestKeys.KEY_INSERT_VALUE, values.get(i));
+            o.put(RequestKeys.KEY_INSERT_COLUMN, key);
+            o.put(RequestKeys.KEY_INSERT_VALUE, insertKeyvalue.get(key));
             array.put(o);
         }
         return array;
     }
 
-    public static JSONArray buildUpdateKeyValue(ArrayList<String> columns, ArrayList<String> values)
+    public static JSONArray buildUpdateKeyValue(Map<String, String> updateKeyvalue)
             throws JSONException
     {
-        JSONArray array = new JSONArray();
-        for (int i = 0; i < columns.size(); i++)
+        if (updateKeyvalue.isEmpty())
         {
+            ServiceLog.e(TAG, "There is no key value mappings in Update Keyvalue Pair.");
+            return null;
+        }
+
+        JSONArray array = new JSONArray();
+        Set<String> keys = updateKeyvalue.keySet();
+        Iterator<String> i = keys.iterator();
+        while (i.hasNext())
+        {
+            String key = i.next();
             JSONObject o = new JSONObject();
-            o.put(RequestKeys.KEY_UPDATE_COLUMN, columns.get(i));
-            o.put(RequestKeys.KEY_UPDATE_VALUE, values.get(i));
+            o.put(RequestKeys.KEY_UPDATE_COLUMN, key);
+            o.put(RequestKeys.KEY_UPDATE_VALUE, updateKeyvalue.get(key));
             array.put(o);
         }
         return array;
     }
 
-    public static JSONArray buildQueryKey(ArrayList<String> columns) throws JSONException
+    public static JSONArray buildQueryKey(List<String> columns) throws JSONException
     {
         JSONArray array = new JSONArray();
         if (columns == null)
@@ -59,16 +81,42 @@ public class JSONHelper
         return array;
     }
 
-    public static JSONArray buildConstraintKeyValue(ArrayList<String> columns,
-            ArrayList<String> operators, ArrayList<String> values) throws JSONException
+    public static JSONArray buildConstraintKeyValue(Map<String, Map<String, String>> constraints)
+            throws JSONException
     {
+        if (constraints.isEmpty())
+        {
+            ServiceLog.e(TAG, "There is no key value mappings in Constraint Keyvalue Pair.");
+            return null;
+        }
+
         JSONArray array = new JSONArray();
-        for (int i = 0; i < columns.size(); i++)
+        Set<String> keys = constraints.keySet();
+        Iterator<String> i = keys.iterator();
+        while (i.hasNext())
         {
             JSONObject o = new JSONObject();
-            o.put(RequestKeys.KEY_CONSTRAINT_COLUMN, columns.get(i));
-            o.put(RequestKeys.KEY_CONSTRAINT_OPERATOR, operators.get(i));
-            o.put(RequestKeys.KEY_CONSTRAINT_VALUE, values.get(i));
+            String key = i.next();
+            Map<String, String> map = constraints.get(key);
+            if (map.isEmpty())
+            {
+                ServiceLog.e(TAG, "There is no operator mappings in Constraint Keyvalue Pair.");
+                return null;
+            }
+
+            Set<String> operators = map.keySet();
+            if (operators.size() == 0 || operators.size() > 1)
+            {
+                ServiceLog.e(TAG,
+                        "There is error in operator mappings of Constraint Keyvalue Pair.");
+                return null;
+            }
+            String operator = operators.iterator().next();
+            String value = map.get(operator);
+
+            o.put(RequestKeys.KEY_CONSTRAINT_COLUMN, key);
+            o.put(RequestKeys.KEY_CONSTRAINT_OPERATOR, operator);
+            o.put(RequestKeys.KEY_CONSTRAINT_VALUE, value);
             array.put(o);
         }
         return array;
@@ -95,8 +143,7 @@ public class JSONHelper
     private static String parseInsertRequest(JSONObject postData, ArrayList<String> requiredKeySet,
             String table) throws JSONException
     {
-        ArrayList<String> keySet = new ArrayList<String>();
-        ArrayList<String> valueSet = new ArrayList<String>();
+        Map<String, String> keyvalue = new HashMap<String, String>();
 
         JSONArray insertKeyvaluePair = postData.getJSONArray(RequestKeys.KEY_INSERT_KEYVALUE_PAIR);
 
@@ -105,19 +152,20 @@ public class JSONHelper
             if (insertKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_INSERT_COLUMN)
                     && insertKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_INSERT_VALUE))
             {
-                keySet.add(insertKeyvaluePair.getJSONObject(i).getString(
-                        RequestKeys.KEY_INSERT_COLUMN));
-                valueSet.add(insertKeyvaluePair.getJSONObject(i).getString(
-                        RequestKeys.KEY_INSERT_VALUE));
+                keyvalue.put(
+                        insertKeyvaluePair.getJSONObject(i)
+                                .getString(RequestKeys.KEY_INSERT_COLUMN), insertKeyvaluePair
+                                .getJSONObject(i).getString(RequestKeys.KEY_INSERT_VALUE));
             }
         }
 
         // Check if any required key is existed in the JSON data
         // If not, will throw JSONException
-        checkKeyParameterExisted(requiredKeySet, keySet);
+        Set<String> keys = keyvalue.keySet();
+        checkKeyParameterExisted(requiredKeySet, keys);
         ServiceLog.d(TAG, "Parsed the INSERT request.");
 
-        return SQLHelper.buildInsertSQL(table, keySet, valueSet);
+        return SQLHelper.buildInsertSQL(table, keyvalue);
 
     }
 
@@ -134,11 +182,9 @@ public class JSONHelper
             }
         }
 
-        ArrayList<String> constraintKeySet = new ArrayList<String>();
-        ArrayList<String> constraintOperatorSet = new ArrayList<String>();
-        ArrayList<String> constraintValueSet = new ArrayList<String>();
+        Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
 
-        parseConstraint(postData, constraintKeySet, constraintOperatorSet, constraintValueSet);
+        parseConstraint(postData, constraints);
 
         String number = null;
         if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
@@ -157,15 +203,13 @@ public class JSONHelper
             }
         }
 
-        return SQLHelper.buildQuerySQL(table, returnSet, constraintKeySet, constraintOperatorSet,
-                constraintValueSet, number, orderBy, isASC);
+        return SQLHelper.buildQuerySQL(table, returnSet, constraints, number, orderBy, isASC);
     }
 
     private static String parseUpdateRequest(JSONObject postData, String table)
             throws JSONException
     {
-        ArrayList<String> keySet = new ArrayList<String>();
-        ArrayList<String> valueSet = new ArrayList<String>();
+        Map<String, String> keyvalue = new HashMap<String, String>();
 
         JSONArray updateKeyvaluePair = postData.getJSONArray(RequestKeys.KEY_UPDATE_KEYVALUE_PAIR);
 
@@ -174,27 +218,23 @@ public class JSONHelper
             if (updateKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_UPDATE_COLUMN)
                     && updateKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_UPDATE_VALUE))
             {
-                keySet.add(updateKeyvaluePair.getJSONObject(i).getString(
-                        RequestKeys.KEY_UPDATE_COLUMN));
-                valueSet.add(updateKeyvaluePair.getJSONObject(i).getString(
-                        RequestKeys.KEY_UPDATE_VALUE));
+                keyvalue.put(
+                        updateKeyvaluePair.getJSONObject(i)
+                                .getString(RequestKeys.KEY_UPDATE_COLUMN), updateKeyvaluePair
+                                .getJSONObject(i).getString(RequestKeys.KEY_UPDATE_VALUE));
             }
         }
 
-        ArrayList<String> constraintKeySet = new ArrayList<String>();
-        ArrayList<String> constraintOperatorSet = new ArrayList<String>();
-        ArrayList<String> constraintValueSet = new ArrayList<String>();
+        Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
 
-        parseConstraint(postData, constraintKeySet, constraintOperatorSet, constraintValueSet);
+        parseConstraint(postData, constraints);
 
-        return SQLHelper.buildUpdateSQL(table, keySet, valueSet, constraintKeySet,
-                constraintOperatorSet, constraintValueSet);
+        return SQLHelper.buildUpdateSQL(table, keyvalue, constraints);
 
     }
 
-    private static void parseConstraint(JSONObject postData, ArrayList<String> constraintKeySet,
-            ArrayList<String> constraintOperatorSet, ArrayList<String> constraintValueSet)
-            throws JSONException
+    private static void parseConstraint(JSONObject postData,
+            Map<String, Map<String, String>> constraints) throws JSONException
     {
         if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
         {
@@ -212,15 +252,16 @@ public class JSONHelper
                     && data.has(RequestKeys.KEY_CONSTRAINT_OPERATOR)
                     && data.has(RequestKeys.KEY_CONSTRAINT_VALUE))
             {
-                constraintKeySet.add(data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN));
-                constraintOperatorSet.add(data.getString(RequestKeys.KEY_CONSTRAINT_OPERATOR));
-                constraintValueSet.add(data.getString(RequestKeys.KEY_CONSTRAINT_VALUE));
+                Map<String, String> hm = new HashMap<String, String>();
+                hm.put(data.getString(RequestKeys.KEY_CONSTRAINT_OPERATOR),
+                        data.getString(RequestKeys.KEY_CONSTRAINT_VALUE));
+                constraints.put(data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN), hm);
             }
         }
     }
 
     public static void checkKeyParameterExisted(List<String> requiredParameters,
-            List<String> parameters) throws JSONException
+            Set<String> parameters) throws JSONException
     {
         if (parameters == null || requiredParameters == null)
         {
@@ -230,10 +271,8 @@ public class JSONHelper
 
         HashSet<String> requiredhs = new HashSet<String>();
         requiredhs.addAll(requiredParameters);
-        HashSet<String> hs = new HashSet<String>();
-        hs.addAll(parameters);
 
-        if (!hs.containsAll(requiredhs))
+        if (!parameters.containsAll(requiredhs))
         {
             throw new JSONException("JSONException happened when check key parameters.");
         }

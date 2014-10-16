@@ -138,8 +138,8 @@ public class ActivityDataManager extends DataManager
                 object.put(ResponseKeys.KEY_CITY, city);
                 object.put(ResponseKeys.KEY_LATITUDE, String.valueOf(lat));
                 object.put(ResponseKeys.KEY_LONGITUDE, String.valueOf(lon));
-                object.put(ResponseKeys.KEY_CATEGORY, String.valueOf(category));
-                object.put(ResponseKeys.KEY_SUBCATEGORY, String.valueOf(subCategory));
+                object.put(ResponseKeys.KEY_CATEGORY_ID, String.valueOf(category));
+                object.put(ResponseKeys.KEY_SUBCATEGORY_ID, String.valueOf(subCategory));
                 object.put(ResponseKeys.KEY_COUNT_LIKE, String.valueOf(countLike));
                 object.put(ResponseKeys.KEY_COUNT_DISLIKE, String.valueOf(countDislike));
 

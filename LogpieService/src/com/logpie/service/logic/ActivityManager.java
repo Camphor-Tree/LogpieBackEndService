@@ -1,6 +1,8 @@
 package com.logpie.service.logic;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -13,7 +15,6 @@ import org.json.JSONObject;
 import com.logpie.commonlib.RequestKeys;
 import com.logpie.commonlib.ResponseKeys;
 import com.logpie.service.data.ActivityDataManager;
-import com.logpie.service.data.CityDataManager;
 import com.logpie.service.data.DataCallback;
 import com.logpie.service.data.DataManager;
 import com.logpie.service.error.ErrorType;
@@ -375,8 +376,43 @@ public class ActivityManager
         keySet.add(RequestKeys.KEY_END_TIME);
         keySet.add(RequestKeys.KEY_CATEGORY);
         keySet.add(RequestKeys.KEY_CITY);
-        keySet.add(RequestKeys.KEY_LATITUDE);
-        keySet.add(RequestKeys.KEY_LONGITUDE);
+
+        JSONArray insertKeyvaluePair = postData.getJSONArray(RequestKeys.KEY_INSERT_KEYVALUE_PAIR);
+        String lat = null;
+        String lon = null;
+        for (int i = 0; i < insertKeyvaluePair.length(); i++)
+        {
+            if (insertKeyvaluePair.getJSONObject(i).has(RequestKeys.KEY_INSERT_COLUMN))
+            {
+                if (insertKeyvaluePair.getJSONObject(i).getString(RequestKeys.KEY_INSERT_COLUMN)
+                        .equals(RequestKeys.KEY_LATITUDE))
+                {
+                    lat = insertKeyvaluePair.getJSONObject(i).getString(
+                            RequestKeys.KEY_INSERT_VALUE);
+                    insertKeyvaluePair.remove(i);
+                    i--;
+                }
+                else if (insertKeyvaluePair.getJSONObject(i)
+                        .getString(RequestKeys.KEY_INSERT_COLUMN).equals(RequestKeys.KEY_LONGITUDE))
+                {
+                    lon = insertKeyvaluePair.getJSONObject(i).getString(
+                            RequestKeys.KEY_INSERT_VALUE);
+                    insertKeyvaluePair.remove(i);
+                    i--;
+                }
+            }
+        }
+        if (lat == null || lon == null)
+        {
+            ServiceLog.e(TAG, "Cannot get the correct latitude and longitude.");
+        }
+
+        // Reset the latitude & longitude format for the database
+        String latlon = "point(" + lat + "," + lon + ")";
+        JSONObject object = new JSONObject();
+        object.put(RequestKeys.KEY_INSERT_COLUMN, DatabaseSchema.SCHEMA_ACTIVITY_LATLON);
+        object.put(RequestKeys.KEY_INSERT_VALUE, latlon);
+        insertKeyvaluePair.put(object);
 
         String sql = JSONHelper.parseToSQL(postData, keySet, DatabaseSchema.SCHEMA_TABLE_ACTIVITY,
                 RequestKeys.REQUEST_TYPE_INSERT, null);
@@ -556,21 +592,12 @@ public class ActivityManager
                 return null;
             }
 
-            String sql = "select cid from city where city = '" + city + "'";
-            String cid = CityDataManager.getInstance().executeSingleQuery(sql,
-                    DatabaseSchema.SCHEMA_CITY_CID);
-            if (cid == null || cid.equals(""))
-            {
-                ServiceLog.e(TAG, "Failed to get the cid", requestID);
-                return null;
-            }
-
-            ArrayList<String> constraintKey = new ArrayList<String>();
-            constraintKey.add(DatabaseSchema.SCHEMA_ACTIVITY_CITY);
-            ArrayList<String> constraintOperator = new ArrayList<String>();
-            constraintOperator.add(RequestKeys.KEY_EQUAL);
-            ArrayList<String> constraintValue = new ArrayList<String>();
-            constraintValue.add(cid);
+            // For constraint key & operator & value
+            Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
+            // For constraint operator & value
+            Map<String, String> map = new HashMap<String, String>();
+            map.put(RequestKeys.KEY_EQUAL, city);
+            constraints.put(DatabaseSchema.SCHEMA_ACTIVITY_CITY, map);
 
             String number = null;
             if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
@@ -586,7 +613,7 @@ public class ActivityManager
             boolean isASC = false;
 
             return SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, returnSet,
-                    constraintKey, constraintOperator, constraintValue, number, orderBy, isASC);
+                    constraints, number, orderBy, isASC);
 
         }
     }
@@ -640,17 +667,18 @@ public class ActivityManager
                 return null;
             }
 
-            ArrayList<String> constraintKey = new ArrayList<String>();
-            constraintKey.add(DatabaseSchema.SCHEMA_ACTIVITY_CATEGORY);
-            ArrayList<String> constraintOperator = new ArrayList<String>();
-            constraintOperator.add(RequestKeys.KEY_EQUAL);
-            ArrayList<String> constraintValue = new ArrayList<String>();
-            constraintValue.add(category);
+            // For constraint key & operator & value
+            Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
+            // For constraint operator & value
+            Map<String, String> map_c = new HashMap<String, String>();
+            map_c.put(RequestKeys.KEY_EQUAL, category);
+            constraints.put(DatabaseSchema.SCHEMA_ACTIVITY_CATEGORY, map_c);
+
             if (subCategory != null)
             {
-                constraintKey.add(DatabaseSchema.SCHEMA_ACTIVITY_SUBCATEGORY);
-                constraintOperator.add(RequestKeys.KEY_EQUAL);
-                constraintValue.add(subCategory);
+                Map<String, String> map_s = new HashMap<String, String>();
+                map_s.put(RequestKeys.KEY_EQUAL, subCategory);
+                constraints.put(DatabaseSchema.SCHEMA_ACTIVITY_SUBCATEGORY, map_s);
             }
 
             String number = null;
@@ -667,7 +695,7 @@ public class ActivityManager
             boolean isASC = false;
 
             return SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, returnSet,
-                    constraintKey, constraintOperator, constraintValue, number, orderBy, isASC);
+                    constraints, number, orderBy, isASC);
         }
 
     }

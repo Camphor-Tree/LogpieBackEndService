@@ -22,7 +22,7 @@ public class ResponseKeys
     public static final String KEY_METADATA = "com.logpie.result.metadata";
     public static final String KEY_RESPONSE_ID = "com.logpie.response.id";
     public static final String KEY_ERROR_MESSAGE = "com.logpie.error.message";
-    
+
     public static final String KEY_SERVER_ERROR_MESSAGE = "com.logpie.server.error.message";
     public static final String KEY_RESULT_ERROR_MESSAGE = "com.logpie.result.error.message";
 
@@ -62,8 +62,8 @@ public class ResponseKeys
     public static final String KEY_COUNT_LIKE = "com.logpie.count.like";
     public static final String KEY_COUNT_DISLIKE = "com.logpie.count.dislike";
     public static final String KEY_ACTIVATED = "com.logpie.activated";
-    public static final String KEY_CATEGORY = "com.logpie.category";
-    public static final String KEY_SUBCATEGORY = "com.logpie.subcategory";
+    public static final String KEY_CATEGORY_ID = "com.logpie.category";
+    public static final String KEY_SUBCATEGORY_ID = "com.logpie.subcategory";
 
     public static final String KEY_SENDER_USER_ID = "com.logpie.sender.user.id";
     public static final String KEY_SEND_TO_USER_ID = "com.logpie.sendto.user.id";

@@ -1,13 +1,15 @@
 package com.logpie.service.util;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 public class SQLHelper
 {
     private static final String TAG = SQLHelper.class.getName();
 
-    public static String buildInsertSQL(String tableName, ArrayList<String> key_set,
-            ArrayList<String> value_set)
+    public static String buildInsertSQL(String tableName, Map<String, String> keyvaluePair)
     {
         StringBuilder sqlBuilder = new StringBuilder();
         ServiceLog.d(TAG, "Building sql of INSERT request...");
@@ -16,57 +18,62 @@ public class SQLHelper
             ServiceLog.e(TAG, "The table name cannot be null or empty.");
             return null;
         }
-        if (key_set == null || value_set == null)
+        if (keyvaluePair == null || keyvaluePair.isEmpty())
         {
-            ServiceLog.e(TAG, "The keySet or valueSet cannot be null.");
-            return null;
-        }
-        if (key_set.size() != value_set.size())
-        {
-            ServiceLog
-                    .e(TAG,
-                            "The length of keySet is not the same as valueSet when parsing the JSONArray of INSERT request.");
+            ServiceLog.e(TAG, "The keyvalue pair cannot be null.");
             return null;
         }
 
         ServiceLog.d(TAG, "Parsing the JSONArray of INSERT request to build sql...");
+        Set<String> keys = keyvaluePair.keySet();
+        Iterator<String> i = keys.iterator();
+
         sqlBuilder.append("insert into \"");
         sqlBuilder.append(tableName);
         sqlBuilder.append("\" (");
-        for (int i = 0; i < key_set.size(); i++)
+
+        StringBuilder values = new StringBuilder();
+        values.append("values (");
+
+        while (i.hasNext())
         {
-            String key = key_set.get(i);
+            String key = i.next();
+            // append key
             sqlBuilder.append(key);
-            if (i == key_set.size() - 1)
+            // append value
+            if (key.equals(DatabaseSchema.SCHEMA_ACTIVITY_LATLON))
             {
-                sqlBuilder.append(") values (\'");
+                values.append(keyvaluePair.get(key));
             }
             else
+            {
+                values.append("'");
+                values.append(keyvaluePair.get(key));
+                values.append("'");
+            }
+
+            // check if key/value is the last one
+            if (i.hasNext())
             {
                 sqlBuilder.append(", ");
-            }
-        }
-        for (int i = 0; i < value_set.size(); i++)
-        {
-            String value = value_set.get(i);
-            sqlBuilder.append(value);
-            if (i == value_set.size() - 1)
-            {
-                sqlBuilder.append("\')");
+                values.append(", ");
             }
             else
             {
-                sqlBuilder.append("\', \'");
+                sqlBuilder.append(") ");
+                values.append(")");
             }
         }
+
+        sqlBuilder.append(values);
         sqlBuilder.append(";");
 
         return sqlBuilder.toString();
     }
 
     public static String buildQuerySQL(String tableName, ArrayList<String> key_set,
-            ArrayList<String> constraint_keys, ArrayList<String> constraint_operators,
-            ArrayList<String> constraint_values, String number, String orderBy, boolean isASC)
+            Map<String, Map<String, String>> constraints, String number, String orderBy,
+            boolean isASC)
     {
         StringBuilder sqlBuilder = new StringBuilder();
         ServiceLog.d(TAG, "Building sql of QUERY request...");
@@ -104,8 +111,7 @@ public class SQLHelper
         sqlBuilder.append("from ");
         sqlBuilder.append(tableName);
 
-        String constraintSQL = buildConstraintSQL(constraint_keys, constraint_operators,
-                constraint_values);
+        String constraintSQL = buildConstraintSQL(constraints);
         if (constraintSQL == null || constraintSQL.equals(""))
         {
             ServiceLog.d(TAG, "Constraint SQL is null.");
@@ -132,9 +138,8 @@ public class SQLHelper
         return sqlBuilder.toString();
     }
 
-    public static String buildUpdateSQL(String tableName, ArrayList<String> key_set,
-            ArrayList<String> value_set, ArrayList<String> constraint_keys,
-            ArrayList<String> constraint_operators, ArrayList<String> constraint_values)
+    public static String buildUpdateSQL(String tableName, Map<String, String> keyvaluePair,
+            Map<String, Map<String, String>> constraints)
     {
         StringBuilder sqlBuilder = new StringBuilder();
         ServiceLog.d(TAG, "Building sql of UPDATE request...");
@@ -143,16 +148,9 @@ public class SQLHelper
             ServiceLog.e(TAG, "The table name cannot be null or empty.");
             return null;
         }
-        if (key_set == null || value_set == null)
+        if (keyvaluePair == null || keyvaluePair.isEmpty())
         {
-            ServiceLog.e(TAG, "The keySet or valueSet cannot be null.");
-            return null;
-        }
-        if (key_set.size() != value_set.size())
-        {
-            ServiceLog
-                    .e(TAG,
-                            "The length of keySet is not the same as valueSet when parsing the JSONArray of UPDATE request.");
+            ServiceLog.e(TAG, "The key value pair cannot be null.");
             return null;
         }
 
@@ -160,23 +158,38 @@ public class SQLHelper
         sqlBuilder.append("update \"");
         sqlBuilder.append(tableName);
         sqlBuilder.append("\" set ");
-        for (int i = 0; i < key_set.size(); i++)
+
+        Set<String> keys = keyvaluePair.keySet();
+        Iterator<String> i = keys.iterator();
+
+        StringBuilder values = new StringBuilder();
+
+        while (i.hasNext())
         {
-            sqlBuilder.append(key_set.get(i));
-            sqlBuilder.append("=\'");
-            sqlBuilder.append(value_set.get(i));
-            if (i == key_set.size() - 1)
+            String key = i.next();
+            // append key
+            sqlBuilder.append(key);
+            sqlBuilder.append("=");
+            // append value
+            if (key.equals(DatabaseSchema.SCHEMA_ACTIVITY_LATLON))
             {
-                sqlBuilder.append("\' ");
+                sqlBuilder.append(keyvaluePair.get(key));
             }
             else
             {
-                sqlBuilder.append("\', ");
+                sqlBuilder.append("'");
+                sqlBuilder.append(keyvaluePair.get(key));
+                sqlBuilder.append("'");
+            }
+
+            // check if key/value is the last one
+            if (i.hasNext())
+            {
+                sqlBuilder.append(", ");
             }
         }
 
-        String constraintSQL = buildConstraintSQL(constraint_keys, constraint_operators,
-                constraint_values);
+        String constraintSQL = buildConstraintSQL(constraints);
         if (constraintSQL == null || constraintSQL.equals(""))
         {
             ServiceLog.d(TAG, "Constraint SQL is null.");
@@ -185,48 +198,63 @@ public class SQLHelper
         {
             sqlBuilder.append(constraintSQL);
         }
+
         sqlBuilder.append(";");
         return sqlBuilder.toString();
     }
 
-    private static String buildConstraintSQL(ArrayList<String> constraint_keys,
-            ArrayList<String> constraint_operators, ArrayList<String> constraint_values)
+    private static String buildConstraintSQL(Map<String, Map<String, String>> constraints)
     {
-        if (constraint_keys != null && constraint_values != null && constraint_operators != null
-                && constraint_keys.size() != 0 && constraint_values.size() != 0
-                && constraint_operators.size() != 0)
+        if (constraints == null || constraints.isEmpty())
         {
-            if (constraint_keys.size() == constraint_values.size()
-                    && constraint_keys.size() == constraint_operators.size())
-            {
-                StringBuilder sqlBuilder = new StringBuilder();
-                sqlBuilder.append(" where ");
-
-                for (int i = 0; i < constraint_keys.size(); i++)
-                {
-                    sqlBuilder.append(constraint_keys.get(i));
-                    if (i == constraint_keys.size() - 1)
-                    {
-                        sqlBuilder.append(constraint_operators.get(i));
-                        sqlBuilder.append("\'");
-                        sqlBuilder.append(constraint_values.get(i));
-                        sqlBuilder.append("\'");
-                    }
-                    else
-                    {
-                        sqlBuilder.append(constraint_operators.get(i));
-                        sqlBuilder.append("\'");
-                        sqlBuilder.append(constraint_values.get(i));
-                        sqlBuilder.append("\' AND ");
-                    }
-                }
-                return sqlBuilder.toString();
-            }
-            ServiceLog.e(TAG, "The length of each parameter list is not the same as others.");
+            ServiceLog.e(TAG, "There is no key value mappings in Constraint Keyvalue Pair.");
             return null;
         }
-        ServiceLog
-                .d(TAG, "Cannot get constraint key and constrint value when building a query sql");
-        return null;
+
+        Set<String> keys = constraints.keySet();
+        Iterator<String> i = keys.iterator();
+
+        StringBuilder sqlBuilder = new StringBuilder();
+        sqlBuilder.append(" where ");
+
+        while (i.hasNext())
+        {
+            String key = i.next();
+            Map<String, String> map = constraints.get(key);
+            if (map.isEmpty())
+            {
+                ServiceLog.e(TAG, "There is no operator mappings in Constraint Keyvalue Pair.");
+                return null;
+            }
+
+            Set<String> operators = map.keySet();
+            if (operators.size() == 0 || operators.size() > 1)
+            {
+                ServiceLog.e(TAG,
+                        "There is error in operator mappings of Constraint Keyvalue Pair.");
+                return null;
+            }
+            String operator = operators.iterator().next();
+            String value = map.get(operator);
+            sqlBuilder.append(key);
+            sqlBuilder.append(operator);
+            if (key.equals(DatabaseSchema.SCHEMA_ACTIVITY_LATLON))
+            {
+                sqlBuilder.append(value);
+            }
+            else
+            {
+                sqlBuilder.append("'");
+                sqlBuilder.append(value);
+                sqlBuilder.append("'");
+            }
+
+            if (i.hasNext())
+            {
+                sqlBuilder.append(" AND ");
+            }
+        }
+
+        return sqlBuilder.toString();
     }
 }
