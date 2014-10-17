@@ -19,12 +19,15 @@ public final class RegisterHelper
     private static final String TAG = RegisterHelper.class.getName();
 
     public static void callCustomerServiceToRegister(final String uid, final String email,
-            final String nickName, final String city, final String request_id)
+            final String nickName, final String city, final String request_id,
+            final String access_token)
     {
         JSONObject requestJSON = buildCustomerServiceJSON(uid, email, nickName, city, request_id);
         GenericConnection connection = new GenericConnection();
         connection.initialize(ServiceURL.CustomerService);
         connection.setRequestData(requestJSON);
+        connection.setHeader("uid", uid);
+        connection.setHeader("access_token", access_token);
         connection.send(new ServiceCallback()
         {
 

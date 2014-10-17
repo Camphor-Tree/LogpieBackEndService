@@ -262,14 +262,17 @@ public class AuthenticationManager
                             // the result contains sql and two tokens
                             ArrayList<String> resultArray = SQLHelper.buildCreateUserStep2SQL(uid,
                                     TokenScopeManager.buildNewUserScope());
+
                             String sql = resultArray.get(0);
+                            final String access_token = resultArray.get(1);
+                            final String refresh_token = resultArray.get(2);
                             boolean success = sAuthDataManager.executeNoResult(sql);
                             if (success)
                             {
                                 // TODO: add check to whether it succeed. if not
                                 // need to roolback the database.
                                 RegisterHelper.callCustomerServiceToRegister(uid, email,
-                                        userNickName, city, request_id);
+                                        userNickName, city, request_id, access_token);
                                 ServiceLog.d(TAG, "Update token successfully", request_id);
                                 result.put(ResponseKeys.KEY_ACCESS_TOKEN, resultArray.get(1));
                                 result.put(ResponseKeys.KEY_REFRESH_TOKEN, resultArray.get(2));
