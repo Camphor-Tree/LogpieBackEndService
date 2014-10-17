@@ -6,7 +6,7 @@ import java.util.HashSet;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.logpie.service.util.ResponseKeys;
+import com.logpie.commonlib.ResponseKeys;
 import com.logpie.service.util.ServiceLog;
 
 public class TokenVerificationManager
@@ -71,13 +71,11 @@ public class TokenVerificationManager
             int randomUIDOffset = mPlainToken.indexOf("$");
             int timeStampOffset = mPlainToken.indexOf("#");
 
-            String timeStampString = mPlainToken
-                    .substring(uidOffset + 1, timeStampOffset);
+            String timeStampString = mPlainToken.substring(uidOffset + 1, timeStampOffset);
             mTokenGeneratedTime = Timestamp.valueOf(timeStampString);
 
             mUidInToken = mPlainToken.substring(0, uidOffset);
-            String scopeString = mPlainToken.substring(randomUIDOffset,
-                    mPlainToken.length());
+            String scopeString = mPlainToken.substring(randomUIDOffset, mPlainToken.length());
             String[] scopes = scopeString.split("$");
             if (mScopes == null)
             {
@@ -105,18 +103,15 @@ public class TokenVerificationManager
         long tokenExpirationTimeMillis = 0;
         if (mTokenType.equals("access_token"))
         {
-            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime()
-                    + sAccessTokenExpiration;
+            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime() + sAccessTokenExpiration;
         }
         else if (mTokenType.equals("refresh_token"))
         {
-            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime()
-                    + sRefreshTokenExpiration;
+            tokenExpirationTimeMillis = mTokenGeneratedTime.getTime() + sRefreshTokenExpiration;
         }
         else
         {
-            ServiceLog.e(TAG, "The token_type cannot be recognized! Token_type is:"
-                    + mTokenType);
+            ServiceLog.e(TAG, "The token_type cannot be recognized! Token_type is:" + mTokenType);
             return false;
         }
 
