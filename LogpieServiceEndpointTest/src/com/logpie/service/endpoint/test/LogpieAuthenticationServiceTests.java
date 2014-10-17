@@ -10,11 +10,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.logpie.service.connection.EndPoint.ServiceURL;
+import com.logpie.commonlib.EndPoint.ServiceURL;
+import com.logpie.commonlib.RequestKeys;
+import com.logpie.commonlib.ResponseKeys;
 import com.logpie.service.connection.GenericConnection;
 import com.logpie.service.endpoint.test.utils.LogpieTestResultWriter;
-import com.logpie.service.util.RequestKeys;
-import com.logpie.service.util.ResponseKeys;
 import com.logpie.service.util.ServiceCallback;
 import com.logpie.service.util.ServiceLog;
 import com.logpie.service.util.TimeHelper;

@@ -1,4 +1,4 @@
-package com.logpie.service.logic;
+package com.logpie.service.logic.helper;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -50,7 +50,7 @@ public class ManagerHelper
      * @param requestID
      * @return RequestType
      */
-    static RequestType getRequestType(JSONObject postData, String keyRequestType,
+    public static RequestType getRequestType(JSONObject postData, String keyRequestType,
             String requestID)
     {
         if (postData.has(keyRequestType))
@@ -60,8 +60,7 @@ public class ManagerHelper
                 return RequestType.matchType(postData.getString(keyRequestType));
             } catch (JSONException e)
             {
-                ServiceLog.e(TAG, "JSONException happend when parsing request type.",
-                        requestID, e);
+                ServiceLog.e(TAG, "JSONException happend when parsing request type.", requestID, e);
             }
         }
         return null;
@@ -73,15 +72,14 @@ public class ManagerHelper
      * @param postData
      * @return requestID
      */
-    static String getRequestID(JSONObject postData)
+    public static String getRequestID(JSONObject postData)
     {
         if (postData.has(RequestKeys.KEY_REQUEST_ID))
         {
             try
             {
                 return postData.getString(RequestKeys.KEY_REQUEST_ID) != null ? postData
-                        .getString(RequestKeys.KEY_REQUEST_ID) : UUID.randomUUID()
-                        .toString();
+                        .getString(RequestKeys.KEY_REQUEST_ID) : UUID.randomUUID().toString();
             } catch (JSONException e)
             {
                 String requestID = UUID.randomUUID().toString();
@@ -103,11 +101,10 @@ public class ManagerHelper
      * @param data
      * @param response
      */
-    static void handleResponse(boolean success, String responseType, JSONObject data,
+    public static void handleResponse(boolean success, String responseType, JSONObject data,
             HttpServletResponse response)
     {
-        ServiceLog.d(TAG,
-                "Handling Logpie Service request... JSON data is: " + data.toString());
+        ServiceLog.d(TAG, "Handling Logpie Service request... JSON data is: " + data.toString());
         try
         {
             if (success)
@@ -121,9 +118,7 @@ public class ManagerHelper
         } catch (JSONException e)
         {
             ServiceLog
-                    .e(TAG,
-                            "JSONException happened when handle Logpie Service request result",
-                            e);
+                    .e(TAG, "JSONException happened when handle Logpie Service request result", e);
         }
         HttpResponseWriter.reponseWithSuccess(responseType, data, response);
     }
@@ -134,14 +129,13 @@ public class ManagerHelper
      * @param response
      * @param errorType
      */
-    static void handleResponseWithError(HttpServletResponse response, ErrorType errorType)
+    public static void handleResponseWithError(HttpServletResponse response, ErrorType errorType)
     {
         try
         {
             response.sendError(errorType.getErrorCode());
-            ServiceLog.e(TAG, "Returning error code when handling the response ->"
-                    + "ErrorCode:" + errorType.getErrorCode() + " ErrorMessage:"
-                    + errorType.getErrorMessage());
+            ServiceLog.e(TAG, "Returning error code when handling the response ->" + "ErrorCode:"
+                    + errorType.getErrorCode() + " ErrorMessage:" + errorType.getErrorMessage());
         } catch (IOException e)
         {
             ServiceLog.e(TAG, "IOException happend when sendErrorCode.", e);

@@ -20,6 +20,7 @@ import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.TokenScopeManager.Scope;
 import com.logpie.commonlib.RequestKeys;
 import com.logpie.commonlib.ResponseKeys;
+import com.logpie.service.authentication.AuthenticationError;
 import com.logpie.service.error.ErrorMessage;
 import com.logpie.service.error.ErrorType;
 import com.logpie.service.error.HttpRequestIsNullException;
@@ -332,6 +333,22 @@ public class AuthenticationManager
 
     }
 
+    private void handleAuthFailWithErrorMessage(final HttpServletResponse response,
+            final String error_message, final String request_id) throws JSONException
+    {
+
+        JSONObject data = new JSONObject();
+
+        ServiceLog.d(TAG, "Sending auth result back: " + error_message, request_id);
+
+        data.put(ResponseKeys.KEY_AUTHENTICATION_RESULT, ResponseKeys.RESULT_ERROR);
+
+        data.put(ResponseKeys.KEY_ERROR_MESSAGE, error_message);
+
+        HttpResponseWriter.reponseWithSuccess(ResponseKeys.KEY_AUTHENTICATION_RESULT, data,
+                response);
+    }
+
     private void handleAuthResult(final boolean success, JSONObject data,
             final HttpServletResponse response, final String request_id) throws JSONException
     {
@@ -628,10 +645,8 @@ public class AuthenticationManager
         {
             try
             {
-                handleAuthResult(false,
-                        verificationManager
-                                .buildFailJSON(TokenVerificationManager.sFailReasonTokenInvalid),
-                        response, request_id);
+                handleAuthFailWithErrorMessage(response, AuthenticationError.ERROR_TOKEN_INVALID,
+                        request_id);
             } catch (JSONException e)
             {
                 ServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
@@ -647,11 +662,8 @@ public class AuthenticationManager
         {
             try
             {
-                handleAuthResult(
-                        false,
-                        verificationManager
-                                .buildFailJSON(TokenVerificationManager.sFailReasonTokenExpiration),
-                        response, request_id);
+                handleAuthFailWithErrorMessage(response, AuthenticationError.ERROR_TOKEN_EXPIRE,
+                        request_id);
             } catch (JSONException e)
             {
                 ServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
@@ -667,10 +679,8 @@ public class AuthenticationManager
         {
             try
             {
-                handleAuthResult(false,
-                        verificationManager
-                                .buildFailJSON(TokenVerificationManager.sFailReasonTokenNoScope),
-                        response, request_id);
+                handleAuthFailWithErrorMessage(response, AuthenticationError.ERROR_TOKEN_NO_SCOPE,
+                        request_id);
             } catch (JSONException e)
             {
                 ServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);
@@ -685,11 +695,8 @@ public class AuthenticationManager
         {
             try
             {
-                handleAuthResult(
-                        false,
-                        verificationManager
-                                .buildFailJSON(TokenVerificationManager.sFailReasonTokenUidNotMatch),
-                        response, request_id);
+                handleAuthFailWithErrorMessage(response, AuthenticationError.ERROR_TOKEN_NOT_MATCH,
+                        request_id);
             } catch (JSONException e)
             {
                 ServiceLog.e(TAG, "JSONException when handle auth result", request_id, e);

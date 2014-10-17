@@ -14,12 +14,14 @@ import org.json.JSONObject;
 
 import com.logpie.commonlib.RequestKeys;
 import com.logpie.commonlib.ResponseKeys;
+import com.logpie.service.authentication.AuthRequestHandler;
 import com.logpie.service.data.ActivityDataManager;
 import com.logpie.service.data.DataCallback;
 import com.logpie.service.data.DataManager;
 import com.logpie.service.error.ErrorType;
 import com.logpie.service.error.HttpRequestIsNullException;
-import com.logpie.service.logic.ManagerHelper.RequestType;
+import com.logpie.service.logic.helper.ManagerHelper;
+import com.logpie.service.logic.helper.ManagerHelper.RequestType;
 import com.logpie.service.util.DatabaseSchema;
 import com.logpie.service.util.HttpRequestParser;
 import com.logpie.service.util.JSONHelper;
@@ -60,6 +62,13 @@ public class ActivityManager
 
     public void handleRequest(HttpServletRequest request, HttpServletResponse response)
     {
+        AuthRequestHandler authHandler = new AuthRequestHandler();
+        boolean authSuccess = authHandler.handleAuthentication(request, response, "LogpieService");
+        if (!authSuccess)
+        {
+            return;
+        }
+
         JSONObject postData = null;
         try
         {
