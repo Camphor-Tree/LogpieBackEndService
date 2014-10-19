@@ -29,6 +29,10 @@ public class RequestKeys
     public static final String SERVICE_LIKE_ACTIVITY = "like_activity";
     public static final String SERVICE_DISLIKE_ACTIVITY = "dislike_activity";
 
+    // For comment to activity service keys
+    public static final String SERVICE_SHOW_COMMENTS = "find_comments";
+    public static final String SERVICE_INSERT_COMMENT_TO_ACTIVITY = "create_comment";
+
     // Key
     public static final String KEY_REQUEST_TYPE = "request_type";
     // Value
@@ -107,14 +111,11 @@ public class RequestKeys
     public static final String KEY_SUBCATEGORY = "subcategory";
     public static final String KEY_ACTIVITY_MODE = "mode";
 
-    public static final String KEY_SENDER_USER_ID = "sender_user_id";
-    public static final String KEY_SEND_TO_USER_ID = "sendto_user_id";
-    public static final String KEY_SENDER_USER_NAME = "sender_username";
-    public static final String KEY_SEND_TO_USER_NAME = "sendto_username";
-    public static final String KEY_COMMENT_CONTENT = "comment_content";
-    public static final String KEY_COMMENT_TIME = "comment_time";
-    public static final String KEY_READ_BY_REPLY = "read_by_reply";
-    public static final String KEY_READ_BY_HOST = "read_by_host";
+    // For Comment Feature
+    public static final String KEY_SENDER_USER_ID = "com.logpie.uid";
+    public static final String KEY_SEND_TO_ACTIVITYID = "com.logpie.to.activityid";
+    public static final String KEY_COMMENT_CONTENT = "com.logpie.comment.content";
+    public static final String KEY_COMMENT_TIME = "com.logpie.comment.time";
 
     public static final String KEY_CID = "cid";
     public static final String KEY_LEVEL = "level";

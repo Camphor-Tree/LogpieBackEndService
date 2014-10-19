@@ -34,9 +34,10 @@ public class DatabaseSchema
 
     public static final String SCHEMA_TABLE_COMMENTS = "comments";
     public static final String SCHEMA_COMMENTS_USER_ID = "user_id";
-    public static final String SCHEMA_COMMENTS_ACTIVITY_ID = "activity";
+    public static final String SCHEMA_COMMENTS_ACTIVITY_ID = "activity_id";
     public static final String SCHEMA_COMMENTS_COMMENT_CONTENT = "comment_content";
     public static final String SCHEMA_COMMENTS_COMMENT_TIME = "comment_time";
+    // TODO: Implement features for message notification
     public static final String SCHEMA_COMMENTS_REPLY_TO = "reply_to";
     public static final String SCHEMA_COMMENTS_READ_BY_REPLY = "read_by_reply";
     public static final String SCHEMA_COMMENTS_READ_BY_HOST = "read_by_host";
@@ -60,5 +61,4 @@ public class DatabaseSchema
     public static final String SCHEMA_SUBCATEGORY_CATEGORYCN = "category_cn";
     public static final String SCHEMA_SUBCATEGORY_CATEGORYUS = "category_us";
     public static final String SCHEMA_SUBCATEGORY_PARENT = "parent";
-
 }

@@ -44,7 +44,8 @@ public class CustomerDataManager extends DataManager
         return sCustomerDataManager;
     }
 
-    private boolean checkTableExisted()
+    @Override
+    protected boolean checkTableExisted()
     {
         if (!tag)
         {

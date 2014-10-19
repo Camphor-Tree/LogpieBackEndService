@@ -32,6 +32,15 @@
 		<servlet-name>activityservlet</servlet-name>
 		<url-pattern>/activity</url-pattern>
 	</servlet-mapping>
+	
+	<servlet>
+        <servlet-name>commentservlet</servlet-name>
+        <servlet-class>com.logpie.service.servlet.CommentService</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>commentservlet</servlet-name>
+        <url-pattern>/comment</url-pattern>
+    </servlet-mapping>
 
 	<listener>
 		<listener-class>com.logpie.service.servlet.LogpieServletListener</listener-class>

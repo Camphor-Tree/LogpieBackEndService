@@ -1,12 +1,5 @@
 package com.logpie.auth.logic;
 
-import java.io.IOException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.UUID;
-
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,7 +14,6 @@ import com.logpie.auth.exception.EmailAlreadyExistException;
 import com.logpie.auth.logic.TokenScopeManager.Scope;
 import com.logpie.commonlib.RequestKeys;
 import com.logpie.commonlib.ResponseKeys;
-import com.logpie.service.authentication.AuthenticationError;
 import com.logpie.service.error.ErrorMessage;
 import com.logpie.service.error.ErrorType;
 import com.logpie.service.error.HttpRequestIsNullException;

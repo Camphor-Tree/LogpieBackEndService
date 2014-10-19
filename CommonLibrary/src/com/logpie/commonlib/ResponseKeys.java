@@ -9,6 +9,7 @@ public class ResponseKeys
     public static final String KEY_AUTHENTICATION_RESULT = "com.logpie.authentication.result";
     public static final String KEY_CUSTOMER_RESULT = "com.logpie.customer.result";
     public static final String KEY_ACTIVITY_RESULT = "com.logpie.activity.result";
+    public static final String KEY_COMMENT_RESULT = "com.logpie.activity.result";
 
     /**
      * Keys for token validation in Authentication Service
@@ -65,13 +66,12 @@ public class ResponseKeys
     public static final String KEY_CATEGORY_ID = "com.logpie.category";
     public static final String KEY_SUBCATEGORY_ID = "com.logpie.subcategory";
 
-    public static final String KEY_SENDER_USER_ID = "com.logpie.sender.user.id";
-    public static final String KEY_SEND_TO_USER_ID = "com.logpie.sendto.user.id";
-    public static final String KEY_SENDER_USER_NAME = "com.logpie.sender.username";
-    public static final String KEY_SEND_TO_USER_NAME = "com.logpie.sendto.username";
+    /**
+     * Key response to comments
+     * */
+    public static final String KEY_SENDER_USER_ID = "com.logpie.uid";
+    public static final String KEY_SEND_TO_ACTIVITYID = "com.logpie.to.activityid";
     public static final String KEY_COMMENT_CONTENT = "com.logpie.comment.content";
     public static final String KEY_COMMENT_TIME = "com.logpie.comment.time";
-    public static final String KEY_READ_BY_REPLY = "com.logpie.read.by.reply";
-    public static final String KEY_READ_BY_HOST = "com.logpie.read.by.host";
 
 }

@@ -41,7 +41,8 @@ public class CategoryDataManager extends DataManager
         return sCategoryDataManager;
     }
 
-    private boolean checkTableExisted()
+    @Override
+    protected boolean checkTableExisted()
     {
         if (!tag)
         {

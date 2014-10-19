@@ -40,7 +40,8 @@ public class CityDataManager extends DataManager
         return sCityDataManager;
     }
 
-    private boolean checkTableExisted()
+    @Override
+    protected boolean checkTableExisted()
     {
         if (!tag)
         {

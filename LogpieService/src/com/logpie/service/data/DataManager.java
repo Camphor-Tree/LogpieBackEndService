@@ -383,6 +383,14 @@ public abstract class DataManager
     protected abstract void buildAllResultSet(ResultSet resultSet, JSONObject returnJSON,
             DataCallback callback);
 
+    /**
+     * Check if the table exists or not
+     * If no, create the table
+     * If yes, do nothing
+     * 
+     * */
+    protected abstract boolean checkTableExisted();
+
     private void handleErrorCallbackWithServerError(JSONObject error, DataCallback callback)
     {
         try

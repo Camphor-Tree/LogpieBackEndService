@@ -43,7 +43,8 @@ public class ActivityDataManager extends DataManager
         return sActivityDataManager;
     }
 
-    private boolean checkTableExisted()
+    @Override
+    protected boolean checkTableExisted()
     {
         if (!tag)
         {
