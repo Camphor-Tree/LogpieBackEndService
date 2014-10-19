@@ -67,11 +67,9 @@ public final class RegisterHelper
         } catch (JSONException e)
         {
             ServiceLog.e(TAG,
-                    "JSONException when build the register request JSON to CustomerService");
-            e.printStackTrace();
+                    "JSONException when build the register request JSON to CustomerService", e);
             return null;
         }
         return requestJSON;
-
     }
 }

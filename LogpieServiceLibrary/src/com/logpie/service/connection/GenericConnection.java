@@ -112,10 +112,10 @@ public class GenericConnection
         try
         {
             mRequestData.put(KEY_REQUEST_ID, UUID.randomUUID().toString());
-        } catch (JSONException e1)
+        } catch (JSONException e)
         {
             // Do nothing if cannot add requestID
-            ServiceLog.e(TAG, "JSONException when putting request_id. Putting empty request_id");
+            ServiceLog.e(TAG, "JSONException when putting request_id. Putting empty request_id", e);
         }
         String data = mRequestData.toString();
         if (data == null)
@@ -127,8 +127,7 @@ public class GenericConnection
                 error.put("error", "cannot send empty data");
             } catch (JSONException e)
             {
-                ServiceLog.e(TAG, "JSONException when set the error message");
-                e.printStackTrace();
+                ServiceLog.e(TAG, "JSONException when set the error message", e);
             }
             callback.onError(error);
             return;
@@ -142,8 +141,7 @@ public class GenericConnection
             writer.write(data);
         } catch (IOException e)
         {
-            e.printStackTrace();
-            ServiceLog.e(TAG, "geOutputStream occured error");
+            ServiceLog.e(TAG, "geOutputStream occured error", e);
 
             handleCallback(false, "IOException when trying to output the data", callback);
         } finally
@@ -242,8 +240,7 @@ public class GenericConnection
                 returnMessage.put("success", message);
             } catch (JSONException e)
             {
-                ServiceLog.e(TAG, "JSONException when putting success message");
-                e.printStackTrace();
+                ServiceLog.e(TAG, "JSONException when putting success message", e);
             }
             callback.onSuccess(returnMessage);
         }
@@ -254,8 +251,7 @@ public class GenericConnection
                 returnMessage.put("error", message);
             } catch (JSONException e)
             {
-                ServiceLog.e(TAG, "JSONException when putting error message");
-                e.printStackTrace();
+                ServiceLog.e(TAG, "JSONException when putting error message", e);
             }
             callback.onError(returnMessage);
         }
@@ -380,6 +376,7 @@ public class GenericConnection
             {
                 builder.append(line);
             }
+            reader.close();
             return builder.toString();
         }
         return null;

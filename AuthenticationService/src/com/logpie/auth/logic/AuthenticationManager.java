@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.ServletContext;
@@ -274,8 +275,8 @@ public class AuthenticationManager
                                 RegisterHelper.callCustomerServiceToRegister(uid, email,
                                         userNickName, city, request_id, access_token);
                                 ServiceLog.d(TAG, "Update token successfully", request_id);
-                                result.put(ResponseKeys.KEY_ACCESS_TOKEN, resultArray.get(1));
-                                result.put(ResponseKeys.KEY_REFRESH_TOKEN, resultArray.get(2));
+                                result.put(ResponseKeys.KEY_ACCESS_TOKEN, access_token);
+                                result.put(ResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
                                 handleAuthResult(true, result, response, request_id);
                             }
                             else
@@ -479,7 +480,13 @@ public class AuthenticationManager
                                 "refresh_token still valid, won't refresh to disturb the account in other device");
             }
 
-            // Step 4. If Step1 to Step3 success, then just add
+            // Step 4. Call LogpieService to get some basic information: like,
+            // nickName, city, gender
+            AuthenticateHelper helper = new AuthenticateHelper();
+            Map<String, String> userInfoMap = helper.callCustomerServiceToGetInfo(uid,
+                    access_token, request_id);
+
+            // Step 5. If Step1 to Step3 success, then just add
             // access_token,refresh_token,uid into the response.
             // TODO: If we support checkbox "remember this device", then we
             // should only return access_token when uncheck.
@@ -487,9 +494,18 @@ public class AuthenticationManager
             {
                 JSONObject authResult = new JSONObject();
                 authResult.put(ResponseKeys.KEY_UID, uid);
+                // Return tokens to client.
                 authResult.put(ResponseKeys.KEY_ACCESS_TOKEN, access_token);
                 authResult.put(ResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
                 authResult.put(ResponseKeys.KEY_RESPONSE_ID, request_id);
+                // Also need to return user info back to the client.
+                if (userInfoMap != null && userInfoMap.size() > 0)
+                {
+                    for (Map.Entry<String, String> infoEntry : userInfoMap.entrySet())
+                    {
+                        authResult.put(infoEntry.getKey(), infoEntry.getValue());
+                    }
+                }
                 handleAuthResult(true, authResult, response, request_id);
             } catch (JSONException e)
             {
