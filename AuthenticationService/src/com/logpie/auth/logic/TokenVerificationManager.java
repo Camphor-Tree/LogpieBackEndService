@@ -76,7 +76,7 @@ public class TokenVerificationManager
 
             mUidInToken = mPlainToken.substring(0, uidOffset);
             String scopeString = mPlainToken.substring(randomUIDOffset, mPlainToken.length());
-            String[] scopes = scopeString.split("$");
+            String[] scopes = scopeString.split("\\$");
             if (mScopes == null)
             {
                 mScopes = new HashSet<String>();

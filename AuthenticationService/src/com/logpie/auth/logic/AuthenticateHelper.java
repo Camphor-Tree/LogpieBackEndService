@@ -40,7 +40,7 @@ public class AuthenticateHelper
     public Map<String, String> callCustomerServiceToGetInfo(final String uid,
             final String access_token, final String request_id)
     {
-        JSONObject requestJSON = buildCustomerServiceJSON(request_id);
+        JSONObject requestJSON = buildCustomerServiceJSON(uid, request_id);
         if (requestJSON == null)
         {
             ServiceLog.e(TAG, "Cannot build requestJSON to call LogpieService to get user info.",
@@ -50,8 +50,12 @@ public class AuthenticateHelper
         GenericConnection connection = new GenericConnection();
         connection.initialize(ServiceURL.CustomerService);
         connection.setRequestData(requestJSON);
+        ServiceLog.e(
+                TAG,
+                "Add auth headers:  uid:" + uid + "  access_token:"
+                        + access_token.replace("\n", ""));
         connection.setHeader("uid", uid);
-        connection.setHeader("access_token", access_token);
+        connection.setHeader("access_token", access_token.replace("\n", ""));
         connection.send(new ServiceCallback()
         {
 
@@ -76,6 +80,60 @@ public class AuthenticateHelper
                             request_id);
                     return;
                 }
+                String successResult = null;
+                try
+                {
+                    successResult = queryResult.getString(ResponseKeys.KEY_CUSTOMER_RESULT);
+                } catch (JSONException e)
+                {
+                    ServiceLog.e(TAG, "JSONException when get result for LogpieService response",
+                            request_id, e);
+                    return;
+                }
+                if (successResult == null || !successResult.equals(ResponseKeys.RESULT_SUCCESS))
+                {
+                    ServiceLog.e(TAG, "Error reponse from LogpieService ", request_id);
+                    return;
+                }
+
+                JSONArray userInfoBundle;
+                try
+                {
+                    userInfoBundle = queryResult.getJSONArray(ResponseKeys.KEY_METADATA);
+                } catch (JSONException e)
+                {
+                    ServiceLog.e(TAG, "JSONException when get result for LogpieService response",
+                            request_id, e);
+                    return;
+                }
+
+                if (userInfoBundle != null && userInfoBundle.length() != 1)
+                {
+                    ServiceLog
+                            .e(TAG,
+                                    "userInfo returned from LogpieService missing or more than two, something must be wrong!",
+                                    request_id);
+                    ServiceLog.e(TAG, "userInfoBundle size:" + userInfoBundle.length(), request_id);
+                    return;
+                }
+
+                JSONObject userInfoJSON = null;
+                try
+                {
+                    userInfoJSON = userInfoBundle.getJSONObject(0);
+                } catch (JSONException e)
+                {
+                    ServiceLog.e(TAG, "JSONException happened when try to get userInfo.",
+                            request_id, e);
+                    return;
+                }
+
+                if (userInfoJSON == null)
+                {
+                    ServiceLog.e(TAG, "userInfoJSON is null!", request_id);
+                    return;
+                }
+
                 // nickName, gender cannot be null. Gender will default to
                 // true(Male) on server
                 String nickName;
@@ -83,7 +141,7 @@ public class AuthenticateHelper
                 String gender;
                 try
                 {
-                    nickName = queryResult.getString(ResponseKeys.KEY_NICKNAME);
+                    nickName = userInfoJSON.getString(ResponseKeys.KEY_NICKNAME);
                 } catch (JSONException e)
                 {
                     // nick name can never be null
@@ -92,7 +150,7 @@ public class AuthenticateHelper
                 }
                 try
                 {
-                    gender = queryResult.getString(ResponseKeys.KEY_GENDER);
+                    gender = userInfoJSON.getString(ResponseKeys.KEY_GENDER);
                 } catch (JSONException e)
                 {
                     ServiceLog.e(TAG, "JSONException when parse gender", request_id, e);
@@ -100,7 +158,7 @@ public class AuthenticateHelper
                 }
                 try
                 {
-                    city = queryResult.getString(ResponseKeys.KEY_CITY);
+                    city = userInfoJSON.getString(ResponseKeys.KEY_CITY);
                 } catch (JSONException e)
                 {
                     ServiceLog.e(TAG, "JSONException when parse city", request_id, e);
@@ -129,7 +187,7 @@ public class AuthenticateHelper
         return mUserInfoMap;
     }
 
-    private JSONObject buildCustomerServiceJSON(final String request_id)
+    private JSONObject buildCustomerServiceJSON(final String uid, final String request_id)
     {
         JSONObject requestJSON = new JSONObject();
         try
@@ -139,6 +197,13 @@ public class AuthenticateHelper
             requestJSON.put(RequestKeys.KEY_REQUEST_TYPE, RequestKeys.REQUEST_TYPE_QUERY);
             JSONArray queryKeyvaluePair = JSONHelper.buildQueryKey(requiredInfo);
             requestJSON.put(RequestKeys.KEY_QUERY_KEY, queryKeyvaluePair);
+            JSONArray constraintJSONArray = new JSONArray();
+            JSONObject uidConstraintJSON = new JSONObject();
+            uidConstraintJSON.put(RequestKeys.KEY_CONSTRAINT_COLUMN, RequestKeys.KEY_UID);
+            uidConstraintJSON.put(RequestKeys.KEY_CONSTRAINT_OPERATOR, RequestKeys.KEY_EQUAL);
+            uidConstraintJSON.put(RequestKeys.KEY_CONSTRAINT_VALUE, uid);
+            constraintJSONArray.put(uidConstraintJSON);
+            requestJSON.put(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR, constraintJSONArray);
         } catch (JSONException e)
         {
             ServiceLog.e(TAG,

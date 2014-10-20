@@ -143,7 +143,7 @@ public class AuthenticationServiceClient
         try
         {
             tokenValidationData.put(RequestKeys.KEY_REQUEST_TYPE, "TOKEN_VALIDATION");
-            tokenValidationData.put(RequestKeys.KEY_DECLARE_UID, "30");
+            tokenValidationData.put(RequestKeys.KEY_DECLARE_UID, declare_uid);
             tokenValidationData.put(RequestKeys.KEY_TOKEN, access_token);
             tokenValidationData.put(RequestKeys.KEY_TOKEN_TYPE, "access_token");
             tokenValidationData.put(RequestKeys.KEY_ACCESS_SERVICE, serviceName);

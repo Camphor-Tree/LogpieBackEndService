@@ -31,8 +31,10 @@ public class AuthRequestHandler
             final HttpServletResponse response, final String serviceName)
     {
         Map<String, String> headers = AuthenticationHeaderParser.getAuthenticationHeader(request);
-        String uid = headers.get("access_token");
-        String access_token = headers.get("uid");
+        ServiceLog.d(TAG, "Header Size:" + headers);
+
+        String access_token = headers.get("access_token");
+        String uid = headers.get("uid");
 
         if (uid == null || access_token == null || uid.equals("") || access_token.equals(""))
         {

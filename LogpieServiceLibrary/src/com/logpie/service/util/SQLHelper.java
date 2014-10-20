@@ -109,7 +109,9 @@ public class SQLHelper
         }
 
         sqlBuilder.append("from ");
+        sqlBuilder.append("\"");
         sqlBuilder.append(tableName);
+        sqlBuilder.append("\"");
 
         String constraintSQL = buildConstraintSQL(constraints);
         if (constraintSQL == null || constraintSQL.equals(""))

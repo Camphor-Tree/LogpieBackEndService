@@ -244,12 +244,12 @@ public class CustomerManager
             }
 
             String sql = null;
-            ArrayList<String> returnSet = null;
+            ArrayList<String> returnSet = new ArrayList<String>();
 
             switch (service)
             {
             case RequestKeys.SERVICE_SHOW_PROFILE:
-                sql = queryUserProfile(postData);
+                sql = queryUserProfile(postData, returnSet);
                 break;
             default:
                 ServiceLog.e(requestID, "Unsupported request service type.");
@@ -402,10 +402,9 @@ public class CustomerManager
         return sql;
     }
 
-    private String queryUserProfile(JSONObject postData) throws JSONException
+    private String queryUserProfile(JSONObject postData, ArrayList<String> returnSet)
+            throws JSONException
     {
-        ArrayList<String> returnSet = new ArrayList<String>();
-
         String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_USER,
                 RequestKeys.REQUEST_TYPE_QUERY, returnSet);
 

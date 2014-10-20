@@ -43,10 +43,10 @@ public class ResponseKeys
     public static final String KEY_REFRESH_TOKEN = "com.logpie.refresh.token";
     public static final String KEY_REFRESH_TOKEN_EXPIRATION = "com.logpie.refresh.token.expiration";
 
-    public static final String KEY_NICKNAME = "com.logpie.nickname";
-    public static final String KEY_GENDER = "com.logpie.gender";
+    public static final String KEY_NICKNAME = "nickname";
+    public static final String KEY_GENDER = "gender";
     public static final String KEY_BIRTHDAY = "com.logpie.birthday";
-    public static final String KEY_CITY = "com.logpie.city";
+    public static final String KEY_CITY = "city";
     public static final String KEY_COUNTRY = "com.logpie.country";
     public static final String KEY_LAST_UPDATE_TIME = "com.logpie.last.update.time";
     public static final String KEY_IS_ORGANIZATION = "com.logpie.is.organization";

@@ -1,7 +1,6 @@
 package com.logpie.auth.logic;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,7 +28,6 @@ import com.logpie.service.util.HttpRequestParser;
 import com.logpie.service.util.HttpResponseWriter;
 import com.logpie.service.util.LatencyHelper;
 import com.logpie.service.util.ServiceLog;
-import com.logpie.service.util.TimeHelper;
 
 public class AuthenticationManager
 {
@@ -260,32 +258,29 @@ public class AuthenticationManager
                             String uid = result.getString(ResponseKeys.KEY_UID);
                             String email = result.getString(ResponseKeys.KEY_EMAIL);
                             ServiceLog.d(TAG, "Generating the new uid:" + uid, request_id);
-                            // the result contains sql and two tokens
-                            ArrayList<String> resultArray = SQLHelper.buildCreateUserStep2SQL(uid,
-                                    TokenScopeManager.buildNewUserScope());
 
-                            String sql = resultArray.get(0);
-                            final String access_token = resultArray.get(1);
-                            final String refresh_token = resultArray.get(2);
-                            boolean success = sAuthDataManager.executeNoResult(sql);
-                            if (success)
-                            {
-                                // TODO: add check to whether it succeed. if not
-                                // need to roolback the database.
-                                RegisterHelper.callCustomerServiceToRegister(uid, email,
-                                        userNickName, city, request_id, access_token);
-                                ServiceLog.d(TAG, "Update token successfully", request_id);
-                                result.put(ResponseKeys.KEY_ACCESS_TOKEN, access_token);
-                                result.put(ResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
-                                handleAuthResult(true, result, response, request_id);
-                            }
-                            else
-                            {
-                                ServiceLog.d(TAG, "Update token fail", request_id);
-                                handleAuthenticationResponseWithError(response,
-                                        ErrorType.SEVER_ERROR, request_id);
-                                return;
-                            }
+                            // TODO: currently we just create new user scopes
+                            // for the user. In
+                            // future we should add a scope to the database.
+                            // Based on that to
+                            // generate the token.
+                            String access_keysource = TokenScopeManager.addScope(
+                                    TokenGenerator.generateAccessTokenBaseKeySource(uid),
+                                    TokenScopeManager.buildNewUserScope());
+                            ServiceLog.d(TAG, "access_keysource:" + access_keysource);
+                            String access_token = TokenGenerator.generateToken(access_keysource);
+                            String refresh_keysource = TokenScopeManager.addScope(
+                                    TokenGenerator.generateRefreshTokenBaseKeySource(uid),
+                                    TokenScopeManager.buildNewUserScope());
+                            ServiceLog.d(TAG, "refresh_keysource:" + refresh_keysource);
+                            String refresh_token = TokenGenerator.generateToken(refresh_keysource);
+
+                            RegisterHelper.callCustomerServiceToRegister(uid, email, userNickName,
+                                    city, request_id, access_token);
+                            ServiceLog.d(TAG, "Update token successfully", request_id);
+                            result.put(ResponseKeys.KEY_ACCESS_TOKEN, access_token);
+                            result.put(ResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
+                            handleAuthResult(true, result, response, request_id);
                         } catch (JSONException e)
                         {
                             ServiceLog.logRequest(TAG, request_id, e.getMessage());
@@ -405,80 +400,22 @@ public class AuthenticationManager
                 return;
             }
 
-            // Step 2: Check the expiration time of accessToken & refreshToken
-            // We do not refresh anyway, because the user may login to multiple
-            // devices, if refresh anyway,
-            // it will invalid the tokens in previous devices, which is a bad
-            // user experience
+            // Step 2: Generate the new access_token and refresh_token for user.
             final String uid = step1_result.getString(ResponseKeys.KEY_UID);
-            String access_token = step1_result.getString(ResponseKeys.KEY_ACCESS_TOKEN);
-            String refresh_token = step1_result.getString(ResponseKeys.KEY_REFRESH_TOKEN);
-            Timestamp access_token_expiration = Timestamp.valueOf(step1_result
-                    .getString(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION));
-            Timestamp refresh_token_expiration = Timestamp.valueOf(step1_result
-                    .getString(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION));
-            String currentTime = TimeHelper.getCurrentTimestamp().toString();
-            ServiceLog.d(TAG, "currentTime:" + currentTime);
-            ServiceLog.d(TAG, "access_token_expiration:" + access_token_expiration.toString());
-            ServiceLog.d(TAG, "refresh_token_expiration:" + refresh_token_expiration.toString());
-            if (!access_token_expiration.before(TimeHelper.getCurrentTimestamp()))
-            {
-                ServiceLog.d(TAG, "access_token already expire, refresh the access_token");
-                // (Step 3.1): If the access_token already expire, update the
-                // token for the user.
-                ArrayList<String> sqlResultWithAccessToken = (ArrayList<String>) SQLHelper
-                        .buildUpdateAccessTokenSQL(uid, access_token);
-                String sql_step3_1 = sqlResultWithAccessToken.get(0);
-                access_token = sqlResultWithAccessToken.get(1);
-                boolean step3_1_result = sAuthDataManager.executeUpdateForLoginStep2(sql_step3_1);
-                if (!step3_1_result)
-                {
-                    ServiceLog.e(sql,
-                            "Error happend in authentication Step2, refresh the access_token",
-                            request_id);
-                    ServiceLog.logRequest(TAG, request_id,
-                            "Error happend in authentication Step2, refresh the access_token");
-                    handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
-                            request_id);
-                    return;
-                }
-            }
-            else
-            {
-                ServiceLog
-                        .d(TAG,
-                                "access_token still valid, won't refresh to disturb the account in other device",
-                                request_id);
-            }
-            if (!refresh_token_expiration.before(TimeHelper.getCurrentTimestamp()))
-            {
-                ServiceLog.d(TAG, "refresh_token already expire, refresh the refresh_token",
-                        request_id);
-                // (Step 3.2): If the refresh_token already expire, update the
-                // token for the user.
-                ArrayList<String> sqlResultWithRefreshToken = (ArrayList<String>) SQLHelper
-                        .buildUpdateRefreshTokenSQL(uid, access_token);
-                String sql_step3_2 = sqlResultWithRefreshToken.get(0);
-                refresh_token = sqlResultWithRefreshToken.get(1);
-                boolean step3_2_result = sAuthDataManager.executeUpdateForLoginStep2(sql_step3_2);
-                if (!step3_2_result)
-                {
-                    ServiceLog.e(sql,
-                            "Error happend in authentication Step3, refresh the refresh_token",
-                            request_id);
-                    ServiceLog.logRequest(TAG, request_id,
-                            "Error happend in authentication Step3, refresh the refresh_token");
-                    handleAuthenticationResponseWithError(response, ErrorType.SEVER_ERROR,
-                            request_id);
-                    return;
-                }
-            }
-            else
-            {
-                ServiceLog
-                        .d(TAG,
-                                "refresh_token still valid, won't refresh to disturb the account in other device");
-            }
+
+            // TODO: currently we just create new user scopes for the user. In
+            // future we should add a scope to the database. Based on that to
+            // generate the token.
+            String access_keysource = TokenScopeManager.addScope(
+                    TokenGenerator.generateAccessTokenBaseKeySource(uid),
+                    TokenScopeManager.buildNewUserScope());
+            ServiceLog.d(TAG, "access_keysource:" + access_keysource);
+            String access_token = TokenGenerator.generateToken(access_keysource);
+            String refresh_keysource = TokenScopeManager.addScope(
+                    TokenGenerator.generateRefreshTokenBaseKeySource(uid),
+                    TokenScopeManager.buildNewUserScope());
+            ServiceLog.d(TAG, "refresh_keysource:" + refresh_keysource);
+            String refresh_token = TokenGenerator.generateToken(refresh_keysource);
 
             // Step 4. Call LogpieService to get some basic information: like,
             // nickName, city, gender
@@ -868,7 +805,7 @@ public class AuthenticationManager
             requestID = requestData.getString(RequestKeys.KEY_REQUEST_ID) != null ? requestData
                     .getString(RequestKeys.KEY_REQUEST_ID) : UUID.randomUUID().toString();
             ServiceLog.d(TAG, "Start handling register: requestID=" + requestID);
-            ServiceLog.d(TAG, "Received registration data:" + requestData);
+            ServiceLog.d(TAG, "Received auth request data:" + requestData);
         } catch (JSONException e)
         {
             requestID = UUID.randomUUID().toString();

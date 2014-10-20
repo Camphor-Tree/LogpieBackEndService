@@ -109,6 +109,8 @@ public class GenericConnection
      */
     public void send(ServiceCallback callback)
     {
+        ServiceLog.d(TAG, "Sending data to :" + mServiceURL.toString() + "  requestData is:"
+                + mRequestData.toString());
         try
         {
             mRequestData.put(KEY_REQUEST_ID, UUID.randomUUID().toString());
