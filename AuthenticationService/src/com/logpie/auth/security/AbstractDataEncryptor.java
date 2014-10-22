@@ -35,8 +35,7 @@ public abstract class AbstractDataEncryptor
             mEncryptionKey = Base64.decode(getEncryptionKey());
         } catch (Base64DecodingException e1)
         {
-            ServiceLog
-                    .e(TAG, "No Such Algorithm Exception, AES/CBC is not supported", e1);
+            ServiceLog.e(TAG, "No Such Algorithm Exception, AES/CBC is not supported", e1);
         }
         mKeySpec = new SecretKeySpec(mEncryptionKey, "AES");
         try
@@ -79,7 +78,10 @@ public abstract class AbstractDataEncryptor
             byte[] cipherText = doCipherOperation(mCipher, dataBytes, 0, dataBytes.length);
             // The final encryption result consists of iv and encryption data
             // Attach iv array in front of encryption byte array.
-            return Base64.encode(concat(iv, cipherText), Base64.BASE64DEFAULTLENGTH);
+            String base64Token = Base64.encode(concat(iv, cipherText), Base64.BASE64DEFAULTLENGTH);
+            // need to replace the "\n". HttpHeader won't allow to pass string
+            // contains "\n"
+            return base64Token.replace("\n", "");
 
         } catch (InvalidKeyException e)
         {
@@ -115,10 +117,13 @@ public abstract class AbstractDataEncryptor
             mCipher.init(Cipher.DECRYPT_MODE, mKeySpec, new IvParameterSpec(dataBytes, 0,
                     INITIALIZATION_VECTOR_LENGTH));
             byte[] plainDataBytes = doCipherOperation(mCipher, dataBytes,
-                    INITIALIZATION_VECTOR_LENGTH, dataBytes.length
-                            - INITIALIZATION_VECTOR_LENGTH);
+                    INITIALIZATION_VECTOR_LENGTH, dataBytes.length - INITIALIZATION_VECTOR_LENGTH);
             // The final encryption result consists of iv and encryption data
             // Attach iv array in front of encryption byte array.
+            if (plainDataBytes == null)
+            {
+                return null;
+            }
             return new String(plainDataBytes, UTF8);
         } catch (InvalidKeyException e)
         {
@@ -133,8 +138,7 @@ public abstract class AbstractDataEncryptor
         return null;
     };
 
-    private byte[] doCipherOperation(Cipher cipher, byte[] dataToEncrypt, int offset,
-            int length)
+    private byte[] doCipherOperation(Cipher cipher, byte[] dataToEncrypt, int offset, int length)
     {
         try
         {
