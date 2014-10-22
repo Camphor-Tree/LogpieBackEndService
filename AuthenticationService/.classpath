@@ -13,6 +13,6 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
-	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container/LogpieServiceCommonLibrary"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/LogpieServiceLibrary"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
