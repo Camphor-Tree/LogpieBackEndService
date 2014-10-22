@@ -1,7 +1,7 @@
 #ignore the files below:
 *.class
-*/build
-*/.settings
-*/bin
-WEB-INF/
+build/
+.settings/
+bin/
+WEB-INF/lib/
 TestResult/

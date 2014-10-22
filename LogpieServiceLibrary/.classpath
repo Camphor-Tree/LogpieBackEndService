@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="lib" path="G:/workspace_logpie/LogpieBackEndService/LogpieServiceLibrary/library/CommonLib.jar"/>
+	<classpathentry exported="true" kind="lib" path="G:/workspace_logpie/LogpieBackEndService/LogpieServiceLibrary/library/javax.servlet-3.0.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="G:/workspace_logpie/LogpieBackEndService/LogpieServiceLibrary/library/org.json-20120521.jar"/>
+	<classpathentry exported="true" kind="lib" path="G:/workspace_logpie/LogpieBackEndService/LogpieServiceLibrary/library/postgresql-9.2-1001.jdbc4.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
