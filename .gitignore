@@ -1,7 +1,6 @@
 #ignore the files below:
 *.class
 */build
-*/.classpath
 */.settings
 */bin
 WEB-INF/
