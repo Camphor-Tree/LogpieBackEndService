@@ -22,6 +22,9 @@ public class EndPoint
         ActivityService("ActivityService", "http://10.0.0.19:8080/LogpieService/activity", "1.0.0",
                 "test", true, true, false),
 
+        CommentService("CommentService", "http://10.0.0.19:8080/LogpieService/comment", "1.0.0",
+                "test", true, true, false),
+
         PhotoService("PhotoService", "http://10.0.0.19:8080/LogpieService/photo", "1.0.0", "test",
                 true, true, false),
         // EC2 Service URL
@@ -38,6 +41,11 @@ public class EndPoint
         ActivityServiceEC2(
                 "ActivityService",
                 "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/activity",
+                "1.0.0", "test", true, true, false),
+
+        CommentServiceEC2(
+                "CommentService",
+                "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/comment",
                 "1.0.0", "test", true, true, false),
 
         PhotoServiceEC2("PhotoService",
