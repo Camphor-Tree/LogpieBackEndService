@@ -295,7 +295,7 @@ public class CommentManager
         keySet.add(RequestKeys.KEY_COMMENT_CONTENT);
         keySet.add(RequestKeys.KEY_COMMENT_TIME);
 
-        String sql = JSONHelper.parseToSQL(postData, keySet, DatabaseSchema.SCHEMA_TABLE_COMMENTS,
+        String sql = JSONHelper.parseToSQL(postData, keySet, DatabaseSchema.SCHEMA_TABLE_COMMENT,
                 RequestKeys.REQUEST_TYPE_INSERT, null);
 
         if (sql == null || sql.equals(""))
@@ -317,7 +317,7 @@ public class CommentManager
     {
         ArrayList<String> returnSet = new ArrayList<String>();
 
-        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_COMMENTS,
+        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_COMMENT,
                 RequestKeys.REQUEST_TYPE_QUERY, returnSet);
 
         if (sql == null || sql.equals(""))

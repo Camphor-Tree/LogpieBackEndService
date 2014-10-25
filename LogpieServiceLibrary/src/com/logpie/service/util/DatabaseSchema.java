@@ -32,7 +32,7 @@ public class DatabaseSchema
     public static final String SCHEMA_ACTIVITY_CATEGORY = "category";
     public static final String SCHEMA_ACTIVITY_SUBCATEGORY = "subcategory";
 
-    public static final String SCHEMA_TABLE_COMMENTS = "comments";
+    public static final String SCHEMA_TABLE_COMMENT = "comment";
     public static final String SCHEMA_COMMENTS_USER_ID = "user_id";
     public static final String SCHEMA_COMMENTS_ACTIVITY_ID = "activity_id";
     public static final String SCHEMA_COMMENTS_COMMENT_CONTENT = "comment_content";

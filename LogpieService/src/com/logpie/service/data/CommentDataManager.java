@@ -17,7 +17,7 @@ public class CommentDataManager extends DataManager
 {
 
     private static final String TAG = CommentDataManager.class.getName();
-    public static final String TABLE_NAME = DatabaseSchema.SCHEMA_TABLE_COMMENTS;
+    public static final String TABLE_NAME = DatabaseSchema.SCHEMA_TABLE_COMMENT;
     private static boolean table_exists = false;
     private static CommentDataManager sCommentDataManager;
 
