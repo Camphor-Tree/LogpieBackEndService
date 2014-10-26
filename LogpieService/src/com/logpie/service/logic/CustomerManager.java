@@ -387,7 +387,9 @@ public class CustomerManager
         keySet.add(RequestKeys.KEY_NICKNAME);
         keySet.add(RequestKeys.KEY_CITY);
 
-        String sql = JSONHelper.parseToSQL(postData, keySet, DatabaseSchema.SCHEMA_TABLE_USER,
+        ArrayList<String> tableList = new ArrayList<String>();
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_USER);
+        String sql = JSONHelper.parseToSQL(postData, keySet, tableList,
                 RequestKeys.REQUEST_TYPE_INSERT, null);
 
         if (sql == null || sql.equals(""))
@@ -405,7 +407,9 @@ public class CustomerManager
     private String queryUserProfile(JSONObject postData, ArrayList<String> returnSet)
             throws JSONException
     {
-        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_USER,
+        ArrayList<String> tableList = new ArrayList<String>();
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_USER);
+        String sql = JSONHelper.parseToSQL(postData, null, tableList,
                 RequestKeys.REQUEST_TYPE_QUERY, returnSet);
 
         if (sql == null || sql.equals(""))
@@ -422,7 +426,9 @@ public class CustomerManager
 
     private String editUserProfile(JSONObject postData) throws JSONException
     {
-        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_USER,
+        ArrayList<String> tableList = new ArrayList<String>();
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_USER);
+        String sql = JSONHelper.parseToSQL(postData, null, tableList,
                 RequestKeys.REQUEST_TYPE_UPDATE, null);
 
         if (sql == null || sql.equals(""))

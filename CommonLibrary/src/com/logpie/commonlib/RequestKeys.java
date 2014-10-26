@@ -67,6 +67,7 @@ public class RequestKeys
     public static final String KEY_CONSTRAINT_COLUMN = "constraint_column";
     public static final String KEY_CONSTRAINT_OPERATOR = "constraint_operator";
     public static final String KEY_CONSTRAINT_VALUE = "constraint_value";
+    public static final String KEY_CONSTRAINT_LINK_COLUMN = "constraint_link_column";
 
     /**
      * OTHER OPTIONAL SQL KEYS

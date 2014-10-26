@@ -71,9 +71,9 @@ public class SQLHelper
         return sqlBuilder.toString();
     }
 
-    public static String buildQuerySQL(String tableName, ArrayList<String> key_set,
-            Map<String, Map<String, String>> constraints, String number, String orderBy,
-            boolean isASC)
+    public static String buildQuerySQL(ArrayList<String> tableName, ArrayList<String> key_set,
+            Map<String, Map<String, String>> constraints, Map<String, String> tableLinkConstraint,
+            String number, String orderBy, boolean isASC)
     {
         StringBuilder sqlBuilder = new StringBuilder();
         ServiceLog.d(TAG, "Building sql of QUERY request...");
@@ -109,11 +109,31 @@ public class SQLHelper
         }
 
         sqlBuilder.append("from ");
-        sqlBuilder.append("\"");
-        sqlBuilder.append(tableName);
-        sqlBuilder.append("\"");
+        if (tableName.size() == 1)
+        {
+            sqlBuilder.append("\"");
+            sqlBuilder.append(tableName.get(0));
+            sqlBuilder.append("\"");
+        }
+        else
+        {
+            int size = tableName.size();
+            for (int i = 0; i < size; i++)
+            {
+                sqlBuilder.append("\"");
+                sqlBuilder.append(tableName.get(i));
+                if (i == size - 1)
+                {
+                    sqlBuilder.append("\"");
+                }
+                else
+                {
+                    sqlBuilder.append("\",");
+                }
+            }
+        }
 
-        String constraintSQL = buildConstraintSQL(constraints);
+        String constraintSQL = buildConstraintSQL(constraints, tableLinkConstraint);
         if (constraintSQL == null || constraintSQL.equals(""))
         {
             ServiceLog.d(TAG, "Constraint SQL is null.");
@@ -164,8 +184,6 @@ public class SQLHelper
         Set<String> keys = keyvaluePair.keySet();
         Iterator<String> i = keys.iterator();
 
-        StringBuilder values = new StringBuilder();
-
         while (i.hasNext())
         {
             String key = i.next();
@@ -191,7 +209,7 @@ public class SQLHelper
             }
         }
 
-        String constraintSQL = buildConstraintSQL(constraints);
+        String constraintSQL = buildConstraintSQL(constraints, null);
         if (constraintSQL == null || constraintSQL.equals(""))
         {
             ServiceLog.d(TAG, "Constraint SQL is null.");
@@ -205,7 +223,8 @@ public class SQLHelper
         return sqlBuilder.toString();
     }
 
-    private static String buildConstraintSQL(Map<String, Map<String, String>> constraints)
+    private static String buildConstraintSQL(Map<String, Map<String, String>> constraints,
+            Map<String, String> linkTableConstraint)
     {
         if (constraints == null || constraints.isEmpty())
         {
@@ -214,14 +233,36 @@ public class SQLHelper
         }
 
         Set<String> keys = constraints.keySet();
-        Iterator<String> i = keys.iterator();
+        Iterator<String> iterator = keys.iterator();
 
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append(" where ");
 
-        while (i.hasNext())
+        // Add talbe link clause to the sql. For examle: select * from
+        // user,comment where "user".uid=activity.user_id
+        if (linkTableConstraint != null && linkTableConstraint.size() > 0)
         {
-            String key = i.next();
+            Set<String> keySet = linkTableConstraint.keySet();
+            for (String key : keySet)
+            {
+                sqlBuilder.append(key);
+                sqlBuilder.append("=");
+                sqlBuilder.append(linkTableConstraint.get(key));
+            }
+
+            if (constraints != null && constraints.size() > 0)
+            {
+                sqlBuilder.append(" AND ");
+            }
+            else
+            {
+                sqlBuilder.append(" ");
+            }
+        }
+
+        while (iterator.hasNext())
+        {
+            String key = iterator.next();
             Map<String, String> map = constraints.get(key);
             if (map.isEmpty())
             {
@@ -251,7 +292,7 @@ public class SQLHelper
                 sqlBuilder.append("'");
             }
 
-            if (i.hasNext())
+            if (iterator.hasNext())
             {
                 sqlBuilder.append(" AND ");
             }

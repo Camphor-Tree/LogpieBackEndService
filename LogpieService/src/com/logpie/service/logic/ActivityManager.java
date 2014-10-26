@@ -423,7 +423,9 @@ public class ActivityManager
         object.put(RequestKeys.KEY_INSERT_VALUE, latlon);
         insertKeyvaluePair.put(object);
 
-        String sql = JSONHelper.parseToSQL(postData, keySet, DatabaseSchema.SCHEMA_TABLE_ACTIVITY,
+        ArrayList<String> tableList = new ArrayList<String>();
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_ACTIVITY);
+        String sql = JSONHelper.parseToSQL(postData, keySet, tableList,
                 RequestKeys.REQUEST_TYPE_INSERT, null);
         if (sql == null || sql.equals(""))
         {
@@ -439,7 +441,9 @@ public class ActivityManager
 
     private String editActivity(JSONObject postData) throws JSONException
     {
-        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_ACTIVITY,
+        ArrayList<String> tableList = new ArrayList<String>();
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_ACTIVITY);
+        String sql = JSONHelper.parseToSQL(postData, null, tableList,
                 RequestKeys.REQUEST_TYPE_UPDATE, null);
         if (sql == null || sql.equals(""))
         {
@@ -620,9 +624,10 @@ public class ActivityManager
 
             String orderBy = DatabaseSchema.SCHEMA_ACTIVITY_AID;
             boolean isASC = false;
-
-            return SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, returnSet,
-                    constraints, number, orderBy, isASC);
+            ArrayList<String> tableList = new ArrayList<String>();
+            tableList.add(DatabaseSchema.SCHEMA_TABLE_ACTIVITY);
+            return SQLHelper.buildQuerySQL(tableList, returnSet, constraints, null, number,
+                    orderBy, isASC);
 
         }
     }
@@ -703,8 +708,10 @@ public class ActivityManager
             String orderBy = DatabaseSchema.SCHEMA_ACTIVITY_AID;
             boolean isASC = false;
 
-            return SQLHelper.buildQuerySQL(DatabaseSchema.SCHEMA_TABLE_ACTIVITY, returnSet,
-                    constraints, number, orderBy, isASC);
+            ArrayList<String> tableList = new ArrayList<String>();
+            tableList.add(DatabaseSchema.SCHEMA_TABLE_ACTIVITY);
+            return SQLHelper.buildQuerySQL(tableList, returnSet, constraints, null, number,
+                    orderBy, isASC);
         }
 
     }

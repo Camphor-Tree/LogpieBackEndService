@@ -122,17 +122,18 @@ public class JSONHelper
         return array;
     }
 
-    public static String parseToSQL(JSONObject postData, ArrayList<String> keySet, String table,
-            String requestType, ArrayList<String> returnSet) throws JSONException
+    public static String parseToSQL(JSONObject postData, ArrayList<String> keySet,
+            ArrayList<String> table, String requestType, ArrayList<String> returnSet)
+            throws JSONException
     {
         switch (requestType)
         {
         case "insert":
-            return parseInsertRequest(postData, keySet, table);
+            return parseInsertRequest(postData, keySet, table.get(0));
         case "query":
             return parseQueryRequest(postData, returnSet, table);
         case "update":
-            return parseUpdateRequest(postData, table);
+            return parseUpdateRequest(postData, table.get(0));
         default:
             ServiceLog.e(TAG, "Unsupported request type.");
             break;
@@ -170,7 +171,7 @@ public class JSONHelper
     }
 
     private static String parseQueryRequest(JSONObject postData, ArrayList<String> returnSet,
-            String table) throws JSONException
+            ArrayList<String> table) throws JSONException
     {
         JSONArray queryKey = postData.getJSONArray(RequestKeys.KEY_QUERY_KEY);
 
@@ -183,8 +184,9 @@ public class JSONHelper
         }
 
         Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
+        Map<String, String> tableLinkConstraint = new HashMap<String, String>();
 
-        parseConstraint(postData, constraints);
+        parseConstraint(postData, constraints, tableLinkConstraint);
 
         String number = null;
         if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
@@ -203,7 +205,8 @@ public class JSONHelper
             }
         }
 
-        return SQLHelper.buildQuerySQL(table, returnSet, constraints, number, orderBy, isASC);
+        return SQLHelper.buildQuerySQL(table, returnSet, constraints, tableLinkConstraint, number,
+                orderBy, isASC);
     }
 
     private static String parseUpdateRequest(JSONObject postData, String table)
@@ -227,14 +230,15 @@ public class JSONHelper
 
         Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
 
-        parseConstraint(postData, constraints);
+        parseConstraint(postData, constraints, null);
 
         return SQLHelper.buildUpdateSQL(table, keyvalue, constraints);
 
     }
 
     private static void parseConstraint(JSONObject postData,
-            Map<String, Map<String, String>> constraints) throws JSONException
+            Map<String, Map<String, String>> constraints, Map<String, String> tableLinkConstraint)
+            throws JSONException
     {
         if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
         {
@@ -256,6 +260,17 @@ public class JSONHelper
                 hm.put(data.getString(RequestKeys.KEY_CONSTRAINT_OPERATOR),
                         data.getString(RequestKeys.KEY_CONSTRAINT_VALUE));
                 constraints.put(data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN), hm);
+            }
+
+            if (data.has(RequestKeys.KEY_CONSTRAINT_COLUMN)
+                    && data.has(RequestKeys.KEY_CONSTRAINT_OPERATOR)
+                    && data.has(RequestKeys.KEY_CONSTRAINT_LINK_COLUMN))
+            {
+                if (tableLinkConstraint != null)
+                {
+                    tableLinkConstraint.put(RequestKeys.KEY_CONSTRAINT_COLUMN,
+                            RequestKeys.KEY_CONSTRAINT_LINK_COLUMN);
+                }
             }
         }
     }

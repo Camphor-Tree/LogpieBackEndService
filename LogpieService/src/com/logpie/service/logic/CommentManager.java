@@ -294,8 +294,9 @@ public class CommentManager
         keySet.add(RequestKeys.KEY_SEND_TO_ACTIVITYID);
         keySet.add(RequestKeys.KEY_COMMENT_CONTENT);
         keySet.add(RequestKeys.KEY_COMMENT_TIME);
-
-        String sql = JSONHelper.parseToSQL(postData, keySet, DatabaseSchema.SCHEMA_TABLE_COMMENT,
+        ArrayList<String> tableList = new ArrayList<String>();
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_COMMENT);
+        String sql = JSONHelper.parseToSQL(postData, keySet, tableList,
                 RequestKeys.REQUEST_TYPE_INSERT, null);
 
         if (sql == null || sql.equals(""))
@@ -317,7 +318,10 @@ public class CommentManager
     {
         ArrayList<String> returnSet = new ArrayList<String>();
         // TODO: This is short term hack for query comment.
-        String sql = JSONHelper.parseToSQL(postData, null, "comment,\"user\"",
+        ArrayList<String> tableList = new ArrayList<String>();
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_COMMENT);
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_USER);
+        String sql = JSONHelper.parseToSQL(postData, null, tableList,
                 RequestKeys.REQUEST_TYPE_QUERY, returnSet);
 
         if (sql == null || sql.equals(""))
