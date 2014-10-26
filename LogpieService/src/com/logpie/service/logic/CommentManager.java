@@ -316,8 +316,8 @@ public class CommentManager
     private String queryCommentToActivity(JSONObject postData) throws JSONException
     {
         ArrayList<String> returnSet = new ArrayList<String>();
-
-        String sql = JSONHelper.parseToSQL(postData, null, DatabaseSchema.SCHEMA_TABLE_COMMENT,
+        // TODO: This is short term hack for query comment.
+        String sql = JSONHelper.parseToSQL(postData, null, "comment,\"user\"",
                 RequestKeys.REQUEST_TYPE_QUERY, returnSet);
 
         if (sql == null || sql.equals(""))

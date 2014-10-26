@@ -37,12 +37,12 @@ public class TokenEncryptor extends AbstractDataEncryptor
                     sSalt.getBytes(), sIterationNum, sEncryptionKeyLength);
             final SecretKey key = factory.generateSecret(keySpec);
             return Base64.encode(key.getEncoded());
-        } catch (NoSuchAlgorithmException e1)
+        } catch (NoSuchAlgorithmException e)
         {
-            ServiceLog.e(TAG, "Doesn't support such algorithm", e1);
-        } catch (InvalidKeySpecException e2)
+            ServiceLog.e(TAG, "Doesn't support such algorithm", e);
+        } catch (InvalidKeySpecException e)
         {
-            ServiceLog.e(TAG, "InvalidKeySpecException", e2);
+            ServiceLog.e(TAG, "InvalidKeySpecException", e);
         }
         return null;
     }

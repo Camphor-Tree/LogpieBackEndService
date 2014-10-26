@@ -89,6 +89,9 @@ public abstract class AbstractDataEncryptor
         } catch (InvalidAlgorithmParameterException e)
         {
             ServiceLog.e(TAG, "InvalidAlgorithmParameterException", e);
+        } catch (Exception e)
+        {
+            ServiceLog.e(TAG, "Unkown exception happened when encrypt token", e);
         }
         return null;
     };
