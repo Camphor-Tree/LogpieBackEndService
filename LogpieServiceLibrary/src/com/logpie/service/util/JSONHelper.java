@@ -268,9 +268,8 @@ public class JSONHelper
             {
                 if (tableLinkConstraint != null)
                 {
-                    tableLinkConstraint.put(
-                            tableLinkConstraint.get(RequestKeys.KEY_CONSTRAINT_COLUMN),
-                            tableLinkConstraint.get(RequestKeys.KEY_CONSTRAINT_LINK_COLUMN));
+                    tableLinkConstraint.put(postData.getString(RequestKeys.KEY_CONSTRAINT_COLUMN),
+                            postData.getString(RequestKeys.KEY_CONSTRAINT_LINK_COLUMN));
                 }
             }
         }
