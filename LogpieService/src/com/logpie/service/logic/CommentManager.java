@@ -6,6 +6,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -225,8 +226,13 @@ public class CommentManager
             }
 
             String sql = null;
-            ArrayList<String> returnSet = null;
-
+            ArrayList<String> returnSet = new ArrayList<String>();
+            JSONArray queryColumnArray = postData.getJSONArray(RequestKeys.KEY_QUERY_KEY);
+            for (int i = 0; i < queryColumnArray.length(); i++)
+            {
+                returnSet.add(queryColumnArray.getJSONObject(i).getString(
+                        RequestKeys.KEY_QUERY_COLUMN));
+            }
             switch (service)
             {
             case RequestKeys.SERVICE_SHOW_COMMENTS:
