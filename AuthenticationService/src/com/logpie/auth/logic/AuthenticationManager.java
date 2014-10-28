@@ -210,7 +210,14 @@ public class AuthenticationManager
             final String email = regData.getString(RequestKeys.KEY_EMAIL);
             String password = regData.getString(RequestKeys.KEY_PASSWORD);
             String nickName = regData.getString(RequestKeys.KEY_NICKNAME);
-            final String city = regData.getString(RequestKeys.KEY_CITY);
+            String city = null;
+            if (regData.has(RequestKeys.KEY_CITY))
+            {
+                city = regData.getString(RequestKeys.KEY_CITY);
+            }
+
+            final String cityID = city;
+
             if (nickName == null || nickName.equals(""))
             {
                 nickName = "New User";
@@ -276,7 +283,7 @@ public class AuthenticationManager
                             String refresh_token = TokenGenerator.generateToken(refresh_keysource);
 
                             RegisterHelper.callCustomerServiceToRegister(uid, email, userNickName,
-                                    city, request_id, access_token);
+                                    cityID, request_id, access_token);
                             ServiceLog.d(TAG, "Update token successfully", request_id);
                             result.put(ResponseKeys.KEY_ACCESS_TOKEN, access_token);
                             result.put(ResponseKeys.KEY_REFRESH_TOKEN, refresh_token);
@@ -310,7 +317,7 @@ public class AuthenticationManager
             }
         } catch (JSONException e)
         {
-            ServiceLog.logRequest(TAG, request_id, e.getMessage());
+            // ServiceLog.logRequest(TAG, request_id, e.getMessage());
             handleAuthenticationResponseWithError(response, ErrorType.BAD_REQUEST, request_id);
             ServiceLog.e(TAG, "JSONException when getting email/password", request_id, e);
 

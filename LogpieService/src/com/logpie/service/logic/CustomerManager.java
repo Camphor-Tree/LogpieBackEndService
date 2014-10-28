@@ -385,7 +385,6 @@ public class CustomerManager
         ArrayList<String> keySet = new ArrayList<String>();
         keySet.add(RequestKeys.KEY_EMAIL);
         keySet.add(RequestKeys.KEY_NICKNAME);
-        keySet.add(RequestKeys.KEY_CITY);
 
         ArrayList<String> tableList = new ArrayList<String>();
         tableList.add(DatabaseSchema.SCHEMA_TABLE_USER);

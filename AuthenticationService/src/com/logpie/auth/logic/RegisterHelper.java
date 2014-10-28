@@ -60,7 +60,11 @@ public final class RegisterHelper
             insertKeyValueMap.put(RequestKeys.KEY_UID, uid);
             insertKeyValueMap.put(RequestKeys.KEY_EMAIL, email);
             insertKeyValueMap.put(RequestKeys.KEY_NICKNAME, nickName);
-            insertKeyValueMap.put(RequestKeys.KEY_CITY, city);
+            // city may not be available when user send a register request
+            if (city != null && !city.equals(""))
+            {
+                insertKeyValueMap.put(RequestKeys.KEY_CITY, city);
+            }
 
             JSONArray insertKeyvaluePair = JSONHelper.buildInsertKeyValue(insertKeyValueMap);
             requestJSON.put(RequestKeys.KEY_INSERT_KEYVALUE_PAIR, insertKeyvaluePair);

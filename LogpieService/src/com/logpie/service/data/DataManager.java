@@ -356,8 +356,9 @@ public abstract class DataManager
                     }
                     else
                     {
-                        ServiceLog.e(TAG, "Cannot get the return value when using the keyword '"
-                                + key + "'.");
+                        ServiceLog.d(TAG, "Cannot get the return value when using the keyword '"
+                                + key + "'. Put the empty string to the value.");
+                        object.put(key, "");
                     }
                 }
                 array.put(object);
