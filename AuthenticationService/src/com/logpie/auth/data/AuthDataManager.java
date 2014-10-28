@@ -322,13 +322,6 @@ public class AuthDataManager
                         resultSet.getString(SQLHelper.SCHEMA_ACCESS_TOKEN));
                 returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN,
                         resultSet.getString(SQLHelper.SCHEMA_REFRESH_TOKEN));
-                returnJSON
-                        .put(ResponseKeys.KEY_ACCESS_TOKEN_EXPIRATION,
-                                resultSet.getTimestamp(SQLHelper.SCHEMA_ACCESS_TOKEN_EXPIRATION)
-                                        .toString());
-                returnJSON.put(ResponseKeys.KEY_REFRESH_TOKEN_EXPIRATION,
-                        resultSet.getTimestamp(SQLHelper.SCHEMA_REFRESH_TOKEN_EXPIRATION)
-                                .toString());
 
                 return returnJSON;
             }

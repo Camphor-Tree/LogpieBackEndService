@@ -347,6 +347,7 @@ public abstract class DataManager
                 JSONObject object = new JSONObject();
                 for (String key : keySet)
                 {
+
                     Object o = resultSet.getObject(key);
                     if (o != null)
                     {
@@ -384,9 +385,8 @@ public abstract class DataManager
             DataCallback callback);
 
     /**
-     * Check if the table exists or not
-     * If no, create the table
-     * If yes, do nothing
+     * Check if the table exists or not If no, create the table If yes, do
+     * nothing
      * 
      * */
     protected abstract boolean checkTableExisted();
