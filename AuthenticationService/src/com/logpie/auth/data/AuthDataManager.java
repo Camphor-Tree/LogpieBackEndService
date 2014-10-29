@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,39 +33,67 @@ public class AuthDataManager
 
     public static final String KEY_CALLBACK_ERROR = "com.logpie.auth.error";
 
+    private static AtomicBoolean sDbInitialized = new AtomicBoolean(false);
+    private static String SQL_CREATE_USER_AUTH_TABLE = "CREATE TABLE user_auth ( uid serial NOT NULL, email character varying NOT NULL, password text NOT NULL, access_token character varying, access_token_expire_time timestamp with time zone, refresh_token character varying, refresh_token_expire_time timestamp with time zone, CONSTRAINT \"PK_user_auth\" PRIMARY KEY (uid), CONSTRAINT emailunique UNIQUE (email) ) WITH ( OIDS=FALSE ); ALTER TABLE user_auth OWNER TO postgres;";
+
     public synchronized static AuthDataManager getInstance()
     {
         if (sAuthDataManager == null)
         {
-            initializeDB();
             sAuthDataManager = new AuthDataManager();
         }
         return sAuthDataManager;
     }
 
+    private AuthDataManager()
+    {
+        initializeDB();
+    }
+
     /**
      * initialize the postgreSQL's db driver
      */
-    private static void initializeDB()
+    private synchronized void initializeDB()
+    {
+        if (!sDbInitialized.get())
+        {
+            try
+            {
+                Class.forName("org.postgresql.Driver").newInstance();
+                createTable();
+            } catch (InstantiationException e)
+            {
+                ServiceLog
+                        .e(TAG,
+                                "InstantiationException happended when trying to initiliaze postgreSQL driver",
+                                e);
+            } catch (IllegalAccessException e)
+            {
+                ServiceLog
+                        .e(TAG,
+                                "IllegalAccessException happended when trying to initiliaze postgreSQL driver",
+                                e);
+            } catch (ClassNotFoundException e)
+            {
+                ServiceLog
+                        .e(TAG,
+                                "ClassNotFoundException happended when trying to initiliaze postgreSQL driver",
+                                e);
+            }
+            sDbInitialized.set(true);
+        }
+    }
+
+    private void createTable()
     {
         try
         {
-            Class.forName("org.postgresql.Driver").newInstance();
-        } catch (InstantiationException e)
+            Statement statement = openConnection().createStatement();
+            ServiceLog.d(TAG, "Creating user_auth table...");
+            statement.execute(SQL_CREATE_USER_AUTH_TABLE);
+        } catch (SQLException e)
         {
-            ServiceLog.e(TAG,
-                    "InstantiationException happended when trying to initiliaze postgreSQL driver",
-                    e);
-        } catch (IllegalAccessException e)
-        {
-            ServiceLog.e(TAG,
-                    "IllegalAccessException happended when trying to initiliaze postgreSQL driver",
-                    e);
-        } catch (ClassNotFoundException e)
-        {
-            ServiceLog.e(TAG,
-                    "ClassNotFoundException happended when trying to initiliaze postgreSQL driver",
-                    e);
+            ServiceLog.e(TAG, "SQL error happen when creating user_auth table", e);
         }
     }
 

@@ -2,9 +2,9 @@ package com.logpie.auth.logic;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -56,13 +56,13 @@ public class AuthenticationManager
 
     // The map to store email under registration to ensure the register is
     // thread safe when checking the email is available or not
-    private static HashSet<String> sEmailsUnderRegistration;
+    private volatile static ConcurrentHashMap<String, Boolean> sEmailsUnderRegistration;
 
     public static void initialize(ServletContext globalUniqueContext)
     {
         // sGlobalUniqueContext = globalUniqueContext;
         sAuthDataManager = AuthDataManager.getInstance();
-        sEmailsUnderRegistration = new HashSet<String>();
+        sEmailsUnderRegistration = new ConcurrentHashMap<String, Boolean>();
     }
 
     public synchronized static AuthenticationManager getInstance()
@@ -228,7 +228,7 @@ public class AuthenticationManager
             String sql = SQLHelper.buildCheckUserDuplicateSQL(email);
             sAuthDataManager = AuthDataManager.getInstance();
             boolean isUserExisted = sAuthDataManager.executeQueryForCheckDuplicate(sql);
-            if (isUserExisted && sEmailsUnderRegistration.contains(email))
+            if (isUserExisted || sEmailsUnderRegistration.contains(email))
             {
                 ServiceLog.e(TAG, "email already exist", request_id);
                 JSONObject errorMessage = new JSONObject();
@@ -245,7 +245,7 @@ public class AuthenticationManager
             }
             else
             {
-                sEmailsUnderRegistration.add(email);
+                sEmailsUnderRegistration.put(email, true);
                 // Step 1: just insert into the database and get the uid back
                 sql = SQLHelper.buildCreateUserStep1SQL(email, password);
                 sAuthDataManager.executeInsertAndGetUIDandEmail(sql, new DataCallback()
