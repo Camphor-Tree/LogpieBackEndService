@@ -7,49 +7,41 @@ public class EndPoint
 {
     private static String TAG = EndPoint.class.getName();
 
+    private static boolean isDebug = true;
+
     public enum ServiceURL
     {
         RocektService("RocketService", "https://10.0.0.6:8443/RocketService/servlet", "1.0.0",
                 "test", true, false, true),
 
-        AuthenticationService("AuthenticationService",
-                "http://10.0.0.19:8080/AuthenticationService/auth", "1.0.0", "test", true, true,
-                false),
-
-        CustomerService("CustomerService", "http://10.0.0.19:8080/LogpieService/customer", "1.0.0",
-                "test", true, true, false),
-
-        ActivityService("ActivityService", "http://10.0.0.19:8080/LogpieService/activity", "1.0.0",
-                "test", true, true, false),
-
-        CommentService("CommentService", "http://10.0.0.19:8080/LogpieService/comment", "1.0.0",
-                "test", true, true, false),
-
-        PhotoService("PhotoService", "http://10.0.0.19:8080/LogpieService/photo", "1.0.0", "test",
-                true, true, false),
-        // EC2 Service URL
-        AuthenticationServiceEC2(
+        AuthenticationService(
                 "AuthenticationService",
-                "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/AuthenticationService/auth",
+                EndPoint.isDebug ? "http://10.0.0.19:8080/AuthenticationService/auth"
+                        : "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/AuthenticationService/auth",
                 "1.0.0", "test", true, true, false),
 
-        CustomerServiceEC2(
+        CustomerService(
                 "CustomerService",
-                "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/customer",
+                EndPoint.isDebug ? "http://10.0.0.19:8080/LogpieService/customer"
+                        : "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/customer",
                 "1.0.0", "test", true, true, false),
 
-        ActivityServiceEC2(
+        ActivityService(
                 "ActivityService",
-                "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/activity",
+                EndPoint.isDebug ? "http://10.0.0.19:8080/LogpieService/activity"
+                        : "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/activity",
                 "1.0.0", "test", true, true, false),
 
-        CommentServiceEC2(
+        CommentService(
                 "CommentService",
-                "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/comment",
+                EndPoint.isDebug ? "http://10.0.0.19:8080/LogpieService/comment"
+                        : "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/activity",
                 "1.0.0", "test", true, true, false),
 
-        PhotoServiceEC2("PhotoService",
-                "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/photo",
+        PhotoService(
+                "PhotoService",
+                EndPoint.isDebug ? "http://10.0.0.19:8080/LogpieService/photo"
+                        : "http://ec2-54-68-64-62.us-west-2.compute.amazonaws.com:8080/LogpieService/photo",
                 "1.0.0", "test", true, true, false);
 
         String mServiceName;

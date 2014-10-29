@@ -83,7 +83,7 @@ public class LogpieAuthenticationServiceTests extends TestCase
                     + "@logpie.com");
             registerData.put(RequestKeys.KEY_PASSWORD, "123456");
             registerData.put(RequestKeys.KEY_NICKNAME, "LogpieTester");
-            registerData.put(RequestKeys.KEY_CITY, "Seattle");
+            registerData.put(RequestKeys.KEY_CITY, "苏州市");
             registerData.put(RequestKeys.KEY_REQUEST_ID, UUID.randomUUID().toString());
             ServiceLog.i(TAG, "Register String" + registerData.toString());
             mConnection.setRequestData(registerData);
@@ -111,7 +111,7 @@ public class LogpieAuthenticationServiceTests extends TestCase
         try
         {
             authenticateData.put(RequestKeys.KEY_REQUEST_TYPE, "AUTHENTICATE");
-            authenticateData.put(RequestKeys.KEY_EMAIL, "a7197901-e@logpie.com");
+            authenticateData.put(RequestKeys.KEY_EMAIL, "770683e1-1@logpie.com");
             authenticateData.put(RequestKeys.KEY_PASSWORD, "123456");
             authenticateData.put(RequestKeys.KEY_REQUEST_ID, UUID.randomUUID().toString());
             ServiceLog.i(TAG, "Register String" + authenticateData.toString());
@@ -139,7 +139,7 @@ public class LogpieAuthenticationServiceTests extends TestCase
         try
         {
             resetPasswordData.put(RequestKeys.KEY_REQUEST_TYPE, "RESET_PASSWORD");
-            resetPasswordData.put(RequestKeys.KEY_EMAIL, "a7197901-e@logpie.com");
+            resetPasswordData.put(RequestKeys.KEY_EMAIL, "770683e1-1@logpie.com");
             resetPasswordData.put(RequestKeys.KEY_PASSWORD, "123456");
             resetPasswordData.put(RequestKeys.KEY_NEW_PASSWORD, "123456");
             resetPasswordData.put(RequestKeys.KEY_REQUEST_ID, UUID.randomUUID().toString());
