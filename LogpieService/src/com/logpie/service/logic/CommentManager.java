@@ -327,6 +327,9 @@ public class CommentManager
         ArrayList<String> tableList = new ArrayList<String>();
         tableList.add(DatabaseSchema.SCHEMA_TABLE_COMMENT);
         tableList.add(DatabaseSchema.SCHEMA_TABLE_USER);
+
+        postData.put(RequestKeys.KEY_ORDER_BY, DatabaseSchema.SCHEMA_COMMENTS_COMMENT_ID);
+
         String sql = JSONHelper.parseToSQL(postData, null, tableList,
                 RequestKeys.REQUEST_TYPE_QUERY, returnSet);
 

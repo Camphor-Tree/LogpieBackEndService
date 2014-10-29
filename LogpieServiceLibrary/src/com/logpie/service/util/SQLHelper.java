@@ -78,7 +78,7 @@ public class SQLHelper
         StringBuilder sqlBuilder = new StringBuilder();
         ServiceLog.d(TAG, "Building sql of QUERY request...");
 
-        if (tableName == null || tableName.equals(""))
+        if (tableName == null || tableName.size() == 0)
         {
             ServiceLog.e(TAG, "The table name cannot be null or empty.");
             return null;

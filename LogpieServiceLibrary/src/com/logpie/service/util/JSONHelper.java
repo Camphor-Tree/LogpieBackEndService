@@ -170,6 +170,7 @@ public class JSONHelper
 
     }
 
+    // TODO: refactor this function
     private static String parseQueryRequest(JSONObject postData, ArrayList<String> returnSet,
             ArrayList<String> table) throws JSONException
     {
@@ -195,6 +196,7 @@ public class JSONHelper
         }
 
         String orderBy = null;
+
         boolean isASC = true;
         if (postData.has(RequestKeys.KEY_ORDER_BY))
         {
