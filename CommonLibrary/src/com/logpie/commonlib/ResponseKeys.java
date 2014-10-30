@@ -33,6 +33,12 @@ public class ResponseKeys
     public static final String RESULT_SUCCESS = "success";
     public static final String RESULT_ERROR = "error";
 
+    // Key
+    public static final String KEY_RESPONSE_MODE = "com.logpie.response.mode";
+    // Value
+    public static final String MODE_REFRESH = "refresh";
+    public static final String MODE_LOAD_MORE = "load_more";
+
     /**
      * Keys for all Logpie keywords in Android
      */

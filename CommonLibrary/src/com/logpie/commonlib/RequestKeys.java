@@ -40,6 +40,12 @@ public class RequestKeys
     public static final String REQUEST_TYPE_QUERY = "query";
     public static final String REQUEST_TYPE_UPDATE = "update";
 
+    // Key
+    public static final String KEY_REQUEST_MODE = "request_mode";
+    // Value
+    public static final String MODE_REFRESH = "refresh";
+    public static final String MODE_LOAD_MORE = "load_more";
+
     // Key for request ID
     // Each httpRequest should have a unique request ID.
     public static final String KEY_REQUEST_ID = "request_id";

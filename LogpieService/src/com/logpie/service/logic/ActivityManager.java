@@ -570,65 +570,7 @@ public class ActivityManager
         String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet, String requestID)
                 throws JSONException
         {
-            JSONArray constraintKeyvaluePair;
-            if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
-            {
-                ServiceLog.e(TAG,
-                        "Failed to find the constraint key value pair from query request.",
-                        requestID);
-                return null;
-            }
-
-            constraintKeyvaluePair = postData
-                    .getJSONArray(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR);
-            String city = null;
-
-            for (int i = 0; i < constraintKeyvaluePair.length(); i++)
-            {
-                JSONObject data = constraintKeyvaluePair.getJSONObject(i);
-                if (data.has(RequestKeys.KEY_CONSTRAINT_COLUMN))
-                {
-                    if (data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN).equals(
-                            RequestKeys.KEY_CITY))
-                    {
-                        city = data.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
-                        ServiceLog.d(TAG, "Parsed the city data is: " + city);
-                        break;
-                    }
-                }
-            }
-
-            if (city == null)
-            {
-                ServiceLog
-                        .e(TAG, "Failed to find the city data from the query request.", requestID);
-                return null;
-            }
-
-            // For constraint key & operator & value
-            Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
-            // For constraint operator & value
-            Map<String, String> map = new HashMap<String, String>();
-            map.put(RequestKeys.KEY_EQUAL, city);
-            constraints.put(DatabaseSchema.SCHEMA_ACTIVITY_CITY, map);
-
-            String number = null;
-            if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
-            {
-                number = postData.getString(RequestKeys.KEY_LIMIT_NUMBER);
-            }
-            else
-            {
-                number = DEFAULT_NUMBER;
-            }
-
-            String orderBy = DatabaseSchema.SCHEMA_ACTIVITY_AID;
-            boolean isASC = false;
-            ArrayList<String> tableList = new ArrayList<String>();
-            tableList.add(DatabaseSchema.SCHEMA_TABLE_ACTIVITY);
-            return SQLHelper.buildQuerySQL(tableList, returnSet, constraints, null, number,
-                    orderBy, isASC);
-
+            return buildQuerySQLForCityOrCategory(postData, returnSet, requestID);
         }
     }
 
@@ -639,80 +581,54 @@ public class ActivityManager
         String buildQuerySQL(JSONObject postData, ArrayList<String> returnSet, String requestID)
                 throws JSONException
         {
-            JSONArray constraintKeyvaluePair;
-            if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
-            {
-                ServiceLog.e(TAG,
-                        "Failed to find the constraint key value pair from query request.",
-                        requestID);
-                return null;
-            }
-
-            constraintKeyvaluePair = postData
-                    .getJSONArray(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR);
-            String category = null;
-            String subCategory = null;
-
-            for (int i = 0; i < constraintKeyvaluePair.length(); i++)
-            {
-                JSONObject data = constraintKeyvaluePair.getJSONObject(i);
-                if (data.has(RequestKeys.KEY_CONSTRAINT_COLUMN))
-                {
-                    if (data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN).equals(
-                            RequestKeys.KEY_CATEGORY))
-                    {
-                        category = data.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
-                        ServiceLog.d(TAG, "Parsed the category data is: " + category);
-                    }
-                    else if (data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN).equals(
-                            RequestKeys.KEY_SUBCATEGORY))
-                    {
-                        subCategory = data.getString(RequestKeys.KEY_CONSTRAINT_VALUE);
-                        ServiceLog.d(TAG, "Parsed the subcategory data is: " + subCategory);
-                    }
-                }
-            }
-
-            // Category must be existed
-            if (category == null)
-            {
-                ServiceLog
-                        .e(TAG, "Failed to find category data from the query request.", requestID);
-                return null;
-            }
-
-            // For constraint key & operator & value
-            Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
-            // For constraint operator & value
-            Map<String, String> map_c = new HashMap<String, String>();
-            map_c.put(RequestKeys.KEY_EQUAL, category);
-            constraints.put(DatabaseSchema.SCHEMA_ACTIVITY_CATEGORY, map_c);
-
-            if (subCategory != null)
-            {
-                Map<String, String> map_s = new HashMap<String, String>();
-                map_s.put(RequestKeys.KEY_EQUAL, subCategory);
-                constraints.put(DatabaseSchema.SCHEMA_ACTIVITY_SUBCATEGORY, map_s);
-            }
-
-            String number = null;
-            if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
-            {
-                number = postData.getString(RequestKeys.KEY_LIMIT_NUMBER);
-            }
-            else
-            {
-                number = DEFAULT_NUMBER;
-            }
-
-            String orderBy = DatabaseSchema.SCHEMA_ACTIVITY_AID;
-            boolean isASC = false;
-
-            ArrayList<String> tableList = new ArrayList<String>();
-            tableList.add(DatabaseSchema.SCHEMA_TABLE_ACTIVITY);
-            return SQLHelper.buildQuerySQL(tableList, returnSet, constraints, null, number,
-                    orderBy, isASC);
+            return buildQuerySQLForCityOrCategory(postData, returnSet, requestID);
         }
 
+    }
+
+    public static String buildQuerySQLForCityOrCategory(JSONObject postData,
+            ArrayList<String> returnSet, String requestID) throws JSONException
+    {
+        // For constraint key & operator & value
+        Map<String, Map<String, String>> constraints = new HashMap<String, Map<String, String>>();
+
+        JSONArray constraintKeyvaluePair;
+        if (!postData.has(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR))
+        {
+            ServiceLog.e(TAG, "Failed to find the constraint key value pair from query request.",
+                    requestID);
+            return null;
+        }
+
+        constraintKeyvaluePair = postData.getJSONArray(RequestKeys.KEY_CONSTRAINT_KEYVALUE_PAIR);
+
+        for (int i = 0; i < constraintKeyvaluePair.length(); i++)
+        {
+            JSONObject data = constraintKeyvaluePair.getJSONObject(i);
+            if (data.has(RequestKeys.KEY_CONSTRAINT_COLUMN)
+                    && data.has(RequestKeys.KEY_CONSTRAINT_OPERATOR)
+                    && data.has(RequestKeys.KEY_CONSTRAINT_VALUE))
+            {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put(data.getString(RequestKeys.KEY_CONSTRAINT_OPERATOR),
+                        data.getString(RequestKeys.KEY_CONSTRAINT_VALUE));
+                constraints.put(data.getString(RequestKeys.KEY_CONSTRAINT_COLUMN), map);
+            }
+        }
+
+        String number = DEFAULT_NUMBER;
+
+        if (postData.has(RequestKeys.KEY_LIMIT_NUMBER))
+        {
+            number = postData.getString(RequestKeys.KEY_LIMIT_NUMBER);
+        }
+
+        String orderBy = DatabaseSchema.SCHEMA_ACTIVITY_AID;
+        boolean isASC = false;
+
+        ArrayList<String> tableList = new ArrayList<String>();
+        tableList.add(DatabaseSchema.SCHEMA_TABLE_ACTIVITY);
+        return SQLHelper.buildQuerySQL(tableList, returnSet, constraints, null, number, orderBy,
+                isASC);
     }
 }
