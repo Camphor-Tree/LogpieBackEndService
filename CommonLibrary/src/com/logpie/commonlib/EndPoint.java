@@ -7,7 +7,7 @@ public class EndPoint
 {
     private static String TAG = EndPoint.class.getName();
 
-    private static boolean isDebug = true;
+    private static boolean isDebug = false;
 
     public enum ServiceURL
     {
