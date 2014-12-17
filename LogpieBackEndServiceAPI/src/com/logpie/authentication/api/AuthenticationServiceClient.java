@@ -1,6 +1,18 @@
 package com.logpie.authentication.api;
 
+import java.util.Map;
+
+import com.logpie.api.exception.LogpieBadRequestException;
+import com.logpie.api.exception.LogpieBadResponseException;
+import com.logpie.api.exception.LogpieConnectionException;
+import com.logpie.api.exception.LogpieServiceErrorException;
+import com.logpie.api.exception.LogpieUnknownException;
 import com.logpie.authentication.api.support.AuthenticationServiceClientHandler;
+import com.logpie.authentication.api.support.exception.BadRequestException;
+import com.logpie.authentication.api.support.exception.BadResponseException;
+import com.logpie.authentication.api.support.exception.ConnectionException;
+import com.logpie.authentication.api.support.exception.InvalidParameterException;
+import com.logpie.authentication.api.support.exception.ServerInternalException;
 
 /**
  * AuthenticationServiceClient is the only API class should be used in Logpie
@@ -16,12 +28,48 @@ import com.logpie.authentication.api.support.AuthenticationServiceClientHandler;
  */
 public class AuthenticationServiceClient implements AuthenticationServiceApiDefinition
 {
+    private final AuthenticationServiceClientHandler mHandler;
+
+    public AuthenticationServiceClient()
+    {
+        mHandler = new AuthenticationServiceClientHandler();
+    }
 
     @Override
-    public AuthenticationData authenticateWithEmailAndPassword(String email, String password)
+    public AuthenticationData authenticateWithEmailAndPassword(final String email,
+            final String password) throws LogpieBadRequestException, LogpieUnknownException,
+            LogpieConnectionException, LogpieBadResponseException, LogpieServiceErrorException
     {
-        new AuthenticationServiceClientHandler();
-        return null;
+        try
+        {
+            Map<String, String> authDataMap;
+            authDataMap = mHandler.authenticateWithEmailAndPassword(email, password);
+            return AuthenticationData.buildAuthenticationData(authDataMap);
+        } catch (InvalidParameterException e)
+        {
+            e.printStackTrace();
+            throw new LogpieBadRequestException(e, "InvalidParameter");
+        } catch (BadRequestException e)
+        {
+            e.printStackTrace();
+            throw new LogpieBadRequestException(e, "Bad request");
+        } catch (ConnectionException e)
+        {
+            e.printStackTrace();
+            throw new LogpieConnectionException(e, "Connection problem");
+        } catch (BadResponseException e)
+        {
+            e.printStackTrace();
+            throw new LogpieBadResponseException(e, "Bad response from server");
+        } catch (ServerInternalException e)
+        {
+            e.printStackTrace();
+            throw new LogpieServiceErrorException(e, "Bad response from server");
+        } catch (Exception e)
+        {
+            throw new LogpieUnknownException(e,
+                    "Unkown exception happens when calling authenticateWithEmailAndPassword");
+        }
     }
 
     @Override

@@ -1,5 +1,10 @@
 package com.logpie.authentication.api;
 
+import com.logpie.api.exception.LogpieBadRequestException;
+import com.logpie.api.exception.LogpieBadResponseException;
+import com.logpie.api.exception.LogpieConnectionException;
+import com.logpie.api.exception.LogpieServiceErrorException;
+import com.logpie.api.exception.LogpieUnknownException;
 
 /**
  * This class defined all the APIs AuthenticationService supports
@@ -8,7 +13,9 @@ package com.logpie.authentication.api;
  */
 public interface AuthenticationServiceApiDefinition
 {
-    AuthenticationData authenticateWithEmailAndPassword(final String email, final String password);
+    AuthenticationData authenticateWithEmailAndPassword(final String email, final String password)
+            throws LogpieBadRequestException, LogpieUnknownException, LogpieConnectionException,
+            LogpieBadResponseException, LogpieServiceErrorException;
 
     AuthenticationData registerNormalUserAccount(final String email, final String password,
             final String username, final String city_id);
